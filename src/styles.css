@@ -76,8 +76,11 @@ button, input, select { font: inherit; color: inherit; }
 .row.total .k { color: var(--ink); }
 
 @media (min-width: 1024px) {
-  .shell { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 56px); }
-  .stepper { border-bottom: none; border-right: 1px solid var(--line); padding: 2rem 1.5rem; }
+  /* Hauteur du bandeau : 28px de logo + 2 × 0.75rem de marge interne. */
+  .shell { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 52px); }
+  /* La colonne des étapes occupe toute la hauteur restante, même sur un écran long. */
+  app-stepper { display: block; }
+  .stepper { height: 100%; border-bottom: none; border-right: 1px solid var(--line); padding: 2rem 1.5rem; }
   .stepper .compact, .stepper .bar { display: none; }
   .stepper ol { display: grid; gap: 1.6rem; position: sticky; top: 5.5rem; }
   .stepper li { display: flex; align-items: center; gap: 0.9rem; color: var(--muted); }
