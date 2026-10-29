@@ -4,20 +4,21 @@ import { ImlApi } from '../api/iml.api';
 import { SiFinancierApi } from '../api/si-financier.api';
 import { formatEuro } from '../domain/format';
 import { CARD_SIM_PRICE, Terminal } from '../domain/models';
-import { isValidIban, isValidImei } from '../domain/rules';
+import { sepaErrors, terminalErrors } from '../domain/validation';
 import { OrderStore } from '../store/order.store';
 import { Page } from '../ui/page';
 import { SimBlock } from '../ui/sim-block';
+import { CORRECT_FIELDS, FieldError, focusFirstError } from '../ui/field-error';
 
 /** Écrans 4 et 4b : SIM, terminal (si-financier) et prélèvement SEPA (api IML). */
 @Component({
   selector: 'app-materiel',
-  imports: [FormsModule, Page, SimBlock],
+  imports: [FormsModule, Page, SimBlock, FieldError],
   template: `
     @let h = store.draft.hardware;
     @let sepa = store.draft.sepa;
-    <app-page title="Matériel et paiement" [busy]="busy()" (primary)="next()" [hint]="error()">
-      <app-sim-block />
+    <app-page title="Matériel et paiement" [busy]="busy()" (primary)="next()" [hint]="hint()">
+      <app-sim-block [showErrors]="submitted()" />
 
       @if (isCard()) {
         <div class="notice orange">
@@ -39,15 +40,18 @@ import { SimBlock } from '../ui/sim-block';
             <div class="grid2" style="margin-top: 1rem">
               <div class="field">
                 <label for="terminal">Terminal</label>
-                <select id="terminal" [ngModel]="h.terminalId" (ngModelChange)="selectTerminal($event)" [class.ko]="submitted() && !h.terminalId">
+                <select id="terminal" [ngModel]="h.terminalId" (ngModelChange)="selectTerminal($event)"
+                  [class.ko]="terr('terminalId')" [attr.aria-invalid]="!!terr('terminalId')" aria-describedby="terminal-error">
                   <option value="" disabled>Choisir un terminal</option>
                   @for (t of terminals(); track t.id) { <option [value]="t.id">{{ t.label }} · {{ euro(t.price) }}</option> }
                 </select>
+                <app-field-error for="terminal" [message]="terr('terminalId')" />
               </div>
               <div class="field">
                 <label for="imei">IMEI</label>
-                <input id="imei" inputmode="numeric" autocomplete="off" [(ngModel)]="h.imei" [class.ko]="submitted() && !imeiOk()" />
-                @if (submitted() && !imeiOk()) { <span class="msg ko">IMEI invalide (15 chiffres)</span> }
+                <input id="imei" inputmode="numeric" autocomplete="off" [(ngModel)]="h.imei"
+                  [class.ko]="terr('imei')" [attr.aria-invalid]="!!terr('imei')" aria-describedby="imei-error" />
+                <app-field-error for="imei" [message]="terr('imei')" />
               </div>
             </div>
             <p class="small muted">Le terminal est géré par l'enabler si-financier et réglé en caisse.</p>
@@ -59,14 +63,16 @@ import { SimBlock } from '../ui/sim-block';
           <div class="seg" style="margin-bottom: 1rem"><button type="button" class="on">Prélèvement SEPA</button></div>
           <div class="field">
             <label for="holder">Titulaire du compte</label>
-            <input id="holder" [(ngModel)]="sepa.holder" (ngModelChange)="sepa.mandateRef = null" [class.ko]="submitted() && !sepa.holder.trim()" />
+            <input id="holder" [(ngModel)]="sepa.holder" (ngModelChange)="sepa.mandateRef = null"
+              [class.ko]="serr('holder')" [attr.aria-invalid]="!!serr('holder')" aria-describedby="holder-error" />
+            <app-field-error for="holder" [message]="serr('holder')" />
           </div>
           <div class="field">
             <label for="iban">IBAN</label>
             <input id="iban" autocomplete="off" placeholder="FR76 …" [(ngModel)]="sepa.iban" (ngModelChange)="sepa.mandateRef = null"
-              [class.ok]="!!sepa.mandateRef" [class.ko]="submitted() && !ibanOk()" />
+              [class.ok]="!!sepa.mandateRef" [class.ko]="serr('iban')" [attr.aria-invalid]="!!serr('iban')" aria-describedby="iban-error" />
             @if (sepa.mandateRef) { <span class="msg ok">Mandat contrôlé et stocké (api IML) · RUM {{ sepa.mandateRef }}</span> }
-            @else if (submitted() && !ibanOk()) { <span class="msg ko">IBAN invalide</span> }
+            @else { <app-field-error for="iban" [message]="serr('iban')" /> }
           </div>
           <p class="small muted">Le mandat SEPA est signé hors de l'outil. Aucun paiement par carte bancaire dans l'outil.</p>
         </div>
@@ -83,7 +89,6 @@ export class MaterielScreen {
   protected readonly terminals = signal<Terminal[]>([]);
   protected readonly busy = signal(false);
   protected readonly submitted = signal(false);
-  protected readonly error = signal<string | null>(null);
   protected readonly cardSimPrice = CARD_SIM_PRICE;
   protected readonly euro = formatEuro;
 
@@ -106,33 +111,42 @@ export class MaterielScreen {
     h.terminalPrice = this.terminals().find((t) => t.id === id)?.price ?? 0;
   }
 
-  protected imeiOk(): boolean {
-    return isValidImei(this.store.draft.hardware.imei);
+  protected terr(field: 'terminalId' | 'imei'): string | null {
+    return this.submitted() ? (terminalErrors(this.store.draft.hardware)[field] ?? null) : null;
   }
 
-  protected ibanOk(): boolean {
-    return isValidIban(this.store.draft.sepa.iban);
+  protected serr(field: 'holder' | 'iban'): string | null {
+    const sepa = this.store.draft.sepa;
+    return this.submitted() ? (sepaErrors(sepa.holder, sepa.iban)[field] ?? null) : null;
+  }
+
+  private invalid(): boolean {
+    if (this.simBlock().error()) return true;
+    if (this.isCard()) return false;
+    const h = this.store.draft.hardware;
+    const sepa = this.store.draft.sepa;
+    return Object.keys(terminalErrors(h)).length > 0 || Object.keys(sepaErrors(sepa.holder, sepa.iban)).length > 0;
+  }
+
+  /** Rappel près du bouton, tant qu'il reste des champs en erreur. */
+  protected hint(): string | null {
+    return this.submitted() && this.invalid() ? CORRECT_FIELDS : null;
   }
 
   async next(): Promise<void> {
     this.submitted.set(true);
-    this.error.set(null);
     this.busy.set(true);
     const simOk = await this.simBlock().check();
     const h = this.store.draft.hardware;
     const sepa = this.store.draft.sepa;
-    let error: string | null = simOk ? null : 'Saisissez ou scannez un ICCID valide.';
-    if (!error && !this.isCard()) {
-      if (h.withTerminal && (!h.terminalId || !this.imeiOk())) error = 'Terminal : choisissez le modèle et saisissez un IMEI valide.';
-      else if (!sepa.holder.trim() || !this.ibanOk()) error = 'Paiement : titulaire et IBAN valides obligatoires.';
-      else if (!sepa.mandateRef) sepa.mandateRef = await this.iml.storeMandate(sepa.holder, sepa.iban);
-    }
+    const invalid = !simOk || this.invalid();
+    if (!invalid && !this.isCard() && !sepa.mandateRef) sepa.mandateRef = await this.iml.storeMandate(sepa.holder, sepa.iban);
     if (this.isCard()) {
       h.withTerminal = false;
       sepa.mandateRef = null;
     }
     this.busy.set(false);
-    this.error.set(error);
-    if (!error) this.store.go('confirmation');
+    if (invalid) focusFirstError();
+    else this.store.go('confirmation');
   }
 }

@@ -3,18 +3,19 @@ import { FormsModule } from '@angular/forms';
 import { AddressSuggestion, OrasApi } from '../api/oras.api';
 import { PartyApi } from '../api/party.api';
 import { ScoringApi } from '../api/scoring.api';
-import { identityChangeRequiresRescore, isValidEmail, isValidMsisdn } from '../domain/rules';
+import { identityChangeRequiresRescore } from '../domain/rules';
 import { OrderStore } from '../store/order.store';
 import { IdentityForm, identityComplete } from '../ui/identity-form';
+import { CORRECT_FIELDS, FieldError, focusFirstError } from '../ui/field-error';
 import { Page } from '../ui/page';
 
 /** Écran 2 : titulaire et adresse de facturation (acquisition). */
 @Component({
   selector: 'app-client',
-  imports: [FormsModule, Page, IdentityForm],
+  imports: [FormsModule, Page, IdentityForm, FieldError],
   template: `
     @let a = store.draft.address;
-    <app-page title="Client" [busy]="busy()" [disabled]="store.score() === 'rouge'" (primary)="next()">
+    <app-page title="Client" [busy]="busy()" [disabled]="store.score() === 'rouge'" (primary)="next()" [hint]="hint()">
       <div class="notice orange">
         Les informations du client sont modifiables. <strong>Modifier le nom, le prénom ou la date de naissance relance
         le contrôle Préventel.</strong>
@@ -28,7 +29,6 @@ import { Page } from '../ui/page';
       <div class="card">
         <h2>Titulaire</h2>
         <app-identity-form [identity]="store.draft.identity" [full]="true" [showErrors]="submitted()" />
-        @if (submitted() && contactError()) { <p class="msg ko small">{{ contactError() }}</p> }
       </div>
 
       <div class="card">
@@ -36,7 +36,8 @@ import { Page } from '../ui/page';
         <div class="field">
           <label for="addr">Rechercher l'adresse</label>
           <input id="addr" autocomplete="off" placeholder="N° et voie, code postal ou commune"
-            [ngModel]="query" (ngModelChange)="search($event)" [class.ko]="submitted() && !a.codePostal" />
+            [ngModel]="query" (ngModelChange)="search($event)" [class.ko]="addressError()" [attr.aria-invalid]="!!addressError()"
+            aria-describedby="addr-error" />
           @if (suggestions().length) {
             <ul class="suggest" role="listbox">
               @for (s of suggestions(); track s.ligne + s.codePostal) {
@@ -46,7 +47,11 @@ import { Page } from '../ui/page';
           } @else if (query.length > 2 && !a.codePostal && searched()) {
             <span class="msg">Aucune adresse trouvée par Api-ORAS.</span>
           }
-          <span class="msg">Adresse complétée et fiabilisée par Api-ORAS.</span>
+          @if (addressError()) {
+            <app-field-error for="addr" [message]="addressError()" />
+          } @else {
+            <span class="msg">Adresse complétée et fiabilisée par Api-ORAS.</span>
+          }
         </div>
         <div class="grid2">
           <div class="field"><label for="cp">Code postal</label><input id="cp" [value]="a.codePostal" readonly /></div>
@@ -57,7 +62,6 @@ import { Page } from '../ui/page';
           </div>
         </div>
       </div>
-      @if (error()) { <div class="notice red">{{ error() }}</div> }
     </app-page>
   `,
 })
@@ -72,7 +76,6 @@ export class ClientScreen {
   protected readonly busy = signal(false);
   protected readonly submitted = signal(false);
   protected readonly rescored = signal(false);
-  protected readonly error = signal<string | null>(null);
   protected query = this.store.draft.address.ligne
     ? `${this.store.draft.address.ligne}, ${this.store.draft.address.codePostal} ${this.store.draft.address.commune}`
     : '';
@@ -92,21 +95,25 @@ export class ClientScreen {
     this.suggestions.set([]);
   }
 
-  protected contactError(): string | null {
-    const i = this.store.draft.identity;
-    if (!isValidMsisdn(i.mobileContact)) return 'Mobile de contact invalide.';
-    if (!isValidEmail(i.email)) return 'Email invalide.';
-    return null;
+  private invalid(): boolean {
+    const d = this.store.draft;
+    return !identityComplete(d.identity, true) || !d.address.codePostal;
+  }
+
+  /** Rappel près du bouton, tant qu'il reste des champs en erreur. */
+  protected hint(): string | null {
+    return this.submitted() && this.invalid() ? CORRECT_FIELDS : null;
+  }
+
+  protected addressError(): string | null {
+    if (!this.submitted() || this.store.draft.address.codePostal) return null;
+    return this.query.trim() ? 'Sélectionnez une adresse dans la liste proposée.' : "L'adresse de facturation est obligatoire.";
   }
 
   async next(): Promise<void> {
     this.submitted.set(true);
-    this.error.set(null);
     const d = this.store.draft;
-    if (!identityComplete(d.identity, true) || this.contactError() || !d.address.codePostal) {
-      this.error.set('Complétez les champs obligatoires du titulaire et l’adresse de facturation.');
-      return;
-    }
+    if (this.invalid()) return focusFirstError();
     const customer = this.store.customer();
     if (!customer) return;
     this.busy.set(true);

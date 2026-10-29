@@ -31,6 +31,7 @@ import { Page } from '../ui/page';
             <input type="checkbox" [checked]="checked" (change)="setOption(o.id, $any($event.target).checked)" />
           </label>
         }
+        @if (error()) { <span class="msg ko group-error" role="alert">{{ error() }}</span> }
       </div>
     </app-page>
   `,
@@ -50,7 +51,7 @@ export class OptionsScreen {
   next(): void {
     const diff = this.store.optionsChange();
     if (!diff.added.length && !diff.removed.length) {
-      this.error.set('Aucune option ajoutée ni retirée.');
+      this.error.set('Ajoutez ou retirez au moins une option.');
       return;
     }
     this.store.go('confirmation');

@@ -5,8 +5,10 @@ import { ScoringApi } from '../api/scoring.api';
 import { formatDate, formatMsisdn } from '../domain/format';
 import { Customer, Identity, Score } from '../domain/models';
 import { digits, isValidMsisdn } from '../domain/rules';
+import { MSISDN_MESSAGE } from '../domain/validation';
 import { CustomerStatus, emptyAddress, emptyIdentity, OrderStore } from '../store/order.store';
 import { IdentityForm, identityComplete } from '../ui/identity-form';
+import { FieldError, focusFirstError } from '../ui/field-error';
 import { Page } from '../ui/page';
 
 type Mode = 'search' | 'unknown' | 'new';
@@ -14,7 +16,7 @@ type Mode = 'search' | 'unknown' | 'new';
 /** Écrans 1 à 1f : identification par MSISDN, contrôle Préventel, client sans numéro. */
 @Component({
   selector: 'app-identification',
-  imports: [FormsModule, Page, IdentityForm],
+  imports: [FormsModule, Page, IdentityForm, FieldError],
   template: `
     <app-page [title]="title()" [disabled]="!canContinue()" (primary)="store.go('demande')"
       [hint]="store.score() === 'rouge' ? 'Score rouge : aucune vente possible.' : null">
@@ -25,12 +27,13 @@ type Mode = 'search' | 'unknown' | 'new';
             <label for="msisdn">Mobile (MSISDN)</label>
             <div class="inline" style="flex-wrap: wrap">
               <input id="msisdn" class="grow" type="tel" inputmode="tel" autocomplete="off" placeholder="06 90 12 34 56"
-                [(ngModel)]="msisdn" (keyup.enter)="search()" [class.ko]="!!error()" style="min-width: 12rem" />
+                [(ngModel)]="msisdn" (keyup.enter)="search()" [class.ko]="!!error()" [attr.aria-invalid]="!!error()"
+                aria-describedby="msisdn-error" style="min-width: 12rem" />
               <button type="button" class="btn primary" style="width: auto" (click)="search()" [disabled]="busy()">
                 @if (busy()) { <span class="spinner"></span> } Rechercher le client
               </button>
             </div>
-            @if (error()) { <span class="msg ko">{{ error() }}</span> }
+            <app-field-error for="msisdn" [message]="error()" />
           </div>
         </div>
         <p style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem">
@@ -56,7 +59,6 @@ type Mode = 'search' | 'unknown' | 'new';
           <div class="card">
             <h2>Identité du client</h2>
             <app-identity-form [identity]="identity" [showErrors]="submitted()" />
-            @if (submitted() && !complete()) { <p class="msg ko small">Renseignez le nom, le prénom, la date de naissance et le n° de pièce.</p> }
             @if (!duplicate()) {
               <button type="button" class="btn" (click)="mode() === 'new' ? verify() : runPreventel('controle')" [disabled]="busy()">
                 @if (busy()) { <span class="spinner"></span> }
@@ -192,7 +194,8 @@ export class IdentificationScreen {
   async search(): Promise<void> {
     this.error.set(null);
     if (!isValidMsisdn(this.msisdn)) {
-      this.error.set('Numéro invalide : 10 chiffres commençant par 06 ou 07.');
+      this.error.set(this.msisdn.trim() ? MSISDN_MESSAGE : 'Saisissez le numéro de mobile du client.');
+      focusFirstError();
       return;
     }
     this.busy.set(true);
@@ -231,7 +234,7 @@ export class IdentificationScreen {
   /** Client sans numéro : recherche d'existence avant création. */
   async verify(): Promise<void> {
     this.submitted.set(true);
-    if (!this.complete()) return;
+    if (!this.complete()) return focusFirstError();
     this.busy.set(true);
     const existing = await this.party.findExisting(this.identity);
     this.busy.set(false);
@@ -250,7 +253,7 @@ export class IdentificationScreen {
   /** Contrôle Préventel puis création du client (sauf score rouge). */
   async runPreventel(status: 'controle' | 'cree'): Promise<void> {
     this.submitted.set(true);
-    if (!this.complete()) return;
+    if (!this.complete()) return focusFirstError();
     this.busy.set(true);
     const score = await this.scoring.preventel(this.identity);
     const customer =

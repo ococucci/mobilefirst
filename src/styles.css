@@ -134,10 +134,13 @@ button, input, select { font: inherit; color: inherit; }
 .field input:focus, .field select:focus { outline: 2px solid var(--ink); outline-offset: 0; border-color: var(--ink); }
 .field input[readonly] { background: var(--bg); }
 .field input.ok { border-color: var(--green); }
-.field input.ko { border-color: var(--red); }
+.field input.ko, .field select.ko { border-color: var(--red); outline-color: var(--red); background: #fffafa; }
+.field input.ko:focus, .field select.ko:focus { outline: 2px solid var(--red); }
+.choices.ko .choice:not(.on):not(:disabled) { border-color: var(--red); }
+.group-error { display: block; margin-top: 0.5rem; }
 .field .msg { font-size: 0.85rem; color: var(--muted); }
 .field .msg.ok { color: var(--green-ink); font-weight: 700; }
-.field .msg.ko { color: var(--red); font-weight: 700; }
+.msg.ko, .field .msg.ko { color: var(--red); font-weight: 700; font-size: 0.85rem; }
 .inline { display: flex; gap: 0.6rem; align-items: stretch; }
 .inline > .grow { flex: 1; min-width: 0; }
 

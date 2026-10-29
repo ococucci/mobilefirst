@@ -4,19 +4,21 @@ import { RessourceApi } from '../api/ressource.api';
 import { RhocApi } from '../api/rhoc.api';
 import { formatEuro, formatMsisdn } from '../domain/format';
 import { DONOR_OPERATORS, FAMILIES, FamilyId, Offer } from '../domain/models';
-import { allowedFamilies, isOpenMlAvailable, isValidMsisdn, isValidRio, openMlDiscount } from '../domain/rules';
+import { allowedFamilies, isOpenMlAvailable, openMlDiscount } from '../domain/rules';
+import { NumberChoice, numberErrors, sponsorError } from '../domain/validation';
 import { OrderStore } from '../store/order.store';
 import { CustomerBanner } from '../ui/customer-banner';
+import { CORRECT_FIELDS, FieldError, focusFirstError } from '../ui/field-error';
 import { Page } from '../ui/page';
 
 /** Écrans 3, 3b et 3c : numéro d'appel, famille, forfaits, Open ML et options. */
 @Component({
   selector: 'app-forfait',
-  imports: [FormsModule, Page, CustomerBanner],
+  imports: [FormsModule, Page, CustomerBanner, FieldError],
   template: `
     @let d = store.draft;
     @let n = d.number;
-    <app-page [title]="isChange ? 'Changement de forfait' : 'Forfait'" [busy]="busy()" (primary)="next()" [hint]="error()">
+    <app-page [title]="isChange ? 'Changement de forfait' : 'Forfait'" [busy]="busy()" (primary)="next()" [hint]="hint()">
       @if (isChange) {
         @if (store.selectedLine(); as line) {
           <app-customer-banner badge="Changement de forfait" [title]="'Ligne ' + fmt(line.msisdn)"
@@ -33,23 +35,29 @@ import { Page } from '../ui/page';
                 <div class="grid2" style="margin-top: 1rem">
                   <div class="field">
                     <label for="rio">Code RIO</label>
-                    <input id="rio" autocomplete="off" placeholder="01P123456ABC" [(ngModel)]="n.rio" [class.ko]="submitted() && !rioOk()" />
-                    @if (submitted() && !rioOk()) { <span class="msg ko">Code RIO invalide (12 caractères)</span> }
+                    <input id="rio" autocomplete="off" placeholder="01P123456ABC" [(ngModel)]="n.rio"
+                      [class.ko]="nerr('rio')" [attr.aria-invalid]="!!nerr('rio')" aria-describedby="rio-error" />
+                    <app-field-error for="rio" [message]="nerr('rio')" />
                   </div>
                   <div class="field">
                     <label for="pmsisdn">Numéro à conserver</label>
-                    <input id="pmsisdn" type="tel" inputmode="tel" [(ngModel)]="n.portedMsisdn" [class.ko]="submitted() && !portedOk()" />
+                    <input id="pmsisdn" type="tel" inputmode="tel" [(ngModel)]="n.portedMsisdn"
+                      [class.ko]="nerr('portedMsisdn')" [attr.aria-invalid]="!!nerr('portedMsisdn')" aria-describedby="pmsisdn-error" />
+                    <app-field-error for="pmsisdn" [message]="nerr('portedMsisdn')" />
                   </div>
                   <div class="field">
                     <label for="op">Opérateur donneur</label>
-                    <select id="op" [(ngModel)]="n.operator" [class.ko]="submitted() && !n.operator">
+                    <select id="op" [(ngModel)]="n.operator" [class.ko]="nerr('operator')" [attr.aria-invalid]="!!nerr('operator')" aria-describedby="op-error">
                       <option value="" disabled>Choisir</option>
                       @for (o of operators; track o) { <option [value]="o">{{ o }}</option> }
                     </select>
+                    <app-field-error for="op" [message]="nerr('operator')" />
                   </div>
                   <div class="field">
                     <label for="pdate">Date d'exécution du portage</label>
-                    <input id="pdate" type="date" [min]="today" [(ngModel)]="n.portingDate" [class.ko]="submitted() && !(n.portingDate >= today)" />
+                    <input id="pdate" type="date" [min]="today" [(ngModel)]="n.portingDate"
+                      [class.ko]="nerr('portingDate')" [attr.aria-invalid]="!!nerr('portingDate')" aria-describedby="pdate-error" />
+                    <app-field-error for="pdate" [message]="nerr('portingDate')" />
                   </div>
                 </div>
                 <span class="small muted">Les quatre champs sont obligatoires.</span>
@@ -63,11 +71,15 @@ import { Page } from '../ui/page';
               @if (n.mode === 'nouveau') {
                 <div class="field" style="margin: 1rem 0 0">
                   <label for="newmsisdn">Nouveau numéro MSISDN</label>
-                  <select id="newmsisdn" [(ngModel)]="n.msisdn" [class.ko]="submitted() && !n.msisdn">
+                  <select id="newmsisdn" [(ngModel)]="n.msisdn" [class.ko]="nerr('msisdn')" [attr.aria-invalid]="!!nerr('msisdn')" aria-describedby="newmsisdn-error">
                     <option value="" disabled>Choisir un numéro disponible</option>
                     @for (num of numbers(); track num) { <option [value]="num">{{ fmt(num) }}</option> }
                   </select>
-                  <span class="msg">Numéros disponibles fournis par api ressource.</span>
+                  @if (nerr('msisdn')) {
+                    <app-field-error for="newmsisdn" [message]="nerr('msisdn')" />
+                  } @else {
+                    <span class="msg">Numéros disponibles fournis par api ressource.</span>
+                  }
                 </div>
               }
             </div>
@@ -98,7 +110,7 @@ import { Page } from '../ui/page';
           <span aria-hidden="true">{{ expanded() ? '▾' : '▸' }}</span>
         </button>
         @if (expanded()) {
-          <div class="tree" role="radiogroup" aria-label="Forfaits">
+          <div class="tree choices" role="radiogroup" aria-label="Forfaits" [class.ko]="offerError()" aria-describedby="offer-error">
             @for (o of familyOffers(); track o.id) {
               @let current = isChange && o.id === store.selectedLine()?.offerId;
               <button type="button" class="choice" role="radio" [attr.aria-checked]="d.offerId === o.id"
@@ -115,7 +127,7 @@ import { Page } from '../ui/page';
             }
           </div>
         }
-        @if (submitted() && !d.offerId) { <p class="msg ko small" style="margin-top: 0.75rem">Choisissez un forfait.</p> }
+        @if (offerError()) { <span class="msg ko group-error" id="offer-error">{{ offerError() }}</span> }
       </div>
 
       <div class="card">
@@ -133,15 +145,15 @@ import { Page } from '../ui/page';
             <div class="inline">
               <input id="sponsor" class="grow" type="tel" inputmode="tel" [ngModel]="d.openMl.sponsor"
                 (ngModelChange)="d.openMl.sponsor = $event; d.openMl.valid = null"
-                [class.ok]="d.openMl.valid === true" [class.ko]="d.openMl.valid === false" />
+                [class.ok]="d.openMl.valid === true" [class.ko]="sponsorErr()" [attr.aria-invalid]="!!sponsorErr()" aria-describedby="sponsor-error" />
               <button type="button" class="btn small" (click)="checkSponsor()" [disabled]="checkingSponsor()">
                 @if (checkingSponsor()) { <span class="spinner"></span> } Vérifier
               </button>
             </div>
             @if (d.openMl.valid === true) {
               <span class="msg ok">Sponsor valide · remise de {{ euro(openMlAmount()) }}/mois à vie</span>
-            } @else if (d.openMl.valid === false) {
-              <span class="msg ko">Sponsor non reconnu par api RHOC</span>
+            } @else if (sponsorErr()) {
+              <app-field-error for="sponsor" [message]="sponsorErr()" />
             } @else {
               <span class="msg">Le N° sponsor est contrôlé par api RHOC.</span>
             }
@@ -180,7 +192,6 @@ export class ForfaitScreen {
   protected readonly submitted = signal(false);
   protected readonly busy = signal(false);
   protected readonly checkingSponsor = signal(false);
-  protected readonly error = signal<string | null>(null);
   protected readonly familyId = signal<FamilyId>(this.store.draft.family);
 
   protected readonly fmt = formatMsisdn;
@@ -204,12 +215,21 @@ export class ForfaitScreen {
     return offer ? openMlDiscount(offer) : 0;
   }
 
-  protected rioOk(): boolean {
-    return isValidRio(this.store.draft.number.rio);
+  /** Erreur d'un champ du choix du numéro (affichée après une tentative de validation). */
+  protected nerr(field: keyof NumberChoice): string | null {
+    if (!this.submitted() || this.isChange) return null;
+    return numberErrors(this.store.draft.number, this.today)[field] ?? null;
   }
 
-  protected portedOk(): boolean {
-    return isValidMsisdn(this.store.draft.number.portedMsisdn);
+  protected offerError(): string | null {
+    return this.submitted() && !this.store.draft.offerId ? 'Choisissez un forfait.' : null;
+  }
+
+  /** Un sponsor refusé s'affiche tout de suite ; les autres erreurs après une tentative de validation. */
+  protected sponsorErr(): string | null {
+    const o = this.store.draft.openMl;
+    if (!this.openMlAvailable() || (!this.submitted() && o.valid !== false)) return null;
+    return sponsorError(o.enabled, o.sponsor, o.valid);
   }
 
   protected selectFamily(id: FamilyId): void {
@@ -237,31 +257,25 @@ export class ForfaitScreen {
     this.checkingSponsor.set(false);
   }
 
-  private sponsorValid(): boolean {
-    return this.store.draft.openMl.valid === true;
+  private invalid(): boolean {
+    const numberInvalid = !this.isChange && Object.keys(numberErrors(this.store.draft.number, this.today)).length > 0;
+    return numberInvalid || !!this.offerError() || !!this.sponsorErr();
   }
 
-  private numberError(): string | null {
-    if (this.isChange) return null;
-    const n = this.store.draft.number;
-    if (n.mode === 'nouveau') return n.msisdn ? null : 'Choisissez un nouveau numéro.';
-    if (!this.rioOk() || !this.portedOk() || !n.operator || !(n.portingDate >= this.today)) {
-      return 'Portabilité : code RIO, numéro, opérateur et date sont obligatoires.';
-    }
-    return null;
+  /** Rappel près du bouton, tant qu'il reste des champs en erreur. */
+  protected hint(): string | null {
+    return this.submitted() && this.invalid() ? CORRECT_FIELDS : null;
   }
 
   async next(): Promise<void> {
     this.submitted.set(true);
     const d = this.store.draft;
-    let error = this.numberError();
-    if (!error && !d.offerId) error = 'Choisissez un forfait.';
-    if (!error && d.openMl.enabled && this.openMlAvailable() && d.openMl.valid !== true) {
-      if (d.openMl.valid === null && d.openMl.sponsor) await this.checkSponsor();
-      if (!this.sponsorValid()) error = 'Remise Open ML : N° sponsor à valider, ou décochez la remise.';
+    // Sponsor saisi mais pas encore vérifié : on le contrôle avant d'afficher une erreur.
+    if (d.openMl.enabled && this.openMlAvailable() && d.openMl.valid === null && d.openMl.sponsor.trim()) {
+      await this.checkSponsor();
     }
-    this.error.set(error);
-    if (error) return;
+    if (!d.offerId) this.expanded.set(true);
+    if (this.invalid()) return focusFirstError();
     if (!this.openMlAvailable()) d.openMl.enabled = false;
     this.store.go(this.isChange ? 'confirmation' : 'materiel');
   }

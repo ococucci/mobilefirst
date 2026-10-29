@@ -4,6 +4,7 @@ import { formatEuro, formatMsisdn } from '../domain/format';
 import { FLOW_LABELS, Line, SIM_REASONS } from '../domain/models';
 import { OrderStore } from '../store/order.store';
 import { CustomerBanner } from '../ui/customer-banner';
+import { CORRECT_FIELDS, focusFirstError } from '../ui/field-error';
 import { Page } from '../ui/page';
 
 /** Écrans 2b, 2c et 2d : choix de la ligne (et de la raison pour un changement de SIM). */
@@ -12,11 +13,11 @@ import { Page } from '../ui/page';
   imports: [Page, CustomerBanner],
   template: `
     @let d = store.draft;
-    <app-page [title]="flowLabel()" [busy]="busy()" (primary)="next()" [hint]="error()">
+    <app-page [title]="flowLabel()" [busy]="busy()" (primary)="next()" [hint]="hint()">
       <app-customer-banner [badge]="flowLabel()" />
 
       <h2 class="section-title">{{ isSim ? 'Ligne concernée' : 'Lignes du client' }}</h2>
-      <div class="choices" role="radiogroup" aria-label="Ligne">
+      <div class="choices" role="radiogroup" aria-label="Ligne" [class.ko]="lineError()" aria-describedby="line-error">
         @for (line of lines(); track line.msisdn) {
           @let pending = isPending(line);
           <button type="button" class="choice" role="radio" [attr.aria-checked]="d.lineMsisdn === line.msisdn"
@@ -35,6 +36,7 @@ import { Page } from '../ui/page';
           </button>
         }
       </div>
+      @if (lineError()) { <span class="msg ko group-error" id="line-error">{{ lineError() }}</span> }
 
       @if (store.flow() === 'forfait' && (store.selectedLine()?.isCard || !d.lineMsisdn)) {
         <div class="notice orange" style="margin-top: 1rem">
@@ -49,7 +51,7 @@ import { Page } from '../ui/page';
       @if (isSim) {
         <h2 class="section-title">Raison du changement</h2>
         <p class="muted">Seuls les motifs perte et vol donnent lieu à des frais de 10 €, à régler en caisse. Aucun paiement n'est pris dans l'application.</p>
-        <div class="choices two" role="radiogroup" aria-label="Raison">
+        <div class="choices two" role="radiogroup" aria-label="Raison" [class.ko]="reasonError()" aria-describedby="reason-error">
           @for (r of reasons; track r.id) {
             <button type="button" class="choice" role="radio" [attr.aria-checked]="d.simReason === r.id" [class.on]="d.simReason === r.id" (click)="d.simReason = r.id">
               <span class="radio"></span>
@@ -58,6 +60,7 @@ import { Page } from '../ui/page';
             </button>
           }
         </div>
+        @if (reasonError()) { <span class="msg ko group-error" id="reason-error">{{ reasonError() }}</span> }
       }
     </app-page>
   `,
@@ -69,13 +72,26 @@ export class LigneScreen {
   protected readonly isSim = this.store.flow() === 'sim';
   protected readonly reasons = SIM_REASONS;
   protected readonly busy = signal(false);
-  protected readonly error = signal<string | null>(null);
   protected readonly blocked = signal<string | null>(null);
+  protected readonly submitted = signal(false);
   protected readonly lines = computed(() => this.store.customer()?.lines ?? []);
   protected readonly flowLabel = computed(() => FLOW_LABELS[this.store.flow() ?? 'forfait']);
 
   protected readonly fmt = formatMsisdn;
   protected readonly euro = formatEuro;
+
+  /** Rappel près du bouton, tant qu'il reste des choix en erreur. */
+  protected hint(): string | null {
+    return this.lineError() || this.reasonError() ? CORRECT_FIELDS : null;
+  }
+
+  protected lineError(): string | null {
+    return this.submitted() && !this.store.selectedLine() ? 'Choisissez la ligne concernée.' : null;
+  }
+
+  protected reasonError(): string | null {
+    return this.submitted() && this.isSim && !this.store.draft.simReason ? 'Choisissez la raison du changement.' : null;
+  }
 
   protected isPending(line: Line): boolean {
     return this.store.pendingLines().includes(line.msisdn);
@@ -84,16 +100,14 @@ export class LigneScreen {
   protected select(line: Line): void {
     this.store.draft.lineMsisdn = line.msisdn;
     this.blocked.set(null);
-    this.error.set(null);
   }
 
   async next(): Promise<void> {
     const d = this.store.draft;
     const line = this.store.selectedLine();
     const customer = this.store.customer();
-    if (!line || !customer) return this.error.set('Choisissez une ligne.');
-    if (this.isSim && !d.simReason) return this.error.set('Choisissez la raison du changement.');
-    this.error.set(null);
+    this.submitted.set(true);
+    if (!line || !customer || this.reasonError()) return focusFirstError();
 
     // Retour sur cette étape sans changer de ligne ni de raison : on garde les saisies suivantes.
     const key = this.isSim ? `${line.msisdn}|${d.simReason}` : line.msisdn;

@@ -67,6 +67,7 @@ services (les écrans ne dépendent que de leurs signatures).
 | Autre numéro | Client inconnu : saisie de l'identité puis Préventel |
 | Nom contenant « rouge » ou « orange » | Score Préventel correspondant (sinon vert) |
 | Nouveau client Dupont Marie, 14/03/1988, CNI 12AB34567 | Doublon trouvé |
+| N° de pièce d'identité | 9 caractères (CNI récente, passeport) ou 12 (ancienne CNI), lettres et chiffres |
 | N° sponsor Open ML | `0690 65 43 21` ou `0696 11 22 33` |
 | ICCID en stock | `8933 0100 0000 0000 001`, `…019`, `…027`, `…035`, `…043`, ou bouton de scan |
 | IBAN | `FR76 3000 6000 0112 3456 7890 189` |
@@ -74,6 +75,13 @@ services (les écrans ne dépendent que de leurs signatures).
 | Adresse | Saisir par exemple « Flamboyants » ou « Pointe-à-Pitre » |
 
 Les montants et libellés d'offres sont des valeurs d'exemple.
+
+## Validation des saisies
+
+Les règles et les messages d'erreur sont regroupés dans `src/app/domain/validation.ts` (testés). Après un clic
+sur « Continuer », chaque champ en erreur passe en bordure rouge avec son message en dessous, le premier champ
+en erreur reçoit le focus, et un rappel s'affiche près du bouton. Les messages disparaissent au fur et à mesure
+des corrections.
 
 ## Hors périmètre (conformément à la cinématique)
 

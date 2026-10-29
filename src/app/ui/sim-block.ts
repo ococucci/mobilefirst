@@ -1,13 +1,14 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IccidCheck, SiFinancierApi } from '../api/si-financier.api';
 import { formatIccid } from '../domain/format';
 import { OrderStore } from '../store/order.store';
+import { FieldError } from './field-error';
 
 /** Bloc Carte SIM : type de SIM et N° ICCID contrôlé par l'enabler si-financier. */
 @Component({
   selector: 'app-sim-block',
-  imports: [FormsModule],
+  imports: [FormsModule, FieldError],
   template: `
     @let h = store.draft.hardware;
     <div class="card">
@@ -21,19 +22,21 @@ import { OrderStore } from '../store/order.store';
         <div class="inline">
           <input id="iccid" class="grow" inputmode="numeric" autocomplete="off" placeholder="8933 0000 0000 0000 000"
             [ngModel]="h.iccid" (ngModelChange)="onInput($event)" (blur)="check()"
-            [class.ok]="state() === 'ok'" [class.ko]="state() === 'format' || state() === 'inconnu'" />
+            [class.ok]="state() === 'ok'" [class.ko]="error()" [attr.aria-invalid]="!!error()" aria-describedby="iccid-error" />
           <button type="button" class="btn icon" (click)="scan()" [disabled]="scanning()" aria-label="Scanner le code-barres de la SIM" title="Scanner le code-barres">
             @if (scanning()) { <span class="spinner"></span> } @else {
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 7V4h3M18 4h3v3M21 17v3h-3M6 20H3v-3M8 8v8M11 8v8M14 8v8M17 8v8"/></svg>
             }
           </button>
         </div>
-        @switch (state()) {
-          @case ('ok') { <span class="msg ok">SIM reconnue dans le stock boutique</span> }
-          @case ('format') { <span class="msg ko">Format invalide : 19 ou 20 chiffres commençant par 89</span> }
-          @case ('inconnu') { <span class="msg ko">ICCID inconnu du stock boutique (si-financier)</span> }
-          @case ('checking') { <span class="msg">Contrôle en cours…</span> }
-          @default { <span class="msg">La SIM est obligatoire pour cette commande.</span> }
+        @if (error(); as e) {
+          <app-field-error for="iccid" [message]="e" />
+        } @else {
+          @switch (state()) {
+            @case ('ok') { <span class="msg ok">SIM reconnue dans le stock boutique</span> }
+            @case ('checking') { <span class="msg">Contrôle en cours…</span> }
+            @default { <span class="msg">La SIM est obligatoire pour cette commande.</span> }
+          }
         }
       </div>
     </div>
@@ -44,6 +47,23 @@ export class SimBlock {
   private readonly siFinancier = inject(SiFinancierApi);
   protected readonly state = signal<IccidCheck | 'checking' | null>(this.store.draft.hardware.iccidValid ? 'ok' : null);
   protected readonly scanning = signal(false);
+  /** Affiche l'erreur « obligatoire » après une tentative de validation. */
+  readonly showErrors = input(false);
+
+  error(): string | null {
+    switch (this.state()) {
+      case 'format':
+        return 'ICCID invalide : 19 ou 20 chiffres commençant par 89.';
+      case 'inconnu':
+        return 'ICCID inconnu du stock boutique (si-financier).';
+      case null:
+        return this.showErrors() && !this.store.draft.hardware.iccid.trim()
+          ? "La SIM est obligatoire : saisissez ou scannez l'ICCID."
+          : null;
+      default:
+        return null;
+    }
+  }
 
   protected onInput(value: string): void {
     this.store.draft.hardware.iccid = value;
