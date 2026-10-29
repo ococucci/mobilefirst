@@ -73,6 +73,8 @@ export interface Draft {
   sepa: { holder: string; iban: string; mandateRef: string | null };
   lineMsisdn: string | null;
   simReason: string | null;
+  /** Ligne (et raison) pour laquelle les étapes suivantes ont été préparées. */
+  preparedFor: string | null;
   confirm: { contractRef: string | null; signed: boolean; cgv: boolean; rgpd: boolean };
 }
 
@@ -97,6 +99,7 @@ const emptyDraft = (): Draft => ({
   sepa: { holder: '', iban: '', mandateRef: null },
   lineMsisdn: null,
   simReason: null,
+  preparedFor: null,
   confirm: { contractRef: null, signed: false, cgv: false, rgpd: false },
 });
 
@@ -137,6 +140,11 @@ export class OrderStore {
   }
 
   go(screen: Screen): void {
+    // Toute modification après la vérification invalide le contrat déjà édité et sa signature.
+    if (this.screen() === 'confirmation' && screen !== 'succes') {
+      this.draft.confirm.contractRef = null;
+      this.draft.confirm.signed = false;
+    }
     this.screen.set(screen);
     window.scrollTo?.({ top: 0 });
   }
@@ -150,7 +158,15 @@ export class OrderStore {
     this.draft.address = structuredClone(customer.address);
   }
 
+  /** Retour sur une étape déjà franchie, sans perdre les saisies. */
+  goToStep(index: number): void {
+    const target = this.steps()[index]?.screens[0];
+    if (target) this.go(target);
+  }
+
   chooseFlow(flow: Flow): void {
+    // Même demande qu'avant un retour à l'identification : on conserve les saisies.
+    if (flow === this.flow()) return;
     const keep = { identity: this.draft.identity, address: this.draft.address, snapshot: this.draft.identitySnapshot };
     this.draft = emptyDraft();
     Object.assign(this.draft, { identity: keep.identity, address: keep.address, identitySnapshot: keep.snapshot });

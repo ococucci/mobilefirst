@@ -42,7 +42,10 @@ button, input, select { font: inherit; color: inherit; }
 .shell { display: block; }
 .stepper { background: #fff; border-bottom: 1px solid var(--line); padding: 0.6rem 1rem; }
 .stepper ol { list-style: none; margin: 0; padding: 0; display: none; }
-.stepper .compact { font-size: 0.9rem; color: var(--muted); }
+.stepper .compact { font-size: 0.9rem; color: var(--muted); display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
+.stepper .compact .back { font-size: 0.9rem; color: var(--ink); white-space: nowrap; }
+.stepper .step-link { display: flex; align-items: center; gap: 0.9rem; background: none; border: none; padding: 0; color: inherit; font: inherit; cursor: pointer; text-align: left; }
+.stepper .step-link:hover { text-decoration: underline; }
 .stepper .compact strong { color: var(--ink); }
 .stepper .bar { height: 4px; background: var(--disabled); border-radius: 2px; margin-top: 0.4rem; overflow: hidden; }
 .stepper .bar span { display: block; height: 100%; background: var(--orange); }

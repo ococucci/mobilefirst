@@ -95,6 +95,13 @@ export class LigneScreen {
     if (this.isSim && !d.simReason) return this.error.set('Choisissez la raison du changement.');
     this.error.set(null);
 
+    // Retour sur cette étape sans changer de ligne ni de raison : on garde les saisies suivantes.
+    const key = this.isSim ? `${line.msisdn}|${d.simReason}` : line.msisdn;
+    if (d.preparedFor === key) {
+      this.store.go(this.isSim ? 'sim' : this.store.flow() === 'options' ? 'options' : 'forfait');
+      return;
+    }
+
     switch (this.store.flow()) {
       case 'forfait': {
         if (line.isCard) {
@@ -112,15 +119,19 @@ export class LigneScreen {
         // Une ligne Card change d'offre pour un forfait : on ouvre sur une famille avec mensualité.
         const family = this.store.offer(line.offerId)?.family ?? 'bloque';
         d.family = family === 'prepaye' ? 'bloque' : family;
+        d.openMl = { enabled: false, sponsor: '', valid: null };
+        d.preparedFor = key;
         this.store.go('forfait');
         break;
       }
       case 'options':
         d.options = [...line.options];
+        d.preparedFor = key;
         this.store.go('options');
         break;
       case 'sim':
         d.hardware.simType = d.simReason === 'esim' ? 'esim' : line.simType;
+        d.preparedFor = key;
         this.store.go('sim');
         break;
     }
