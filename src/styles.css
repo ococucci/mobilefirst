@@ -121,7 +121,8 @@ button, input, select { font: inherit; color: inherit; }
 .btn.small { min-height: 40px; padding: 0.4rem 0.9rem; }
 .btn.icon { width: 52px; padding: 0; flex: none; }
 
-.field { display: grid; gap: 0.35rem; margin-bottom: 0.9rem; min-width: 0; }
+/* align-content: start évite qu'un champ s'étire quand son voisin affiche un message. */
+.field { display: grid; gap: 0.35rem; margin-bottom: 0.9rem; min-width: 0; align-content: start; }
 .field > label, .field > .label { font-size: 0.9rem; color: var(--muted); }
 .field input, .field select {
   width: 100%; min-height: 48px; padding: 0.6rem 0.85rem;
