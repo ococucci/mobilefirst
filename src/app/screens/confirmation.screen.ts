@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { DocumentApi } from '../api/document.api';
 import { EpcApi } from '../api/epc.api';
 import { OrderApi, OrderRequest } from '../api/order.api';
@@ -18,7 +19,7 @@ interface SummaryCard {
 /** Écrans 5, 4c, 4d et 4e : vérification de la commande, contrat et validation. */
 @Component({
   selector: 'app-confirmation',
-  imports: [Page],
+  imports: [FormsModule, Page],
   template: `
     @let c = store.draft.confirm;
     <app-page title="Vérifiez la commande" primaryLabel="Valider la commande" [disabled]="!canValidate()" [busy]="busy()"
@@ -54,10 +55,10 @@ interface SummaryCard {
 
       <div class="card">
         @if (withContract) {
-          <label class="check"><input type="checkbox" [checked]="c.signed" (change)="c.signed = !c.signed" /><strong class="body">Le client a signé le contrat</strong></label>
+          <label class="check"><input type="checkbox" [(ngModel)]="c.signed" /><strong class="body">Le client a signé le contrat</strong></label>
         }
-        <label class="check"><input type="checkbox" [checked]="c.cgv" (change)="c.cgv = !c.cgv" /><span class="body">J'accepte les conditions générales de vente</span></label>
-        <label class="check"><input type="checkbox" [checked]="c.rgpd" (change)="c.rgpd = !c.rgpd" /><span class="body">J'ai pris connaissance de la politique de données personnelles</span></label>
+        <label class="check"><input type="checkbox" [(ngModel)]="c.cgv" /><span class="body">J'accepte les conditions générales de vente</span></label>
+        <label class="check"><input type="checkbox" [(ngModel)]="c.rgpd" /><span class="body">J'ai pris connaissance de la politique de données personnelles</span></label>
       </div>
       @if (error()) { <div class="notice red">{{ error() }}</div> }
     </app-page>

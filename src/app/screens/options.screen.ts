@@ -28,7 +28,7 @@ import { Page } from '../ui/page';
             @else if (!active && checked) { <span class="badge orange">À ajouter</span> }
             @else if (active && !checked) { <span class="badge soft">À retirer</span> }
             <span class="price">+{{ euro(o.price) }}/mois</span>
-            <input type="checkbox" [checked]="checked" (change)="toggle(o.id)" />
+            <input type="checkbox" [checked]="checked" (change)="setOption(o.id, $any($event.target).checked)" />
           </label>
         }
       </div>
@@ -41,9 +41,9 @@ export class OptionsScreen {
   protected readonly fmt = formatMsisdn;
   protected readonly euro = formatEuro;
 
-  protected toggle(id: string): void {
+  protected setOption(id: string, checked: boolean): void {
     const d = this.store.draft;
-    d.options = d.options.includes(id) ? d.options.filter((o) => o !== id) : [...d.options, id];
+    d.options = checked ? [...new Set([...d.options, id])] : d.options.filter((o) => o !== id);
     this.error.set(null);
   }
 

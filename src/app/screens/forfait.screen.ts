@@ -158,7 +158,7 @@ import { Page } from '../ui/page';
             <label class="check">
               <span class="body">{{ o.label }}</span>
               <span class="price">+{{ euro(o.price) }}/mois</span>
-              <input type="checkbox" [checked]="d.options.includes(o.id)" (change)="toggleOption(o.id)" />
+              <input type="checkbox" [checked]="d.options.includes(o.id)" (change)="setOption(o.id, $any($event.target).checked)" />
             </label>
           }
         }
@@ -226,9 +226,9 @@ export class ForfaitScreen {
     if (!this.openMlAvailable()) d.openMl = { enabled: false, sponsor: '', valid: null };
   }
 
-  protected toggleOption(id: string): void {
+  protected setOption(id: string, checked: boolean): void {
     const d = this.store.draft;
-    d.options = d.options.includes(id) ? d.options.filter((o) => o !== id) : [...d.options, id];
+    d.options = checked ? [...new Set([...d.options, id])] : d.options.filter((o) => o !== id);
   }
 
   protected async checkSponsor(): Promise<void> {
