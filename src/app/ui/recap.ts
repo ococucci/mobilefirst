@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { FLOW_LABELS, SIM_REASONS } from '../domain/models';
 import { formatEuro, formatMsisdn } from '../domain/format';
+import { selectedOptions } from '../domain/rules';
 import { OrderStore } from '../store/order.store';
 
 interface Row {
@@ -86,11 +87,11 @@ export class Recap {
       if (offer && b) {
         rows.push({ k: flow === 'forfait' ? 'Nouvelle offre' : offer.label, v: flow === 'forfait' ? offer.label : formatEuro(b.base), cls: 'sep' });
         if (flow === 'forfait') rows.push({ k: 'Prix', v: formatEuro(b.base) });
-        for (const id of d.options) {
-          const o = s.option(id);
-          if (o) rows.push({ k: o.label, v: '+' + formatEuro(o.price) });
+        for (const o of selectedOptions(offer, d.options)) {
+          rows.push({ k: o.label, v: o.included ? 'Incluse' : '+' + formatEuro(o.price) });
         }
         if (b.openMl) rows.push({ k: 'Remise Open ML', v: `−${formatEuro(b.openMl)}/mois, à vie` });
+        for (const p of offer.promos) rows.push({ k: 'Remise', v: p.label });
         rows.push({ k: 'Mensualité', v: formatEuro(b.total) + '/mois', cls: 'sep total' });
         if (b.promo) rows.push({ k: `Les ${b.promo.months} premiers mois`, v: formatEuro(b.promo.total) + '/mois' });
       }

@@ -1,24 +1,17 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { MobileOption, Offer, Promo } from '../domain/models';
+import { Offer } from '../domain/models';
 import { API } from './api-base';
 
-/** Catalogue Castor, promo advice, numéros disponibles (api ressource) et Open ML (api RHOC). */
+/** Catalogue (Castor et promo advice), numéros disponibles (api ressource) et Open ML (api RHOC). */
 @Injectable({ providedIn: 'root' })
 export class CatalogApi {
   private readonly http = inject(HttpClient);
 
+  /** Offres avec, pour chacune, ses options, ses remises (appliquées automatiquement) et l'éligibilité Open ML. */
   offers(): Promise<Offer[]> {
     return firstValueFrom(this.http.get<Offer[]>(`${API}/catalog/offers`));
-  }
-
-  options(): Promise<MobileOption[]> {
-    return firstValueFrom(this.http.get<MobileOption[]>(`${API}/catalog/options`));
-  }
-
-  promotions(): Promise<Promo[]> {
-    return firstValueFrom(this.http.get<Promo[]>(`${API}/catalog/promotions`));
   }
 
   availableNumbers(): Promise<string[]> {

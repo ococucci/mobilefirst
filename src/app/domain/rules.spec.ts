@@ -13,13 +13,22 @@ import {
   monthly,
   openMlDiscount,
   optionsDiff,
+  selectedOptions,
   requiresContract,
   simChangeFee,
   stepsFor,
 } from './rules';
 
 const offer = (over: Partial<Offer> = {}): Offer => ({
-  id: 'o', family: 'bloque', label: 'Offre', detail: '', price: 20, entryLevel: false, ...over,
+  id: 'o', family: 'bloque', label: 'Offre', detail: '', price: 20,
+  openMl: { eligible: true, monthlyDiscount: 10 },
+  options: [
+    { id: 'a', label: 'A', price: 5, included: false },
+    { id: 'b', label: 'B', price: 3, included: false },
+    { id: 'inc', label: 'Incluse', price: 0, included: true },
+  ],
+  promos: [],
+  ...over,
 });
 
 const identity: Identity = {
@@ -45,25 +54,38 @@ describe('relance de Préventel', () => {
 });
 
 describe('remise Open ML', () => {
-  it('−5 € pour une offre d’entrée de gamme, −10 € sinon', () => {
-    expect(openMlDiscount(offer({ entryLevel: true }))).toBe(5);
+  it('montant porté par l’offre (5 € en entrée de gamme, 10 € sinon)', () => {
+    expect(openMlDiscount(offer({ openMl: { eligible: true, monthlyDiscount: 5 } }))).toBe(5);
     expect(openMlDiscount(offer())).toBe(10);
   });
-  it('indisponible pour la Carte Prépayée et pour une ligne Card', () => {
-    expect(isOpenMlAvailable(offer({ family: 'prepaye' }))).toBe(false);
+  it('indisponible pour une offre non éligible et pour une ligne Card', () => {
+    expect(isOpenMlAvailable(offer({ family: 'prepaye', openMl: { eligible: false } }))).toBe(false);
     expect(isOpenMlAvailable(offer(), { isCard: true } as Line)).toBe(false);
     expect(isOpenMlAvailable(offer(), { isCard: false } as Line)).toBe(true);
   });
 });
 
 describe('mensualité', () => {
-  it('additionne options, déduit Open ML et calcule la période de remise', () => {
-    const b = monthly(offer({ price: 22.99 }), [{ id: 'a', label: 'A', price: 5 }], true, { offerId: 'o', label: '', amount: 10, months: 6 });
+  it('additionne les options payantes, déduit Open ML et applique les remises de l’offre', () => {
+    const promos = [{ id: 'p', label: '−10 € / 6 mois', monthlyDiscount: 10, durationMonths: 6 }];
+    const b = monthly(offer({ price: 22.99, promos }), ['a', 'inc'], true);
     expect(b.total).toBe(17.99);
     expect(b.promo).toEqual({ amount: 10, months: 6, total: 7.99 });
+    expect(monthly(offer({ price: 22.99 }), ['a'], true).promo).toBeUndefined();
+  });
+  it('remises cumulées sur la durée de la plus courte', () => {
+    const promos = [
+      { id: 'p1', label: '', monthlyDiscount: 10, durationMonths: 6 },
+      { id: 'p2', label: '', monthlyDiscount: 5, durationMonths: 12 },
+    ];
+    expect(monthly(offer({ price: 30, promos }), [], false).promo).toEqual({ amount: 15, months: 6, total: 15 });
+  });
+  it('option incluse toujours active et gratuite, option non proposée ignorée', () => {
+    expect(selectedOptions(offer(), ['a', 'x']).map((o) => o.id)).toEqual(['a', 'inc']);
+    expect(monthly(offer(), ['x'], false).total).toBe(20);
   });
   it('ne descend jamais sous zéro', () => {
-    expect(monthly(offer({ price: 5, entryLevel: true }), [], true).total).toBe(0);
+    expect(monthly(offer({ price: 5, openMl: { eligible: true, monthlyDiscount: 5 } }), [], true).total).toBe(0);
   });
 });
 
@@ -92,9 +114,9 @@ describe('contrat et parcours', () => {
       expect(stepsFor(flow).map((s) => s.label)).not.toContain('Matériel et paiement');
     }
   });
-  it('différence d’options', () => {
-    const catalog = [{ id: 'a', label: 'A', price: 5 }, { id: 'b', label: 'B', price: 3 }];
-    expect(optionsDiff(['a'], ['b'], catalog)).toEqual({ added: ['b'], removed: ['a'], delta: -2 });
+  it('différence d’options, sans compter les options incluses', () => {
+    expect(optionsDiff(['a'], ['b'], offer())).toEqual({ added: ['b'], removed: ['a'], delta: -2 });
+    expect(optionsDiff(['a'], ['a', 'inc'], offer())).toEqual({ added: [], removed: [], delta: 0 });
   });
 });
 

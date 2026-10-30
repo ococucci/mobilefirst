@@ -8,9 +8,8 @@ import {
   Flow,
   Identity,
   Line,
-  MobileOption,
   Offer,
-  Promo,
+  OfferOption,
   Score,
   Screen,
   SIM_LOSS_FEE,
@@ -90,14 +89,19 @@ export function identityChangeRequiresRescore(before: Identity, after: Identity)
   );
 }
 
-/** Open ML : indisponible pour la Carte Prépayée et pour une ligne Card. */
+/** Open ML : selon l'éligibilité de l'offre (pas la Carte Prépayée) et jamais pour une ligne Card. */
 export function isOpenMlAvailable(offer: Offer | undefined, line?: Line | null): boolean {
-  return !!offer && offer.family !== 'prepaye' && !line?.isCard;
+  return !!offer && offer.openMl.eligible && !line?.isCard;
 }
 
-/** Open ML : −5 €/mois à vie pour une offre d'entrée de gamme, −10 €/mois sinon. */
+/** Montant mensuel de la remise Open ML de l'offre (5 € pour une offre d'entrée de gamme, 10 € sinon). */
 export function openMlDiscount(offer: Offer): number {
-  return offer.entryLevel ? 5 : 10;
+  return offer.openMl.monthlyDiscount ?? 0;
+}
+
+/** Options actives avec l'offre : les options incluses, plus celles choisies parmi celles proposées. */
+export function selectedOptions(offer: Offer, optionIds: string[]): OfferOption[] {
+  return offer.options.filter((o) => o.included || optionIds.includes(o.id));
 }
 
 export interface MonthlyBreakdown {
@@ -106,26 +110,26 @@ export interface MonthlyBreakdown {
   openMl: number;
   /** Mensualité hors remise temporaire. */
   total: number;
-  /** Mensualité pendant la durée de la remise commerciale, si elle existe. */
+  /**
+   * Mensualité pendant les remises de l'offre (appliquées automatiquement) : remises cumulées, sur la durée
+   * de la plus courte. Absent si l'offre n'a pas de remise.
+   */
   promo?: { amount: number; months: number; total: number };
 }
 
-export function monthly(
-  offer: Offer,
-  options: MobileOption[],
-  openMlApplied: boolean,
-  promo?: Promo,
-): MonthlyBreakdown {
+export function monthly(offer: Offer, optionIds: string[], openMlApplied: boolean): MonthlyBreakdown {
   const base = offer.price;
-  const opts = round(options.reduce((sum, o) => sum + o.price, 0));
+  const paid = selectedOptions(offer, optionIds).filter((o) => !o.included);
+  const opts = round(paid.reduce((sum, o) => sum + o.price, 0));
   const openMl = openMlApplied ? openMlDiscount(offer) : 0;
   const total = Math.max(0, round(base + opts - openMl));
   const result: MonthlyBreakdown = { base, options: opts, openMl, total };
-  if (promo) {
+  if (offer.promos.length) {
+    const amount = round(offer.promos.reduce((sum, p) => sum + p.monthlyDiscount, 0));
     result.promo = {
-      amount: promo.amount,
-      months: promo.months,
-      total: Math.max(0, round(total - promo.amount)),
+      amount,
+      months: Math.min(...offer.promos.map((p) => p.durationMonths)),
+      total: Math.max(0, round(total - amount)),
     };
   }
   return result;
@@ -151,10 +155,14 @@ export interface OptionsDiff {
   delta: number;
 }
 
-export function optionsDiff(current: string[], selected: string[], catalog: MobileOption[]): OptionsDiff {
-  const added = selected.filter((id) => !current.includes(id));
-  const removed = current.filter((id) => !selected.includes(id));
-  const price = (id: string) => catalog.find((o) => o.id === id)?.price ?? 0;
+/** Ajouts et retraits parmi les options payantes de l'offre : une option incluse n'est ni ajoutée ni retirée. */
+export function optionsDiff(current: string[], selected: string[], offer: Offer | undefined): OptionsDiff {
+  const paid = (ids: string[]) => (offer ? selectedOptions(offer, ids).filter((o) => !o.included).map((o) => o.id) : []);
+  const before = paid(current);
+  const after = paid(selected);
+  const added = after.filter((id) => !before.includes(id));
+  const removed = before.filter((id) => !after.includes(id));
+  const price = (id: string) => offer?.options.find((o) => o.id === id)?.price ?? 0;
   const delta = round(added.reduce((s, id) => s + price(id), 0) - removed.reduce((s, id) => s + price(id), 0));
   return { added, removed, delta };
 }

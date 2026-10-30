@@ -15,9 +15,7 @@ describe('App', () => {
     expect(el.querySelector('.brand')?.textContent).toContain('Orange Order First');
     expect(el.querySelector('h1')?.textContent).toContain('Nouvelle demande');
     const http = TestBed.inject(HttpTestingController);
-    for (const url of ['/api/v1/catalog/offers', '/api/v1/catalog/options', '/api/v1/catalog/promotions']) {
-      http.expectOne(url).flush([]);
-    }
+    http.expectOne('/api/v1/catalog/offers').flush([]);
     http.verify();
   });
 });

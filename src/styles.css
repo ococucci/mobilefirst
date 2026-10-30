@@ -70,8 +70,9 @@ button, input, select { font: inherit; color: inherit; }
 
 .rows { display: grid; gap: 0.55rem; padding: 0.25rem 0 0.75rem; }
 .row { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.95rem; }
-.row .k { color: var(--muted); white-space: nowrap; }
-.row .v { text-align: right; }
+/* La valeur passe en priorité (jusqu'aux deux tiers de la ligne) ; le libellé revient à la ligne si besoin. */
+.row .k { color: var(--muted); flex: 1 1 auto; min-width: 0; }
+.row .v { text-align: right; flex: 0 0 auto; max-width: 66%; }
 .row.sep { border-top: 1px solid var(--line); padding-top: 0.6rem; }
 .row.total { font-weight: 700; font-size: 1.1rem; }
 .row.total .k { color: var(--ink); }

@@ -82,21 +82,27 @@ export interface Offer {
   detail: string;
   /** Prix mensuel en euros (0 pour la Carte Prépayée). */
   price: number;
-  /** Offre d'entrée de gamme : remise Open ML de 5 € au lieu de 10 €. */
-  entryLevel: boolean;
+  /** Remise Open ML : −5 €/mois pour une offre d'entrée de gamme, −10 € sinon ; non éligible pour la Carte Prépayée. */
+  openMl: { eligible: boolean; monthlyDiscount?: number | null };
+  /** Options proposées avec cette offre, à un prix propre à l'offre. */
+  options: OfferOption[];
+  /** Remises appliquées automatiquement (api-promo advice). */
+  promos: Promo[];
 }
 
-export interface MobileOption {
+export interface OfferOption {
   id: string;
   label: string;
   price: number;
+  /** Option incluse dans l'offre : gratuite et toujours active. */
+  included: boolean;
 }
 
 export interface Promo {
-  offerId: string;
+  id: string;
   label: string;
-  amount: number;
-  months: number;
+  monthlyDiscount: number;
+  durationMonths: number;
 }
 
 export interface Terminal {

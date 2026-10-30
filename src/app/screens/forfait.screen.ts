@@ -120,7 +120,9 @@ import { run } from '../ui/run';
                   <span class="title" style="display: block">{{ o.label }}</span>
                   <span class="sub" style="display: block">{{ o.detail }}</span>
                   @if (current) { <span class="badge gray">Offre actuelle</span> }
-                  @else if (store.promoFor(o.id); as p) { <span class="badge orange">{{ p.label }}</span> }
+                  @else {
+                    @for (p of o.promos; track p.id) { <span class="badge orange">{{ p.label }}</span> }
+                  }
                 </span>
                 <span class="end">{{ o.price ? euro(o.price) + '/mois' : 'Sans mensualité' }}</span>
               </button>
@@ -163,16 +165,23 @@ import { run } from '../ui/run';
 
       <div class="card">
         <h2>Options mobile</h2>
-        @if (store.selectedOffer()?.family === 'prepaye') {
-          <p class="muted">Pas d'option mobile sur la Carte Prépayée.</p>
-        } @else {
-          @for (o of store.catalogOptions(); track o.id) {
-            <label class="check">
+        @if (store.selectedOffer(); as offer) {
+          @for (o of offer.options; track o.id) {
+            <label class="check" [class.disabled]="o.included">
               <span class="body">{{ o.label }}</span>
-              <span class="price">+{{ euro(o.price) }}/mois</span>
-              <input type="checkbox" [checked]="d.options.includes(o.id)" (change)="setOption(o.id, $any($event.target).checked)" />
+              @if (o.included) {
+                <span class="badge green">Incluse</span>
+              } @else {
+                <span class="price">+{{ euro(o.price) }}/mois</span>
+              }
+              <input type="checkbox" [disabled]="o.included" [checked]="o.included || d.options.includes(o.id)"
+                (change)="setOption(o.id, $any($event.target).checked)" />
             </label>
+          } @empty {
+            <p class="muted">Aucune option n'est proposée avec cette offre.</p>
           }
+        } @else {
+          <p class="muted">Choisissez un forfait pour voir ses options.</p>
         }
       </div>
     </app-page>
@@ -241,7 +250,8 @@ export class ForfaitScreen {
   protected selectOffer(offer: Offer): void {
     const d = this.store.draft;
     d.offerId = offer.id;
-    if (offer.family === 'prepaye') d.options = [];
+    // On garde les options choisies que la nouvelle offre propose (hors options incluses, toujours actives).
+    d.options = d.options.filter((id) => offer.options.some((o) => o.id === id && !o.included));
     if (!this.openMlAvailable()) d.openMl = { enabled: false, sponsor: '', valid: null };
   }
 

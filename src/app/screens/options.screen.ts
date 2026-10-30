@@ -19,17 +19,20 @@ import { Page } from '../ui/page';
       <div class="card">
         <h2>Options mobile</h2>
         <p class="muted small">Cochez pour ajouter, décochez pour retirer. Les options actives sont cochées.</p>
-        @for (o of store.catalogOptions(); track o.id) {
-          @let active = line?.options?.includes(o.id);
-          @let checked = d.options.includes(o.id);
-          <label class="check">
+        @for (o of store.optionsOffer()?.options ?? []; track o.id) {
+          @let active = o.included || line?.options?.includes(o.id);
+          @let checked = o.included || d.options.includes(o.id);
+          <label class="check" [class.disabled]="o.included">
             <span class="body">{{ o.label }}</span>
-            @if (active && checked) { <span class="badge green">Active</span> }
+            @if (o.included) { <span class="badge green">Incluse</span> }
+            @else if (active && checked) { <span class="badge green">Active</span> }
             @else if (!active && checked) { <span class="badge orange">À ajouter</span> }
             @else if (active && !checked) { <span class="badge soft">À retirer</span> }
-            <span class="price">+{{ euro(o.price) }}/mois</span>
-            <input type="checkbox" [checked]="checked" (change)="setOption(o.id, $any($event.target).checked)" />
+            @if (!o.included) { <span class="price">+{{ euro(o.price) }}/mois</span> }
+            <input type="checkbox" [disabled]="o.included" [checked]="checked" (change)="setOption(o.id, $any($event.target).checked)" />
           </label>
+        } @empty {
+          <p class="muted">Aucune option n'est proposée avec l'offre actuelle de cette ligne.</p>
         }
         @if (error()) { <span class="msg ko group-error" role="alert">{{ error() }}</span> }
       </div>

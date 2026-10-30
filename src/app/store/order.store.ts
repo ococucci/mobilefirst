@@ -8,10 +8,9 @@ import {
   Flow,
   Identity,
   Line,
-  MobileOption,
   Offer,
+  OfferOption,
   OrderResult,
-  Promo,
   Score,
   Screen,
   SimType,
@@ -121,22 +120,13 @@ export class OrderStore {
   readonly flowChoice = signal<Flow | null>(null);
 
   readonly offers = signal<Offer[]>([]);
-  readonly catalogOptions = signal<MobileOption[]>([]);
-  readonly promos = signal<Promo[]>([]);
 
   draft: Draft = emptyDraft();
 
   readonly steps = computed(() => stepsFor(this.flow()));
 
   async loadCatalog(): Promise<void> {
-    const [offers, options, promos] = await Promise.all([
-      this.catalogApi.offers(),
-      this.catalogApi.options(),
-      this.catalogApi.promotions(),
-    ]);
-    this.offers.set(offers);
-    this.catalogOptions.set(options);
-    this.promos.set(promos);
+    this.offers.set(await this.catalogApi.offers());
   }
 
   go(screen: Screen): void {
@@ -193,12 +183,13 @@ export class OrderStore {
     return this.offers().find((o) => o.id === id);
   }
 
-  promoFor(offerId: string | null | undefined): Promo | undefined {
-    return this.promos().find((p) => p.offerId === offerId);
+  /** Offre dont dépendent les options : l'offre choisie, ou l'offre actuelle de la ligne pour une modification d'options. */
+  optionsOffer(): Offer | undefined {
+    return this.flow() === 'options' ? this.offer(this.selectedLine()?.offerId) : this.selectedOffer();
   }
 
-  option(id: string): MobileOption | undefined {
-    return this.catalogOptions().find((o) => o.id === id);
+  option(id: string): OfferOption | undefined {
+    return this.optionsOffer()?.options.find((o) => o.id === id);
   }
 
   selectedOffer(): Offer | undefined {
@@ -212,12 +203,11 @@ export class OrderStore {
   breakdown(): MonthlyBreakdown | null {
     const offer = this.selectedOffer();
     if (!offer) return null;
-    const options = this.draft.options.map((id) => this.option(id)).filter((o): o is MobileOption => !!o);
-    return monthly(offer, options, this.draft.openMl.enabled && !!this.draft.openMl.valid, this.promoFor(offer.id));
+    return monthly(offer, this.draft.options, this.draft.openMl.enabled && !!this.draft.openMl.valid);
   }
 
   optionsChange(): OptionsDiff {
-    return optionsDiff(this.selectedLine()?.options ?? [], this.draft.options, this.catalogOptions());
+    return optionsDiff(this.selectedLine()?.options ?? [], this.draft.options, this.optionsOffer());
   }
 
   cashDue(): number {
