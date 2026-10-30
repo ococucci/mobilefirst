@@ -50,7 +50,8 @@ button, input, select { font: inherit; color: inherit; }
 .stepper .bar { height: 4px; background: var(--disabled); border-radius: 2px; margin-top: 0.4rem; overflow: hidden; }
 .stepper .bar span { display: block; height: 100%; background: var(--orange); }
 
-.page { padding: 1rem 1rem 9rem; max-width: 1400px; margin: 0 auto; }
+/* Pas de largeur maximale : la zone centrale occupe tout l'espace entre les étapes et le récapitulatif. */
+.page { padding: 1rem 1rem 9rem; }
 .page .content { min-width: 0; }
 
 /* Récapitulatif : barre basse en mobile, colonne en bureau */
@@ -69,7 +70,7 @@ button, input, select { font: inherit; color: inherit; }
 
 .rows { display: grid; gap: 0.55rem; padding: 0.25rem 0 0.75rem; }
 .row { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.95rem; }
-.row .k { color: var(--muted); }
+.row .k { color: var(--muted); white-space: nowrap; }
 .row .v { text-align: right; }
 .row.sep { border-top: 1px solid var(--line); padding-top: 0.6rem; }
 .row.total { font-weight: 700; font-size: 1.1rem; }
@@ -77,7 +78,7 @@ button, input, select { font: inherit; color: inherit; }
 
 @media (min-width: 1024px) {
   /* Hauteur du bandeau : 28px de logo + 2 × 0.75rem de marge interne. */
-  .shell { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 52px); }
+  .shell { display: grid; grid-template-columns: 240px 1fr; min-height: calc(100vh - 52px); }
   /* La colonne des étapes occupe toute la hauteur restante, même sur un écran long. */
   app-stepper { display: block; }
   .stepper { height: 100%; border-bottom: none; border-right: 1px solid var(--line); padding: 2rem 1.5rem; }
@@ -93,7 +94,7 @@ button, input, select { font: inherit; color: inherit; }
   .stepper li.current { color: var(--ink); font-weight: 700; }
   .stepper li.current .dot { background: var(--orange); border-color: var(--orange); color: var(--ink); }
 
-  .page { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 2rem; padding: 2.5rem 2.5rem 3rem; align-items: start; }
+  .page { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 1.75rem; padding: 2.5rem 1.5rem 3rem 2.25rem; align-items: start; }
   h1 { font-size: 2.3rem; margin-bottom: 1.5rem; }
   .recap-panel {
     position: sticky; top: 5.5rem; left: auto; right: auto; bottom: auto;
@@ -103,9 +104,10 @@ button, input, select { font: inherit; color: inherit; }
   .recap-panel details summary::after, .recap-panel details summary .sum-total { display: none; }
   .recap-panel details .rows { max-height: none; }
 }
-@media (min-width: 1024px) and (max-width: 1279px) {
-  .shell { grid-template-columns: 220px 1fr; }
-  .page { grid-template-columns: minmax(0, 1fr) 280px; padding: 2rem 1.5rem; gap: 1.5rem; }
+@media (min-width: 1024px) and (max-width: 1365px) {
+  .shell { grid-template-columns: 210px 1fr; }
+  .stepper { padding: 2rem 1rem; }
+  .page { grid-template-columns: minmax(0, 1fr) 280px; padding: 2rem 1rem 3rem 1.5rem; gap: 1.25rem; }
 }
 
 /* ---------- Composants ---------- */
