@@ -1,13 +1,14 @@
 import { Component, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ImlApi } from '../api/iml.api';
-import { SiFinancierApi } from '../api/si-financier.api';
+import { HardwareApi } from '../api/hardware.api';
+import { OrderApi } from '../api/order.api';
 import { formatEuro } from '../domain/format';
 import { CARD_SIM_PRICE, Terminal } from '../domain/models';
 import { sepaErrors, terminalErrors } from '../domain/validation';
 import { OrderStore } from '../store/order.store';
 import { Page } from '../ui/page';
 import { SimBlock } from '../ui/sim-block';
+import { run } from '../ui/run';
 import { CORRECT_FIELDS, FieldError, focusFirstError } from '../ui/field-error';
 
 /** Écrans 4 et 4b : SIM, terminal (si-financier) et prélèvement SEPA (api IML). */
@@ -82,8 +83,8 @@ import { CORRECT_FIELDS, FieldError, focusFirstError } from '../ui/field-error';
 })
 export class MaterielScreen {
   protected readonly store = inject(OrderStore);
-  private readonly siFinancier = inject(SiFinancierApi);
-  private readonly iml = inject(ImlApi);
+  private readonly hardware = inject(HardwareApi);
+  private readonly orders = inject(OrderApi);
   private readonly simBlock = viewChild.required(SimBlock);
 
   protected readonly terminals = signal<Terminal[]>([]);
@@ -98,7 +99,7 @@ export class MaterielScreen {
       const i = this.store.draft.identity;
       sepa.holder = `${i.prenom} ${i.nom}`.trim();
     }
-    void this.siFinancier.terminals().then((t) => this.terminals.set(t));
+    void run(null, async () => this.terminals.set(await this.hardware.terminals()));
   }
 
   protected isCard(): boolean {
@@ -135,18 +136,18 @@ export class MaterielScreen {
 
   async next(): Promise<void> {
     this.submitted.set(true);
-    this.busy.set(true);
-    const simOk = await this.simBlock().check();
-    const h = this.store.draft.hardware;
-    const sepa = this.store.draft.sepa;
-    const invalid = !simOk || this.invalid();
-    if (!invalid && !this.isCard() && !sepa.mandateRef) sepa.mandateRef = await this.iml.storeMandate(sepa.holder, sepa.iban);
-    if (this.isCard()) {
-      h.withTerminal = false;
-      sepa.mandateRef = null;
-    }
-    this.busy.set(false);
-    if (invalid) focusFirstError();
-    else this.store.go('confirmation');
+    await run(this.busy, async () => {
+      const simOk = await this.simBlock().check();
+      const h = this.store.draft.hardware;
+      const sepa = this.store.draft.sepa;
+      if (!simOk || this.invalid()) return focusFirstError();
+      if (this.isCard()) {
+        h.withTerminal = false;
+        sepa.mandateRef = null;
+      } else if (!sepa.mandateRef) {
+        sepa.mandateRef = await this.orders.storeMandate(sepa.holder, sepa.iban);
+      }
+      this.store.go('confirmation');
+    });
   }
 }

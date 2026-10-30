@@ -9,6 +9,8 @@ import { MaterielScreen } from './screens/materiel.screen';
 import { OptionsScreen } from './screens/options.screen';
 import { SimScreen } from './screens/sim.screen';
 import { SuccesScreen } from './screens/succes.screen';
+import { ApiErrors } from './api/api-base';
+import { run } from './ui/run';
 import { OrderStore } from './store/order.store';
 import { Stepper } from './ui/stepper';
 
@@ -33,6 +35,12 @@ import { Stepper } from './ui/stepper';
       <span class="brand">Orange Order First</span>
       <span class="who">Conseiller · Boutique</span>
     </header>
+    @if (apiErrors.message(); as message) {
+      <div class="api-error" role="alert">
+        <span>{{ message }}</span>
+        <button type="button" class="btn link" (click)="apiErrors.clear()" aria-label="Fermer le message">Fermer</button>
+      </div>
+    }
     @if (store.screen() === 'succes') {
       <app-succes />
     } @else {
@@ -57,8 +65,9 @@ import { Stepper } from './ui/stepper';
 })
 export class App implements OnInit {
   protected readonly store = inject(OrderStore);
+  protected readonly apiErrors = inject(ApiErrors);
 
   ngOnInit(): void {
-    void this.store.loadCatalog();
+    void run(null, () => this.store.loadCatalog());
   }
 }

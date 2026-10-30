@@ -1,13 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AddressSuggestion, OrasApi } from '../api/oras.api';
-import { PartyApi } from '../api/party.api';
-import { ScoringApi } from '../api/scoring.api';
-import { identityChangeRequiresRescore } from '../domain/rules';
+import { AddressApi, AddressSuggestion } from '../api/address.api';
+import { CustomerApi } from '../api/customer.api';
 import { OrderStore } from '../store/order.store';
 import { IdentityForm, identityComplete } from '../ui/identity-form';
 import { CORRECT_FIELDS, FieldError, focusFirstError } from '../ui/field-error';
 import { Page } from '../ui/page';
+import { run } from '../ui/run';
 
 /** Écran 2 : titulaire et adresse de facturation (acquisition). */
 @Component({
@@ -67,9 +66,8 @@ import { Page } from '../ui/page';
 })
 export class ClientScreen {
   protected readonly store = inject(OrderStore);
-  private readonly oras = inject(OrasApi);
-  private readonly party = inject(PartyApi);
-  private readonly scoring = inject(ScoringApi);
+  private readonly addresses = inject(AddressApi);
+  private readonly customers = inject(CustomerApi);
 
   protected readonly suggestions = signal<AddressSuggestion[]>([]);
   protected readonly searched = signal(false);
@@ -83,10 +81,12 @@ export class ClientScreen {
   protected async search(query: string): Promise<void> {
     this.query = query;
     Object.assign(this.store.draft.address, { ligne: '', codePostal: '', commune: '' });
-    const results = await this.oras.search(query);
-    if (query !== this.query) return;
-    this.suggestions.set(results);
-    this.searched.set(true);
+    await run(null, async () => {
+      const results = await this.addresses.search(query);
+      if (query !== this.query) return;
+      this.suggestions.set(results);
+      this.searched.set(true);
+    });
   }
 
   protected pick(s: AddressSuggestion): void {
@@ -116,21 +116,18 @@ export class ClientScreen {
     if (this.invalid()) return focusFirstError();
     const customer = this.store.customer();
     if (!customer) return;
-    this.busy.set(true);
-    let score = this.store.score() ?? customer.score;
-    if (identityChangeRequiresRescore(d.identitySnapshot, d.identity)) {
-      score = await this.scoring.preventel(d.identity);
+    await run(this.busy, async () => {
+      // Le serveur relance Préventel si le nom, le prénom ou la date de naissance ont changé ;
+      // avec un score rouge, il n'enregistre rien.
+      const { score, rescored, customer: updated } = await this.customers.update(customer.id, d.identity, d.address);
       this.store.score.set(score);
-      this.rescored.set(true);
-      d.identitySnapshot = structuredClone(d.identity);
-    }
-    if (score === 'rouge') {
-      this.busy.set(false);
-      return;
-    }
-    const updated = await this.party.update(customer.id, d.identity, d.address, score);
-    this.store.customer.set(updated);
-    this.busy.set(false);
-    this.store.go('forfait');
+      if (rescored) {
+        this.rescored.set(true);
+        d.identitySnapshot = structuredClone(d.identity);
+      }
+      if (score === 'rouge') return;
+      this.store.customer.set(updated);
+      this.store.go('forfait');
+    });
   }
 }

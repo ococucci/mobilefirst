@@ -1,7 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RessourceApi } from '../api/ressource.api';
-import { RhocApi } from '../api/rhoc.api';
+import { CatalogApi } from '../api/catalog.api';
 import { formatEuro, formatMsisdn } from '../domain/format';
 import { DONOR_OPERATORS, FAMILIES, FamilyId, Offer } from '../domain/models';
 import { allowedFamilies, isOpenMlAvailable, openMlDiscount } from '../domain/rules';
@@ -10,6 +9,7 @@ import { OrderStore } from '../store/order.store';
 import { CustomerBanner } from '../ui/customer-banner';
 import { CORRECT_FIELDS, FieldError, focusFirstError } from '../ui/field-error';
 import { Page } from '../ui/page';
+import { run } from '../ui/run';
 
 /** Écrans 3, 3b et 3c : numéro d'appel, famille, forfaits, Open ML et options. */
 @Component({
@@ -180,8 +180,7 @@ import { Page } from '../ui/page';
 })
 export class ForfaitScreen {
   protected readonly store = inject(OrderStore);
-  private readonly ressource = inject(RessourceApi);
-  private readonly rhoc = inject(RhocApi);
+  private readonly catalog = inject(CatalogApi);
 
   protected readonly isChange = this.store.flow() === 'forfait';
   protected readonly families = FAMILIES;
@@ -203,7 +202,7 @@ export class ForfaitScreen {
 
   constructor() {
     if (!this.allowed().includes(this.store.draft.family)) this.selectFamily(this.allowed()[0] ?? 'prepaye');
-    if (!this.isChange) void this.ressource.availableNumbers().then((n) => this.numbers.set(n));
+    if (!this.isChange) void run(null, async () => this.numbers.set(await this.catalog.availableNumbers()));
   }
 
   protected openMlAvailable(): boolean {
@@ -252,9 +251,9 @@ export class ForfaitScreen {
   }
 
   protected async checkSponsor(): Promise<void> {
-    this.checkingSponsor.set(true);
-    this.store.draft.openMl.valid = await this.rhoc.checkSponsor(this.store.draft.openMl.sponsor);
-    this.checkingSponsor.set(false);
+    await run(this.checkingSponsor, async () => {
+      this.store.draft.openMl.valid = await this.catalog.checkSponsor(this.store.draft.openMl.sponsor);
+    });
   }
 
   private invalid(): boolean {

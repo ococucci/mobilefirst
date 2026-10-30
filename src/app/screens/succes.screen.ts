@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { ManagePaymentApi } from '../api/manage-payment.api';
+import { OrderApi } from '../api/order.api';
+import { run } from '../ui/run';
 import { formatEuro, formatMsisdn } from '../domain/format';
 import { CARD_SIM_PRICE, SIM_REASONS } from '../domain/models';
 import { OrderStore } from '../store/order.store';
@@ -54,7 +55,7 @@ import { OrderStore } from '../store/order.store';
 })
 export class SuccesScreen {
   protected readonly store = inject(OrderStore);
-  private readonly payments = inject(ManagePaymentApi);
+  private readonly orders = inject(OrderApi);
   protected readonly recording = signal(false);
   protected readonly euro = formatEuro;
 
@@ -140,9 +141,9 @@ export class SuccesScreen {
   async recordPayment(): Promise<void> {
     const r = this.store.result();
     if (!r) return;
-    this.recording.set(true);
-    const paymentRef = await this.payments.recordCashPayment(r.orderNumber, r.cashDue);
-    this.store.result.set({ ...r, paymentRef });
-    this.recording.set(false);
+    await run(this.recording, async () => {
+      const paymentRef = await this.orders.recordCashPayment(r.orderNumber, r.cashDue);
+      this.store.result.set({ ...r, paymentRef });
+    });
   }
 }

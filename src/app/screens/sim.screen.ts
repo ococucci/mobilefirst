@@ -5,6 +5,7 @@ import { OrderStore } from '../store/order.store';
 import { CustomerBanner } from '../ui/customer-banner';
 import { Page } from '../ui/page';
 import { SimBlock } from '../ui/sim-block';
+import { run } from '../ui/run';
 import { CORRECT_FIELDS, focusFirstError } from '../ui/field-error';
 
 /** Écran 3e : saisie de la nouvelle carte SIM. */
@@ -46,10 +47,9 @@ export class SimScreen {
 
   async next(): Promise<void> {
     this.submitted.set(true);
-    this.busy.set(true);
-    const ok = await this.simBlock().check();
-    this.busy.set(false);
-    if (ok) this.store.go('confirmation');
-    else focusFirstError();
+    await run(this.busy, async () => {
+      if (await this.simBlock().check()) this.store.go('confirmation');
+      else focusFirstError();
+    });
   }
 }

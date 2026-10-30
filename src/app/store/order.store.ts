@@ -1,6 +1,6 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { CatalogueApi } from '../api/catalogue.api';
-import { PromoAdviceApi } from '../api/promo-advice.api';
+import { ApiErrors } from '../api/api-base';
+import { CatalogApi } from '../api/catalog.api';
 import {
   Address,
   Customer,
@@ -105,8 +105,8 @@ const emptyDraft = (): Draft => ({
 
 @Injectable({ providedIn: 'root' })
 export class OrderStore {
-  private readonly catalogueApi = inject(CatalogueApi);
-  private readonly promoApi = inject(PromoAdviceApi);
+  private readonly catalogApi = inject(CatalogApi);
+  private readonly apiErrors = inject(ApiErrors);
 
   readonly screen = signal<Screen>('identification');
   readonly customer = signal<Customer | null>(null);
@@ -130,9 +130,9 @@ export class OrderStore {
 
   async loadCatalog(): Promise<void> {
     const [offers, options, promos] = await Promise.all([
-      this.catalogueApi.offers(),
-      this.catalogueApi.options(),
-      this.promoApi.promos(),
+      this.catalogApi.offers(),
+      this.catalogApi.options(),
+      this.catalogApi.promotions(),
     ]);
     this.offers.set(offers);
     this.catalogOptions.set(options);
@@ -145,6 +145,7 @@ export class OrderStore {
       this.draft.confirm.contractRef = null;
       this.draft.confirm.signed = false;
     }
+    this.apiErrors.clear();
     this.screen.set(screen);
     window.scrollTo?.({ top: 0 });
   }

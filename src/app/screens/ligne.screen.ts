@@ -1,11 +1,12 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { ScoringApi } from '../api/scoring.api';
+import { CustomerApi } from '../api/customer.api';
 import { formatEuro, formatMsisdn } from '../domain/format';
 import { FLOW_LABELS, Line, SIM_REASONS } from '../domain/models';
 import { OrderStore } from '../store/order.store';
 import { CustomerBanner } from '../ui/customer-banner';
 import { CORRECT_FIELDS, focusFirstError } from '../ui/field-error';
 import { Page } from '../ui/page';
+import { run } from '../ui/run';
 
 /** Écrans 2b, 2c et 2d : choix de la ligne (et de la raison pour un changement de SIM). */
 @Component({
@@ -67,7 +68,7 @@ import { Page } from '../ui/page';
 })
 export class LigneScreen {
   protected readonly store = inject(OrderStore);
-  private readonly scoring = inject(ScoringApi);
+  private readonly customers = inject(CustomerApi);
 
   protected readonly isSim = this.store.flow() === 'sim';
   protected readonly reasons = SIM_REASONS;
@@ -119,12 +120,14 @@ export class LigneScreen {
     switch (this.store.flow()) {
       case 'forfait': {
         if (line.isCard) {
-          this.busy.set(true);
-          const score = await this.scoring.rescore(customer.id, customer.identity);
-          this.busy.set(false);
-          this.store.score.set(score);
-          if (score !== 'vert') {
-            this.blocked.set(score);
+          const rescoring: { score?: string } = {};
+          await run(this.busy, async () => {
+            const score = await this.customers.rescoreCardLine(customer.id, line.msisdn);
+            this.store.score.set(score);
+            rescoring.score = score;
+          });
+          if (rescoring.score !== 'vert') {
+            if (rescoring.score) this.blocked.set(rescoring.score);
             return;
           }
         }

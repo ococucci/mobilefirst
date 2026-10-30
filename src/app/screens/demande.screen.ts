@@ -1,10 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
-import { OrderApi } from '../api/order.api';
+import { CustomerApi } from '../api/customer.api';
 import { Flow } from '../domain/models';
 import { firstScreenOf } from '../domain/rules';
 import { OrderStore } from '../store/order.store';
 import { CustomerBanner } from '../ui/customer-banner';
 import { Page } from '../ui/page';
+import { run } from '../ui/run';
 
 interface Request {
   flow: Flow;
@@ -42,7 +43,7 @@ interface Request {
 })
 export class DemandeScreen {
   protected readonly store = inject(OrderStore);
-  private readonly orders = inject(OrderApi);
+  private readonly customers = inject(CustomerApi);
   protected readonly busy = signal(false);
 
   protected readonly requests: Request[] = [
@@ -68,13 +69,13 @@ export class DemandeScreen {
   async next(): Promise<void> {
     const flow = this.store.flowChoice();
     if (!flow) return;
-    this.store.chooseFlow(flow);
-    if (flow !== 'acquisition') {
-      this.busy.set(true);
-      const msisdns = this.store.customer()?.lines.map((l) => l.msisdn) ?? [];
-      this.store.pendingLines.set(await this.orders.linesWithPendingOrder(msisdns));
-      this.busy.set(false);
-    }
-    this.store.go(firstScreenOf(flow));
+    await run(this.busy, async () => {
+      const customer = this.store.customer();
+      if (flow !== 'acquisition' && customer) {
+        this.store.pendingLines.set(await this.customers.pendingLines(customer.id));
+      }
+      this.store.chooseFlow(flow);
+      this.store.go(firstScreenOf(flow));
+    });
   }
 }

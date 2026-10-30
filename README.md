@@ -6,12 +6,25 @@ lorsque l'outil de vente Oreka Boutique est indisponible. Elle met en œuvre la 
 
 ## Démarrer
 
+Le front appelle l'API [`ococucci/mobilefirst-api`](https://github.com/ococucci/mobilefirst-api) (Spring Boot), qui
+doit tourner sur le port 8080. En développement, `proxy.conf.json` redirige `/api` vers `http://localhost:8080`.
+
 ```bash
+# dans mobilefirst-api
+./mvnw spring-boot:run
+```
+
+```bash
+# dans mobilefirst
 npm install
 npm start          # http://localhost:4200
 npm test           # tests unitaires (Vitest)
 npm run build      # build de production dans dist/
 ```
+
+En production, servir le front et l'API sur le même domaine (ou derrière la même passerelle) pour que `/api/v1`
+atteigne l'API. Si l'API ne répond pas ou renvoie une erreur, un bandeau rouge l'indique en haut de l'écran ;
+l'action en cours s'arrête et le conseiller peut réessayer.
 
 ## Parcours couverts
 
@@ -30,33 +43,30 @@ récapitulatif repliable en bas d'écran sur mobile.
 
 ```
 src/app/
-  domain/      règles de gestion (fonctions pures, testées) et modèles
-  api/         un service par API de la section 9, bouchonné (données dans mock-data.ts)
+  domain/      règles de gestion (fonctions pures, testées), validation et modèles
+  api/         clients HTTP de l'API mobilefirst-api, un par ressource
   store/       état de la commande en cours (OrderStore)
   ui/          gabarit d'écran, étapes, récapitulatif, blocs réutilisés (identité, carte SIM)
   screens/     un composant par écran de la cinématique
 ```
 
-| API (cinématique) | Service |
-| --- | --- |
-| Party (appy) | `api/party.api.ts` |
-| api-scoring (Préventel) | `api/scoring.api.ts` |
-| Catalogue Castor | `api/catalogue.api.ts` |
-| api-promo advice | `api/promo-advice.api.ts` |
-| api RHOC (Open ML) | `api/rhoc.api.ts` |
-| api ressource | `api/ressource.api.ts` |
-| api-order | `api/order.api.ts` (publie la commande validée dans le bus, `api/pubsub.ts`) |
-| Enabler si-financier | `api/si-financier.api.ts` |
-| Enabler managePayment | `api/manage-payment.api.ts` |
-| Api-ORAS | `api/oras.api.ts` |
-| Api-document | `api/document.api.ts` |
-| api IML | `api/iml.api.ts` |
-| api EPC | `api/epc.api.ts` |
+| Service | Endpoints (`/api/v1`) | API du SI derrière |
+| --- | --- | --- |
+| `api/customer.api.ts` | `/customers` (recherche, existence, création, mise à jour, lignes en cours, re-scoring) | Party, api-scoring, api-order |
+| `api/catalog.api.ts` | `/catalog/*`, `/numbers/available`, `/open-ml/sponsor-checks` | Castor, promo advice, ressource, RHOC |
+| `api/hardware.api.ts` | `/hardware/*` (terminaux, ICCID, lecture de SIM) | si-financier |
+| `api/address.api.ts` | `/addresses` | Api-ORAS |
+| `api/order.api.ts` | `/sepa-mandates`, `/contracts`, `/orders`, `/orders/{n}/cash-payments` | IML, EPC, Api-document, api-order, PubSub, managePayment |
 
-Toutes les API sont bouchonnées : pour brancher le SI réel, il suffit de remplacer l'implémentation des
-services (les écrans ne dépendent que de leurs signatures).
+Une recherche sans résultat répond 204 (numéro inconnu, aucun client existant) : le service renvoie alors `null`.
+Les règles de gestion restent contrôlées dans le front pour guider la saisie, puis l'API les revérifie ; le
+montant à régler en caisse affiché après validation est celui calculé par l'API.
 
 ## Jeu de démonstration
+
+Les données viennent des bouchons de l'API (identiques au jeu ci-dessous). Une commande validée consomme
+réellement la SIM, réserve le numéro et met la ligne en « commande en cours » : redémarrer l'API remet le jeu à
+zéro.
 
 | Saisie | Résultat |
 | --- | --- |

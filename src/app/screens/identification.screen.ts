@@ -1,7 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { PartyApi } from '../api/party.api';
-import { ScoringApi } from '../api/scoring.api';
+import { CustomerApi } from '../api/customer.api';
 import { formatDate, formatMsisdn } from '../domain/format';
 import { Customer, Identity, Score } from '../domain/models';
 import { digits, isValidMsisdn } from '../domain/rules';
@@ -10,6 +9,7 @@ import { CustomerStatus, emptyAddress, emptyIdentity, OrderStore } from '../stor
 import { IdentityForm, identityComplete } from '../ui/identity-form';
 import { FieldError, focusFirstError } from '../ui/field-error';
 import { Page } from '../ui/page';
+import { run } from '../ui/run';
 
 type Mode = 'search' | 'unknown' | 'new';
 
@@ -137,8 +137,7 @@ type Mode = 'search' | 'unknown' | 'new';
 })
 export class IdentificationScreen {
   protected readonly store = inject(OrderStore);
-  private readonly party = inject(PartyApi);
-  private readonly scoring = inject(ScoringApi);
+  private readonly customers = inject(CustomerApi);
 
   protected readonly mode = signal<Mode>('search');
   protected readonly busy = signal(false);
@@ -198,17 +197,18 @@ export class IdentificationScreen {
       focusFirstError();
       return;
     }
-    this.busy.set(true);
-    this.store.searchMsisdn.set(digits(this.msisdn));
-    const customer = await this.party.findByMsisdn(this.msisdn);
-    this.busy.set(false);
-    if (customer) {
-      this.setResult(customer, 'connu', customer.score);
-    } else {
-      this.identity = emptyIdentity();
-      this.identity.mobileContact = digits(this.msisdn);
-      this.mode.set('unknown');
-    }
+    await run(this.busy, async () => {
+      // 204 (numéro inconnu) : pas de client, on passe à la saisie de l'identité.
+      const customer = await this.customers.findByMsisdn(this.msisdn);
+      this.store.searchMsisdn.set(digits(this.msisdn));
+      if (customer) {
+        this.setResult(customer, 'connu', customer.score);
+      } else {
+        this.identity = emptyIdentity();
+        this.identity.mobileContact = digits(this.msisdn);
+        this.mode.set('unknown');
+      }
+    });
   }
 
   protected startNew(): void {
@@ -235,14 +235,13 @@ export class IdentificationScreen {
   async verify(): Promise<void> {
     this.submitted.set(true);
     if (!this.complete()) return focusFirstError();
-    this.busy.set(true);
-    const existing = await this.party.findExisting(this.identity);
-    this.busy.set(false);
-    if (existing) {
-      this.duplicate.set(existing);
-    } else {
-      await this.runPreventel('cree');
-    }
+    // undefined : l'appel a échoué (erreur affichée en bandeau) ; null : 204, aucun client ne correspond.
+    const check: { existing?: Customer | null } = {};
+    await run(this.busy, async () => {
+      check.existing = await this.customers.findExisting(this.identity);
+    });
+    if (check.existing) this.duplicate.set(check.existing);
+    else if (check.existing === null) await this.runPreventel('cree');
   }
 
   protected useDuplicate(customer: Customer): void {
@@ -250,19 +249,23 @@ export class IdentificationScreen {
     this.setResult(customer, 'connu', customer.score);
   }
 
-  /** Contrôle Préventel puis création du client (sauf score rouge). */
+  /** Contrôle Préventel puis création du client, côté serveur (pas de création si le score est rouge). */
   async runPreventel(status: 'controle' | 'cree'): Promise<void> {
     this.submitted.set(true);
     if (!this.complete()) return focusFirstError();
-    this.busy.set(true);
-    const score = await this.scoring.preventel(this.identity);
-    const customer =
-      score === 'rouge'
-        ? { id: '', type: 'GP' as const, identity: structuredClone(this.identity), address: emptyAddress(), score, lines: [] }
-        : await this.party.create(this.identity, emptyAddress(), score);
-    this.busy.set(false);
-    this.duplicate.set(null);
-    this.setResult(customer, status, score);
+    await run(this.busy, async () => {
+      const { score, customer } = await this.customers.create(this.identity);
+      const shown = customer ?? {
+        id: '',
+        type: 'GP' as const,
+        identity: structuredClone(this.identity),
+        address: emptyAddress(),
+        score,
+        lines: [],
+      };
+      this.duplicate.set(null);
+      this.setResult(shown, status, score);
+    });
   }
 
   private setResult(customer: Customer, status: CustomerStatus, score: Score): void {

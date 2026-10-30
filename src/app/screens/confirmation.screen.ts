@@ -1,13 +1,12 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DocumentApi } from '../api/document.api';
-import { EpcApi } from '../api/epc.api';
 import { OrderApi, OrderRequest } from '../api/order.api';
 import { formatDate, formatEuro, formatMsisdn, maskIban } from '../domain/format';
 import { FLOW_LABELS, Screen, SIM_REASONS } from '../domain/models';
 import { requiresContract } from '../domain/rules';
 import { OrderStore } from '../store/order.store';
 import { Page } from '../ui/page';
+import { run } from '../ui/run';
 
 interface SummaryCard {
   k: string;
@@ -60,21 +59,17 @@ interface SummaryCard {
         <label class="check"><input type="checkbox" [(ngModel)]="c.cgv" /><span class="body">J'accepte les conditions générales de vente</span></label>
         <label class="check"><input type="checkbox" [(ngModel)]="c.rgpd" /><span class="body">J'ai pris connaissance de la politique de données personnelles</span></label>
       </div>
-      @if (error()) { <div class="notice red">{{ error() }}</div> }
     </app-page>
   `,
 })
 export class ConfirmationScreen {
   protected readonly store = inject(OrderStore);
-  private readonly epc = inject(EpcApi);
-  private readonly documents = inject(DocumentApi);
   private readonly orders = inject(OrderApi);
 
   private readonly flow = this.store.flow() ?? 'acquisition';
   protected readonly withContract = requiresContract(this.flow);
   protected readonly busy = signal(false);
   protected readonly generating = signal(false);
-  protected readonly error = signal<string | null>(null);
   protected readonly cards = computed(() => this.buildCards());
 
   protected canValidate(): boolean {
@@ -150,91 +145,77 @@ export class ConfirmationScreen {
     return cards;
   }
 
-  private contractLines(): string[] {
-    const s = this.store;
-    const i = s.draft.identity;
-    const cards = this.cards().map((c) => `${c.k} : ${c.v}${c.s ? ` (${c.s})` : ''}`);
-    return [
-      `Objet : ${FLOW_LABELS[this.flow]}`,
-      `Client : ${s.customer()?.id} - ${s.holderName()}`,
-      s.customer()?.company ? `SIREN : ${s.customer()?.company?.siren}` : `Pièce : ${i.pieceType} ${i.pieceNumero}`,
-      '',
-      ...cards,
-      '',
-      `Édité le ${new Date().toLocaleString('fr-FR')} par Orange Order First.`,
-      '',
-      'Signature du client :',
-    ];
-  }
-
-  /** api EPC génère le PDF, Api-document le stocke. */
-  private async ensureContract(): Promise<Blob | null> {
-    if (!this.withContract) return null;
-    const customer = this.store.customer();
-    const pdf = await this.epc.generateContract(`Contrat - ${FLOW_LABELS[this.flow]}`, this.contractLines());
-    this.store.draft.confirm.contractRef = await this.documents.store(customer?.id ?? 'inconnu', pdf);
-    return pdf;
+  /** Le serveur contrôle la commande, génère le contrat (api EPC) et le stocke (Api-document). */
+  private async ensureContract(): Promise<string> {
+    const c = this.store.draft.confirm;
+    c.contractRef ??= await this.orders.generateContract(this.request());
+    return c.contractRef;
   }
 
   async download(): Promise<void> {
-    this.generating.set(true);
-    const pdf = await this.ensureContract();
-    this.generating.set(false);
-    if (!pdf) return;
-    const url = URL.createObjectURL(pdf);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `contrat-${this.store.customer()?.id ?? 'client'}.pdf`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    await run(this.generating, async () => {
+      const pdf = await this.orders.downloadContract(await this.ensureContract());
+      const url = URL.createObjectURL(pdf);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `contrat-${this.store.customer()?.id ?? 'client'}.pdf`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
   }
 
   async validate(): Promise<void> {
     if (!this.canValidate()) return;
     const s = this.store;
-    const customer = s.customer();
-    if (!customer) return;
-    this.busy.set(true);
-    this.error.set(null);
-    try {
-      if (this.withContract && !s.draft.confirm.contractRef) await this.ensureContract();
-      const { orderNumber, createdAt } = await this.orders.create(this.request(customer.id));
-      s.result.set({ orderNumber, createdAt, cashDue: s.cashDue() });
+    await run(this.busy, async () => {
+      if (this.withContract) await this.ensureContract();
+      // Le montant à régler en caisse est celui recalculé par le serveur.
+      const { orderNumber, createdAt, cashDue } = await this.orders.create(this.request());
+      s.result.set({ orderNumber, createdAt: new Date(createdAt), cashDue });
       s.go('succes');
-    } catch (e) {
-      this.error.set(`La commande n'a pas pu être créée : ${(e as Error).message}`);
-    } finally {
-      this.busy.set(false);
-    }
+    });
   }
 
-  private request(customerId: string): OrderRequest {
+  /** Commande au format de l'API (même corps pour le contrat et pour la validation). */
+  private request(): OrderRequest {
     const s = this.store;
     const d = s.draft;
-    const base: OrderRequest = { flow: this.flow, customerId, msisdn: s.orderMsisdn(), contractRef: d.confirm.contractRef };
+    const iccid = d.hardware.iccid.replace(/\s/g, '');
+    const openMlSponsor = d.openMl.enabled && d.openMl.valid ? d.openMl.sponsor : null;
+    const base: OrderRequest = {
+      flow: this.flow,
+      customerId: s.customer()?.id ?? '',
+      contractRef: d.confirm.contractRef,
+      contractSigned: d.confirm.signed,
+      cgvAccepted: d.confirm.cgv,
+      privacyAccepted: d.confirm.rgpd,
+    };
     switch (this.flow) {
-      case 'acquisition':
+      case 'acquisition': {
+        const n = d.number;
+        const card = s.selectedOffer()?.family === 'prepaye';
         return {
           ...base,
           holder: d.identity,
           billingAddress: d.address,
-          number: d.number,
+          number:
+            n.mode === 'nouveau'
+              ? { mode: 'nouveau', msisdn: n.msisdn }
+              : { mode: 'portabilite', rio: n.rio, portedMsisdn: n.portedMsisdn, operator: n.operator, portingDate: n.portingDate },
           offerId: d.offerId,
           options: d.options,
-          openMlSponsor: d.openMl.enabled ? d.openMl.sponsor : null,
-          sim: { type: d.hardware.simType, iccid: d.hardware.iccid.replace(/\s/g, '') },
-          terminal: d.hardware.withTerminal ? { id: d.hardware.terminalId, imei: d.hardware.imei } : null,
-          sepaMandateRef: d.sepa.mandateRef,
-          cashDue: s.cashDue(),
+          openMlSponsor,
+          sim: { type: d.hardware.simType, iccid },
+          terminal: d.hardware.withTerminal && !card ? { id: d.hardware.terminalId, imei: d.hardware.imei } : null,
+          sepaMandateRef: card ? null : d.sepa.mandateRef,
         };
-      case 'forfait':
-        return { ...base, offerId: d.offerId, options: d.options, openMlSponsor: d.openMl.enabled ? d.openMl.sponsor : null };
-      case 'options': {
-        const diff = s.optionsChange();
-        return { ...base, addedOptions: diff.added, removedOptions: diff.removed };
       }
+      case 'forfait':
+        return { ...base, lineMsisdn: d.lineMsisdn, offerId: d.offerId, options: d.options, openMlSponsor };
+      case 'options':
+        return { ...base, lineMsisdn: d.lineMsisdn, options: d.options };
       case 'sim':
-        return { ...base, reason: d.simReason, sim: { type: d.hardware.simType, iccid: d.hardware.iccid.replace(/\s/g, '') }, cashDue: s.cashDue() };
+        return { ...base, lineMsisdn: d.lineMsisdn, simReason: d.simReason, sim: { type: d.hardware.simType, iccid } };
     }
   }
 }

@@ -1,9 +1,11 @@
 import { Component, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { IccidCheck, SiFinancierApi } from '../api/si-financier.api';
+import { HttpErrorResponse } from '@angular/common/http';
+import { HardwareApi, IccidCheck } from '../api/hardware.api';
 import { formatIccid } from '../domain/format';
 import { OrderStore } from '../store/order.store';
 import { FieldError } from './field-error';
+import { run } from './run';
 
 /** Bloc Carte SIM : type de SIM et N° ICCID contrôlé par l'enabler si-financier. */
 @Component({
@@ -44,7 +46,7 @@ import { FieldError } from './field-error';
 })
 export class SimBlock {
   protected readonly store = inject(OrderStore);
-  private readonly siFinancier = inject(SiFinancierApi);
+  private readonly hardware = inject(HardwareApi);
   protected readonly state = signal<IccidCheck | 'checking' | null>(this.store.draft.hardware.iccidValid ? 'ok' : null);
   protected readonly scanning = signal(false);
   /** Affiche l'erreur « obligatoire » après une tentative de validation. */
@@ -72,10 +74,9 @@ export class SimBlock {
   }
 
   protected async scan(): Promise<void> {
-    this.scanning.set(true);
-    const iccid = await this.siFinancier.scanSim();
-    this.store.draft.hardware.iccid = formatIccid(iccid);
-    this.scanning.set(false);
+    await run(this.scanning, async () => {
+      this.store.draft.hardware.iccid = formatIccid(await this.hardware.scanSim());
+    });
     await this.check();
   }
 
@@ -88,7 +89,15 @@ export class SimBlock {
       return false;
     }
     this.state.set('checking');
-    const result = await this.siFinancier.checkIccid(h.iccid);
+    let result: IccidCheck;
+    try {
+      result = await this.hardware.checkIccid(h.iccid);
+    } catch (e) {
+      // Erreur déjà affichée en bandeau : l'ICCID reste à contrôler.
+      this.state.set(null);
+      if (e instanceof HttpErrorResponse) return false;
+      throw e;
+    }
     h.iccidValid = result === 'ok';
     if (h.iccidValid) h.iccid = formatIccid(h.iccid);
     this.state.set(result);
