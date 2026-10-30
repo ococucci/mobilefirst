@@ -91,7 +91,7 @@ export class Recap {
           rows.push({ k: o.label, v: o.included ? 'Incluse' : '+' + formatEuro(o.price) });
         }
         if (b.openMl) rows.push({ k: 'Remise Open ML', v: `−${formatEuro(b.openMl)}/mois, à vie` });
-        for (const p of offer.promos) rows.push({ k: 'Remise', v: p.label });
+        if (offer.promo) rows.push({ k: 'Remise', v: offer.promo.label });
         rows.push({ k: 'Mensualité', v: formatEuro(b.total) + '/mois', cls: 'sep total' });
         if (b.promo) rows.push({ k: `Les ${b.promo.months} premiers mois`, v: formatEuro(b.promo.total) + '/mois' });
       }

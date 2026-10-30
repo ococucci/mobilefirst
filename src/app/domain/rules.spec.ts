@@ -27,7 +27,7 @@ const offer = (over: Partial<Offer> = {}): Offer => ({
     { id: 'b', label: 'B', price: 3, included: false },
     { id: 'inc', label: 'Incluse', price: 0, included: true },
   ],
-  promos: [],
+  promo: null,
   ...over,
 });
 
@@ -66,19 +66,16 @@ describe('remise Open ML', () => {
 });
 
 describe('mensualité', () => {
-  it('additionne les options payantes, déduit Open ML et applique les remises de l’offre', () => {
-    const promos = [{ id: 'p', label: '−10 € / 6 mois', monthlyDiscount: 10, durationMonths: 6 }];
-    const b = monthly(offer({ price: 22.99, promos }), ['a', 'inc'], true);
+  it('additionne les options payantes, déduit Open ML et applique la remise de l’offre', () => {
+    const promo = { id: 'p', label: '−10 € / 6 mois', monthlyDiscount: 10, durationMonths: 6 };
+    const b = monthly(offer({ price: 22.99, promo }), ['a', 'inc'], true);
     expect(b.total).toBe(17.99);
     expect(b.promo).toEqual({ amount: 10, months: 6, total: 7.99 });
     expect(monthly(offer({ price: 22.99 }), ['a'], true).promo).toBeUndefined();
   });
-  it('remises cumulées sur la durée de la plus courte', () => {
-    const promos = [
-      { id: 'p1', label: '', monthlyDiscount: 10, durationMonths: 6 },
-      { id: 'p2', label: '', monthlyDiscount: 5, durationMonths: 12 },
-    ];
-    expect(monthly(offer({ price: 30, promos }), [], false).promo).toEqual({ amount: 15, months: 6, total: 15 });
+  it('la remise ne fait jamais passer la mensualité sous zéro', () => {
+    const promo = { id: 'p', label: '', monthlyDiscount: 10, durationMonths: 12 };
+    expect(monthly(offer({ price: 8, promo }), [], false).promo).toEqual({ amount: 10, months: 12, total: 0 });
   });
   it('option incluse toujours active et gratuite, option non proposée ignorée', () => {
     expect(selectedOptions(offer(), ['a', 'x']).map((o) => o.id)).toEqual(['a', 'inc']);

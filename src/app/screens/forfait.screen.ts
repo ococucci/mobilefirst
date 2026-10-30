@@ -120,9 +120,7 @@ import { run } from '../ui/run';
                   <span class="title" style="display: block">{{ o.label }}</span>
                   <span class="sub" style="display: block">{{ o.detail }}</span>
                   @if (current) { <span class="badge gray">Offre actuelle</span> }
-                  @else {
-                    @for (p of o.promos; track p.id) { <span class="badge orange">{{ p.label }}</span> }
-                  }
+                  @else if (o.promo) { <span class="badge orange">{{ o.promo.label }}</span> }
                 </span>
                 <span class="end">{{ o.price ? euro(o.price) + '/mois' : 'Sans mensualité' }}</span>
               </button>

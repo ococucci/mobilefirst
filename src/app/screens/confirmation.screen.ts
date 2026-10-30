@@ -95,7 +95,7 @@ export class ConfirmationScreen {
       const b = s.breakdown();
       const opts = d.options.length ? ` + ${d.options.length} option${d.options.length > 1 ? 's' : ''}` : '';
       const extras = [
-        ...(offer?.promos.map((p) => `Remise ${p.label}`) ?? []),
+        offer?.promo ? `Remise ${offer.promo.label}` : '',
         b?.openMl ? `Remise Open ML −${formatEuro(b.openMl)}` : '',
         b ? `${formatEuro(b.total)}/mois` : '',
       ].filter(Boolean);

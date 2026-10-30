@@ -86,8 +86,8 @@ export interface Offer {
   openMl: { eligible: boolean; monthlyDiscount?: number | null };
   /** Options proposées avec cette offre, à un prix propre à l'offre. */
   options: OfferOption[];
-  /** Remises appliquées automatiquement (api-promo advice). */
-  promos: Promo[];
+  /** Remise appliquée automatiquement (api-promo advice) : une seule par offre, les remises ne se cumulent pas. */
+  promo: Promo | null;
 }
 
 export interface OfferOption {

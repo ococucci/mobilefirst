@@ -110,10 +110,7 @@ export interface MonthlyBreakdown {
   openMl: number;
   /** Mensualité hors remise temporaire. */
   total: number;
-  /**
-   * Mensualité pendant les remises de l'offre (appliquées automatiquement) : remises cumulées, sur la durée
-   * de la plus courte. Absent si l'offre n'a pas de remise.
-   */
+  /** Mensualité pendant la remise de l'offre (appliquée automatiquement) ; absent si l'offre n'a pas de remise. */
   promo?: { amount: number; months: number; total: number };
 }
 
@@ -124,13 +121,9 @@ export function monthly(offer: Offer, optionIds: string[], openMlApplied: boolea
   const openMl = openMlApplied ? openMlDiscount(offer) : 0;
   const total = Math.max(0, round(base + opts - openMl));
   const result: MonthlyBreakdown = { base, options: opts, openMl, total };
-  if (offer.promos.length) {
-    const amount = round(offer.promos.reduce((sum, p) => sum + p.monthlyDiscount, 0));
-    result.promo = {
-      amount,
-      months: Math.min(...offer.promos.map((p) => p.durationMonths)),
-      total: Math.max(0, round(total - amount)),
-    };
+  if (offer.promo) {
+    const { monthlyDiscount, durationMonths } = offer.promo;
+    result.promo = { amount: monthlyDiscount, months: durationMonths, total: Math.max(0, round(total - monthlyDiscount)) };
   }
   return result;
 }
