@@ -2,9 +2,6 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { tap } from 'rxjs';
 
-/** Préfixe de l'API Orange Order First (mobilefirst-api). En développement, proxy.conf.json le redirige vers :8080. */
-export const API = '/api/v1';
-
 /** Dernière erreur renvoyée par l'API, affichée en bandeau rouge en haut de l'écran. */
 @Injectable({ providedIn: 'root' })
 export class ApiErrors {

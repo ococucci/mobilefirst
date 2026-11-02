@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { Terminal } from '../domain/models';
-import { API } from './api-base';
+import { APP_CONFIG } from '../config';
 
 export type IccidCheck = 'ok' | 'format' | 'inconnu';
 
@@ -10,19 +10,20 @@ export type IccidCheck = 'ok' | 'format' | 'inconnu';
 @Injectable({ providedIn: 'root' })
 export class HardwareApi {
   private readonly http = inject(HttpClient);
+  private readonly api = inject(APP_CONFIG).apiUrl;
 
   terminals(): Promise<Terminal[]> {
-    return firstValueFrom(this.http.get<Terminal[]>(`${API}/hardware/terminals`));
+    return firstValueFrom(this.http.get<Terminal[]>(`${this.api}/hardware/terminals`));
   }
 
   async checkIccid(iccid: string): Promise<IccidCheck> {
-    const res = await firstValueFrom(this.http.post<{ result: IccidCheck }>(`${API}/hardware/iccid-checks`, { iccid }));
+    const res = await firstValueFrom(this.http.post<{ result: IccidCheck }>(`${this.api}/hardware/iccid-checks`, { iccid }));
     return res.result;
   }
 
   /** Simule la lecture du code-barres d'une SIM du stock boutique. */
   async scanSim(): Promise<string> {
-    const res = await firstValueFrom(this.http.post<{ iccid: string }>(`${API}/hardware/sim-scans`, null));
+    const res = await firstValueFrom(this.http.post<{ iccid: string }>(`${this.api}/hardware/sim-scans`, null));
     return res.iccid;
   }
 }

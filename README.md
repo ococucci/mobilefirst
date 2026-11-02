@@ -6,25 +6,45 @@ lorsque l'outil de vente Oreka Boutique est indisponible. Elle met en œuvre la 
 
 ## Démarrer
 
-Le front appelle l'API [`ococucci/mobilefirst-api`](https://github.com/ococucci/mobilefirst-api) (Spring Boot), qui
-doit tourner sur le port 8080. En développement, `proxy.conf.json` redirige `/api` vers `http://localhost:8080`.
+Le front peut tourner de deux façons :
+
+- **avec l'API** [`ococucci/mobilefirst-api`](https://github.com/ococucci/mobilefirst-api) (Spring Boot) ;
+- **seul, avec les bouchons intégrés** : même contrat et même jeu de démonstration que l'API, sans backend.
+  Un badge « Démo · bouchons » s'affiche alors dans l'en-tête.
 
 ```bash
-# dans mobilefirst-api
-./mvnw spring-boot:run
-```
-
-```bash
-# dans mobilefirst
 npm install
-npm start          # http://localhost:4200
-npm test           # tests unitaires (Vitest)
-npm run build      # build de production dans dist/
 ```
 
-En production, servir le front et l'API sur le même domaine (ou derrière la même passerelle) pour que `/api/v1`
-atteigne l'API. Si l'API ne répond pas ou renvoie une erreur, un bandeau rouge l'indique en haut de l'écran ;
-l'action en cours s'arrête et le conseiller peut réessayer.
+| Commande | Usage |
+| --- | --- |
+| `npm start` | Développement avec l'API, `/api` redirigé vers `http://localhost:8080` (http://localhost:4200) |
+| `API_TARGET=https://recette.exemple.fr npm start` | Développement avec une API sur un autre endpoint |
+| `npm run start:mock` | Développement sans backend, bouchons intégrés |
+| `npm run build` | Build de production (appels vers l'API) dans `dist/` |
+| `npm run build:mock` | Build de démonstration (bouchons intégrés) dans `dist/` |
+| `npm test` | Tests unitaires (Vitest) |
+
+Pour lancer l'API : `./mvnw spring-boot:run` dans `mobilefirst-api`.
+
+### Configuration à l'exécution
+
+Après le build, le fichier `config.json` (à la racine de l'application, vide par défaut) permet de changer
+l'endpoint ou le mode sans reconstruire. Exemple (voir aussi `config.example.json` à la racine du projet) :
+
+```json
+{ "backend": "api", "apiUrl": "https://api.exemple.fr/api/v1" }
+```
+
+- `apiUrl` : URL de base de l'API, relative (même domaine ou passerelle, `/api/v1` par défaut) ou absolue. Avec une
+  URL absolue sur un autre domaine, ajouter l'origine du front à `orderfirst.cors.allowed-origins` côté API.
+- `backend` : `api` (par défaut) ou `mock` pour une démonstration sans backend.
+
+Les valeurs du build (`src/environments/`) s'appliquent pour tout ce que `config.json` ne précise pas. Les
+bouchons ne sont chargés qu'en mode `mock` (fichier séparé), ils n'alourdissent pas l'application en mode `api`.
+
+Si l'API ne répond pas ou renvoie une erreur, un bandeau rouge l'indique en haut de l'écran ; l'action en cours
+s'arrête et le conseiller peut réessayer.
 
 ## Parcours couverts
 
@@ -45,6 +65,7 @@ récapitulatif repliable en bas d'écran sur mobile.
 src/app/
   domain/      règles de gestion (fonctions pures, testées), validation et modèles
   api/         clients HTTP de l'API mobilefirst-api, un par ressource
+  mock/        bouchons intégrés (mode mock) : intercepteur qui répond comme l'API, jeu de démonstration
   store/       état de la commande en cours (OrderStore)
   ui/          gabarit d'écran, étapes, récapitulatif, blocs réutilisés (identité, carte SIM)
   screens/     un composant par écran de la cinématique
@@ -64,9 +85,9 @@ montant à régler en caisse affiché après validation est celui calculé par l
 
 ## Jeu de démonstration
 
-Les données viennent des bouchons de l'API (identiques au jeu ci-dessous). Une commande validée consomme
-réellement la SIM, réserve le numéro et met la ligne en « commande en cours » : redémarrer l'API remet le jeu à
-zéro.
+Les données viennent des bouchons de l'API, ou des bouchons intégrés en mode `mock` (même jeu). Une commande
+validée consomme réellement la SIM, réserve le numéro et met la ligne en « commande en cours » : redémarrer l'API
+(ou recharger la page en mode `mock`) remet le jeu à zéro.
 
 | Saisie | Résultat |
 | --- | --- |

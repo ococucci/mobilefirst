@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { Address, Flow, Identity, SimType } from '../domain/models';
-import { API } from './api-base';
+import { APP_CONFIG } from '../config';
 
 /** Corps commun à POST /contracts et POST /orders ; les champs utiles dépendent de la demande. */
 export interface OrderRequest {
@@ -39,29 +39,30 @@ export interface CreatedOrder {
 @Injectable({ providedIn: 'root' })
 export class OrderApi {
   private readonly http = inject(HttpClient);
+  private readonly api = inject(APP_CONFIG).apiUrl;
 
   async storeMandate(holder: string, iban: string): Promise<string> {
-    const res = await firstValueFrom(this.http.post<{ reference: string }>(`${API}/sepa-mandates`, { holder, iban }));
+    const res = await firstValueFrom(this.http.post<{ reference: string }>(`${this.api}/sepa-mandates`, { holder, iban }));
     return res.reference;
   }
 
   /** Génère et stocke le contrat ; renvoie son identifiant (contractRef). */
   async generateContract(request: OrderRequest): Promise<string> {
-    const res = await firstValueFrom(this.http.post<{ documentId: string }>(`${API}/contracts`, request));
+    const res = await firstValueFrom(this.http.post<{ documentId: string }>(`${this.api}/contracts`, request));
     return res.documentId;
   }
 
   downloadContract(documentId: string): Promise<Blob> {
-    return firstValueFrom(this.http.get(`${API}/contracts/${documentId}`, { responseType: 'blob' }));
+    return firstValueFrom(this.http.get(`${this.api}/contracts/${documentId}`, { responseType: 'blob' }));
   }
 
   create(request: OrderRequest): Promise<CreatedOrder> {
-    return firstValueFrom(this.http.post<CreatedOrder>(`${API}/orders`, request));
+    return firstValueFrom(this.http.post<CreatedOrder>(`${this.api}/orders`, request));
   }
 
   async recordCashPayment(orderNumber: string, amount: number): Promise<string> {
     const res = await firstValueFrom(
-      this.http.post<{ reference: string }>(`${API}/orders/${orderNumber}/cash-payments`, { amount }),
+      this.http.post<{ reference: string }>(`${this.api}/orders/${orderNumber}/cash-payments`, { amount }),
     );
     return res.reference;
   }

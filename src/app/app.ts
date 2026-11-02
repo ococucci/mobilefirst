@@ -10,6 +10,7 @@ import { OptionsScreen } from './screens/options.screen';
 import { SimScreen } from './screens/sim.screen';
 import { SuccesScreen } from './screens/succes.screen';
 import { ApiErrors } from './api/api-base';
+import { APP_CONFIG } from './config';
 import { run } from './ui/run';
 import { OrderStore } from './store/order.store';
 import { Stepper } from './ui/stepper';
@@ -33,6 +34,9 @@ import { Stepper } from './ui/stepper';
     <header class="topbar">
       <span class="logo" aria-hidden="true"></span>
       <span class="brand">Orange Order First</span>
+      @if (config.backend === 'mock') {
+        <span class="demo" title="Le front tourne sans backend, avec les bouchons intégrés">Démo · bouchons</span>
+      }
       <span class="who">Conseiller · Boutique</span>
     </header>
     @if (apiErrors.message(); as message) {
@@ -66,6 +70,7 @@ import { Stepper } from './ui/stepper';
 export class App implements OnInit {
   protected readonly store = inject(OrderStore);
   protected readonly apiErrors = inject(ApiErrors);
+  protected readonly config = inject(APP_CONFIG);
 
   ngOnInit(): void {
     void run(null, () => this.store.loadCatalog());
