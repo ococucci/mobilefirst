@@ -197,6 +197,8 @@ export class IdentificationScreen {
       focusFirstError();
       return;
     }
+    // Nouvelle recherche : le client trouvé précédemment (et sa demande en cours) est effacé.
+    this.reset();
     await run(this.busy, async () => {
       // 204 (numéro inconnu) : pas de client, on passe à la saisie de l'identité.
       const customer = await this.customers.findByMsisdn(this.msisdn);
