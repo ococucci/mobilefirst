@@ -1,28 +1,39 @@
 # Client Java ManagePayment (Apache CXF 3.4)
 
-Client SOAP du service `ManagePaymentProviderService` (enabler-si-monetique), généré avec `cxf-codegen-plugin` 3.4.10.
+Client SOAP du service `ManagePaymentProviderService` (enabler-si-monetique), Apache CXF 3.4.10, Java 8+.
 
-## Génération + build
+Les classes JAX-WS/JAXB (~520) sont **déjà générées et versionnées** dans `src/main/java` :
 
-Le WSDL fourni (`wsdl/managePayment.wsdl`) ne contient que le binding et le service ; il importe
-`ManagePayment.wsdl` (portType + XSD) depuis le serveur. Il faut donc avoir accès au réseau interne :
+| Package | Contenu |
+|---|---|
+| `com.orangecaraibe.soa.managepayment` | `ManagePayment` (interface du service) + exceptions (`DoPaymentException`, `InterfaceUnavailableException`…) |
+| `com.orangecaraibe.soa.managepayment.service` | `ManagePaymentProviderService` (classe Service JAX-WS) |
+| `com.orangecaraibe.soa.v2.interfaces.managepayment.schemas` | wrappers requête/réponse et faults |
+| `com.orangecaraibe.soa.v2.model.*` | modèle métier (`Payment`, `Refund`, `LocalPaymentFacility`, `Criteria`…) |
+| `com.orangecaraibe.client.managepayment` | code écrit à la main : factory + exemples |
+
+## Build
 
 ```bash
 mvn clean install
 ```
 
-Autre URL (autre environnement) :
+Aucun accès réseau au serveur n'est nécessaire : les WSDL sont dans `wsdl/`
+(`managePayment.wsdl` = binding + service, `ManagePayment.wsdl` = portType + XSD).
+
+## Régénérer les classes
+
+Après une évolution du contrat, remplacer les fichiers de `wsdl/` puis :
 
 ```bash
-mvn clean install -Dwsdl.url="http://autre-host:8080/enabler-si-monetique/soa/managePayment?wsdl"
+mvn -Pgenerate generate-sources
 ```
 
-Hors réseau : télécharger `?wsdl`, `?wsdl=ManagePayment.wsdl` et les éventuels `?xsd=...`,
-réécrire les `location`/`schemaLocation` en relatif, puis `-Dwsdl.url=file:///chemin/managePayment.wsdl`.
+Ou directement depuis le serveur :
 
-Les classes sont générées dans `target/generated-sources/cxf` :
-- `com.orangecaraibe.soa.managepayment.ManagePayment` : interface du service (SEI)
-- `com.orangecaraibe.soa.managepayment.*` : requêtes/réponses et exceptions (faults)
+```bash
+mvn -Pgenerate generate-sources -Dwsdl.url="http://it-enabler-si-monetique-1.xitg.ms.fcm:8080/enabler-si-monetique/soa/managePayment?wsdl"
+```
 
 ## Utilisation
 
@@ -35,13 +46,25 @@ ManagePayment port = new ManagePaymentClientFactory()
         // .basicAuth("user", "pwd") // si nécessaire
         .create();
 
-FindAndGetPaymentResponse resp = port.findAndGetPayment(request);
+// Recherche : Criteria + restrictions (Eq, Like, Gt, And, Or...)
+Eq eq = new Eq();
+eq.setProperty("paymentID");
+eq.setValue("123");
+Criteria criteria = new Criteria();
+criteria.getRestrictions().add(eq);
+List<Payment> payments = port.findAndGetPayment(criteria);
+
+// Opérations de mise à jour : le paiement est un paramètre IN/OUT (Holder)
+Holder<Payment> holder = new Holder<>(payment);
+port.doPayment(useCase, holder, computerOrNetworkEquipment);
+Payment result = holder.value;
 ```
 
-Exemple exécutable :
+Toutes les faults héritent de `Fault` (`getCode()`, `getLabel()`, `getFaultDetail()`), accessibles via
+`e.getFaultInfo()`. Les erreurs techniques (réseau, timeout) arrivent en `javax.xml.ws.WebServiceException`.
+
+Voir `ManagePaymentClientMain` pour des exemples complets, exécutables avec :
 
 ```bash
 mvn compile exec:java -Dexec.args="http://host:8080/enabler-si-monetique/soa/managePayment"
 ```
-
-Java 8+ (testé jusqu'à Java 21).

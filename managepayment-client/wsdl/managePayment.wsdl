@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?><wsdl:definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://provider.soa.payment.enabler.sifinancier.backend.orangecaraibe.com/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:ns3="http://schemas.xmlsoap.org/soap/http" xmlns:ns1="http://www.orangecaraibe.com/soa/v2/Interfaces/ManagePayment" name="ManagePaymentProviderService" targetNamespace="http://provider.soa.payment.enabler.sifinancier.backend.orangecaraibe.com/">
-  <wsdl:import location="http://it-enabler-si-monetique-1.xitg.ms.fcm:8080/enabler-si-monetique/soa/managePayment?wsdl=ManagePayment.wsdl" namespace="http://www.orangecaraibe.com/soa/v2/Interfaces/ManagePayment">
+  <wsdl:import location="ManagePayment.wsdl" namespace="http://www.orangecaraibe.com/soa/v2/Interfaces/ManagePayment">
     </wsdl:import>
   <wsdl:binding name="ManagePaymentProviderServiceSoapBinding" type="ns1:ManagePayment">
     <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>

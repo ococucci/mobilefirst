@@ -17,12 +17,12 @@
         <cxf.version>3.4.10</cxf.version>
 
         <!--
-            WSDL used for code generation. The provided WSDL (binding + service) imports
-            ManagePayment.wsdl (portType + XSD) from the server, so by default we generate
-            straight from the live service. Override with:
-              mvn clean install -Dwsdl.url=file:///path/to/managePayment.wsdl
+            WSDL used by the "generate" profile (mvn -Pgenerate generate-sources).
+            Local copy: managePayment.wsdl (binding + service) imports ManagePayment.wsdl
+            (portType + all XSD schemas inline). Override to regenerate from the live service:
+              -Dwsdl.url="http://host:8080/enabler-si-monetique/soa/managePayment?wsdl"
         -->
-        <wsdl.url>http://it-enabler-si-monetique-1.xitg.ms.fcm:8080/enabler-si-monetique/soa/managePayment?wsdl</wsdl.url>
+        <wsdl.url>${project.basedir}/wsdl/managePayment.wsdl</wsdl.url>
     </properties>
 
     <dependencies>
@@ -58,37 +58,13 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>${project.basedir}/wsdl</directory>
+                <targetPath>wsdl</targetPath>
+            </resource>
+        </resources>
         <plugins>
-            <plugin>
-                <groupId>org.apache.cxf</groupId>
-                <artifactId>cxf-codegen-plugin</artifactId>
-                <version>${cxf.version}</version>
-                <executions>
-                    <execution>
-                        <id>generate-sources</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>wsdl2java</goal>
-                        </goals>
-                        <configuration>
-                            <sourceRoot>${project.build.directory}/generated-sources/cxf</sourceRoot>
-                            <wsdlOptions>
-                                <wsdlOption>
-                                    <wsdl>${wsdl.url}</wsdl>
-                                    <extraargs>
-                                        <extraarg>-p</extraarg>
-                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Interfaces/ManagePayment=com.orangecaraibe.soa.managepayment</extraarg>
-                                        <extraarg>-p</extraarg>
-                                        <extraarg>http://provider.soa.payment.enabler.sifinancier.backend.orangecaraibe.com/=com.orangecaraibe.soa.managepayment.service</extraarg>
-                                        <extraarg>-autoNameResolution</extraarg>
-                                        <extraarg>-xjc-npa</extraarg>
-                                    </extraargs>
-                                </wsdlOption>
-                            </wsdlOptions>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -100,4 +76,47 @@
             </plugin>
         </plugins>
     </build>
+
+    <!-- Regenerates the JAX-WS/JAXB classes into src/main/java: mvn -Pgenerate generate-sources -->
+    <profiles>
+        <profile>
+            <id>generate</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.cxf</groupId>
+                        <artifactId>cxf-codegen-plugin</artifactId>
+                        <version>${cxf.version}</version>
+                        <executions>
+                            <execution>
+                                <id>generate-sources</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>wsdl2java</goal>
+                                </goals>
+                                <configuration>
+                                    <sourceRoot>${project.basedir}/src/main/java</sourceRoot>
+                                    <wsdlOptions>
+                                        <wsdlOption>
+                                            <wsdl>${wsdl.url}</wsdl>
+                                            <extraargs>
+                                                <extraarg>-p</extraarg>
+                                                <extraarg>http://www.orangecaraibe.com/soa/v2/Interfaces/ManagePayment=com.orangecaraibe.soa.managepayment</extraarg>
+                                                <extraarg>-p</extraarg>
+                                                <extraarg>http://provider.soa.payment.enabler.sifinancier.backend.orangecaraibe.com/=com.orangecaraibe.soa.managepayment.service</extraarg>
+                                                <extraarg>-wsdlLocation</extraarg>
+                                                <extraarg>classpath:wsdl/managePayment.wsdl</extraarg>
+                                                <extraarg>-autoNameResolution</extraarg>
+                                                <extraarg>-xjc-npa</extraarg>
+                                            </extraargs>
+                                        </wsdlOption>
+                                    </wsdlOptions>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
