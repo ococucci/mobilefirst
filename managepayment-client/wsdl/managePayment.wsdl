@@ -1,0 +1,231 @@
+<?xml version='1.0' encoding='UTF-8'?><wsdl:definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://provider.soa.payment.enabler.sifinancier.backend.orangecaraibe.com/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:ns3="http://schemas.xmlsoap.org/soap/http" xmlns:ns1="http://www.orangecaraibe.com/soa/v2/Interfaces/ManagePayment" name="ManagePaymentProviderService" targetNamespace="http://provider.soa.payment.enabler.sifinancier.backend.orangecaraibe.com/">
+  <wsdl:import location="http://it-enabler-si-monetique-1.xitg.ms.fcm:8080/enabler-si-monetique/soa/managePayment?wsdl=ManagePayment.wsdl" namespace="http://www.orangecaraibe.com/soa/v2/Interfaces/ManagePayment">
+    </wsdl:import>
+  <wsdl:binding name="ManagePaymentProviderServiceSoapBinding" type="ns1:ManagePayment">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="doPayment">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManagePayment/doPayment" style="document"/>
+      <wsdl:input name="doPayment">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="doPaymentResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="DoPaymentException">
+        <soap:fault name="DoPaymentException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findAndGetRefund">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManagePayment/findAndGetRefund" style="document"/>
+      <wsdl:input name="findAndGetRefund">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="findAndGetRefundResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="FindAndGetRefundSpecificationException">
+        <soap:fault name="FindAndGetRefundSpecificationException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="FindAndGetRefundException">
+        <soap:fault name="FindAndGetRefundException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="updatePayment">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManagePayment/updatePayment" style="document"/>
+      <wsdl:input name="updatePayment">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="updatePaymentResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="UpdatePaymentException">
+        <soap:fault name="UpdatePaymentException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="createPaymentFacility">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManagePayment/createPaymentFacility" style="document"/>
+      <wsdl:input name="createPaymentFacility">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="createPaymentFacilityResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="CreatePaymentFacilityException">
+        <soap:fault name="CreatePaymentFacilityException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="executePayment">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManagePayment/executePayment" style="document"/>
+      <wsdl:input name="executePayment">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="executePaymentResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="ExecutePaymentException">
+        <soap:fault name="ExecutePaymentException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="preparePayment">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManagePayment/preparePayment" style="document"/>
+      <wsdl:input name="preparePayment">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="preparePaymentResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="PreparePaymentException">
+        <soap:fault name="PreparePaymentException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="executeRefund">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManagePayment/executeRefund" style="document"/>
+      <wsdl:input name="executeRefund">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="executeRefundResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="ExecuteRefundException">
+        <soap:fault name="ExecuteRefundException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="getPaymentAuthorization">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManagePayment/getPaymentAuthorization" style="document"/>
+      <wsdl:input name="getPaymentAuthorization">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="getPaymentAuthorizationResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="GetPaymentAuthorizationException">
+        <soap:fault name="GetPaymentAuthorizationException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findAndGetPayment">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManagePayment/findAndGetPayment" style="document"/>
+      <wsdl:input name="findAndGetPayment">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="findAndGetPaymentResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="FindAndGetPaymentException">
+        <soap:fault name="FindAndGetPaymentException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="FindAndGetPaymentFacilityException">
+        <soap:fault name="FindAndGetPaymentFacilityException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="setPayment">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManagePayment/setPayment" style="document"/>
+      <wsdl:input name="setPayment">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="setPaymentResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="SetPaymentException">
+        <soap:fault name="SetPaymentException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findAndGetRefundSpecification">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManagePayment/findAndGetRefundSpecification" style="document"/>
+      <wsdl:input name="findAndGetRefundSpecification">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="findAndGetRefundSpecificationResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="FindAndGetRefundSpecificationException">
+        <soap:fault name="FindAndGetRefundSpecificationException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findAndGetPaymentFacility">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManagePayment/findAndGetPaymentFacility" style="document"/>
+      <wsdl:input name="findAndGetPaymentFacility">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="findAndGetPaymentFacilityResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="FindAndGetPaymentFacilityException">
+        <soap:fault name="FindAndGetPaymentFacilityException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="cancelPayment">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManagePayment/cancelPayment" style="document"/>
+      <wsdl:input name="cancelPayment">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="cancelPaymentResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="CancelPaymentException">
+        <soap:fault name="CancelPaymentException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="CancelPaymentFacilityException">
+        <soap:fault name="CancelPaymentFacilityException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="cancelPaymentFacility">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManagePayment/cancelPaymentFacility" style="document"/>
+      <wsdl:input name="cancelPaymentFacility">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="cancelPaymentFacilityResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="CancelPaymentFacilityException">
+        <soap:fault name="CancelPaymentFacilityException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="ManagePaymentProviderService">
+    <wsdl:port binding="tns:ManagePaymentProviderServiceSoapBinding" name="ManagePaymentProviderPort">
+      <soap:address location="http://it-enabler-si-monetique-1.xitg.ms.fcm:8080/enabler-si-monetique/soa/managePayment"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
