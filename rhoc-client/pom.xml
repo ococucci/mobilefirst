@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.orange.rhoc</groupId>
+    <artifactId>rhoc-client</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <name>RHOC REST client (Apache CXF 3.4)</name>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <cxf.version>3.4.10</cxf.version>
+        <jackson.version>2.13.5</jackson.version>
+        <!-- OpenAPI spec used by the "generate" profile -->
+        <openapi.spec>${project.basedir}/openapi/rhoc-api.json</openapi.spec>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-rs-client</artifactId>
+            <version>${cxf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-features-logging</artifactId>
+            <version>${cxf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.jaxrs</groupId>
+            <artifactId>jackson-jaxrs-json-provider</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+        <!-- Annotations used by the generated classes (documentation only, no runtime effect) -->
+        <dependency>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-annotations</artifactId>
+            <version>1.6.11</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.36</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>com.orange.rhoc.client.RhocClientMain</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- Regenerates the API interface and models into src/main/java: mvn -Pgenerate generate-sources -->
+    <profiles>
+        <profile>
+            <id>generate</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.openapitools</groupId>
+                        <artifactId>openapi-generator-maven-plugin</artifactId>
+                        <!-- 7.x needed for nameMappings -->
+                        <version>7.4.0</version>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>generate</goal>
+                                </goals>
+                                <configuration>
+                                    <inputSpec>${openapi.spec}</inputSpec>
+                                    <generatorName>jaxrs-cxf-client</generatorName>
+                                    <!-- Removes the unused io.swagger.jaxrs.PATCH / multipart imports -->
+                                    <templateDirectory>${project.basedir}/openapi/templates</templateDirectory>
+                                    <output>${project.basedir}</output>
+                                    <apiPackage>com.orange.rhoc.client.api</apiPackage>
+                                    <modelPackage>com.orange.rhoc.client.model</modelPackage>
+                                    <!-- The untyped X-Cloud-Trace-Context header makes validation complain -->
+                                    <skipValidateSpec>true</skipValidateSpec>
+                                    <generateSupportingFiles>false</generateSupportingFiles>
+                                    <generateApiTests>false</generateApiTests>
+                                    <generateModelTests>false</generateModelTests>
+                                    <generateApiDocumentation>false</generateApiDocumentation>
+                                    <generateModelDocumentation>false</generateModelDocumentation>
+                                    <!-- Adds @JsonValue/@JsonCreator to enums (missing by default with jaxrs-cxf-client:
+                                         "acknowledged" would not be (de)serialized) -->
+                                    <!-- Message declares both messageId/message_id and publishTime/publish_time
+                                         (Google Pub/Sub sends both): give the snake_case ones their own Java name -->
+                                    <nameMappings>message_id=messageIdSnakeCase,publish_time=publishTimeSnakeCase</nameMappings>
+                                    <additionalProperties>
+                                        <additionalProperty>jackson=true</additionalProperty>
+                                    </additionalProperties>
+                                    <configOptions>
+                                        <sourceFolder>src/main/java</sourceFolder>
+                                        <useBeanValidation>false</useBeanValidation>
+                                        <dateLibrary>java8</dateLibrary>
+                                    </configOptions>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>
