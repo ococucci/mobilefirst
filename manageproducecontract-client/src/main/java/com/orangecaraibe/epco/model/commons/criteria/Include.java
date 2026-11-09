@@ -1,0 +1,34 @@
+
+package com.orangecaraibe.epco.model.commons.criteria;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlType;
+
+
+/**
+ * <p>Java class for Include complex type.
+ * 
+ * <p>The following schema fragment specifies the expected content contained within this class.
+ * 
+ * <pre>
+ * &lt;complexType name="Include"&gt;
+ *   &lt;complexContent&gt;
+ *     &lt;extension base="{http://www.orangecaraibe.com/soa/v2/Model/Commons/Criteria}Variation"&gt;
+ *       &lt;sequence&gt;
+ *       &lt;/sequence&gt;
+ *     &lt;/extension&gt;
+ *   &lt;/complexContent&gt;
+ * &lt;/complexType&gt;
+ * </pre>
+ * 
+ * 
+ */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "Include", namespace = "http://www.orangecaraibe.com/soa/v2/Model/Commons/Criteria")
+public class Include
+    extends Variation
+{
+
+
+}

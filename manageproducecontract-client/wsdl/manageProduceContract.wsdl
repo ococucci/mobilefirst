@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://document.soa.enabler.orangecaraibe.com/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:ns3="http://schemas.xmlsoap.org/soap/http" xmlns:ns1="http://www.orangecaraibe.com/soa/v2/Interfaces/ManageProduceContract" name="ManageProduceContractProviderService" targetNamespace="http://document.soa.enabler.orangecaraibe.com/">
+  <wsdl:import location="ManageProduceContract.wsdl" namespace="http://www.orangecaraibe.com/soa/v2/Interfaces/ManageProduceContract">
+    </wsdl:import>
+  <wsdl:binding name="ManageProduceContractProviderServiceSoapBinding" type="ns1:ManageProduceContract">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="updateContract">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManageProduceContract/updateContract" style="document"/>
+      <wsdl:input name="updateContract">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="updateContractResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="UpdateContractException">
+        <soap:fault name="UpdateContractException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="produceContract">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManageProduceContract/produceContract" style="document"/>
+      <wsdl:input name="produceContract">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="produceContractResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="ProduceContractException">
+        <soap:fault name="ProduceContractException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findAndGet">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManageProduceContract/findAndGet" style="document"/>
+      <wsdl:input name="findAndGet">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="findAndGetResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="FindAndGetException">
+        <soap:fault name="FindAndGetException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="ManageProduceContractProviderService">
+    <wsdl:port binding="tns:ManageProduceContractProviderServiceSoapBinding" name="ManageProduceContractProviderPort">
+      <soap:address location="http://epco.gitg.ms.fcm/soa/manageProduceContract"/>
+    </wsdl:port>
+  </wsdl:service></wsdl:definitions>
