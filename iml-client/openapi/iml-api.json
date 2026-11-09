@@ -1,0 +1,513 @@
+{
+  "openapi" : "3.0.1",
+  "info" : {
+    "title" : "IBAN Management Layer",
+    "description" : "IBAN Management Layer",
+    "contact" : {
+      "name" : "Equipe OCS",
+      "email" : "ocs-dsi.oca@orange.com"
+    },
+    "license" : {
+      "name" : "Apache 2.0 License",
+      "url" : "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "servers" : [ {
+    "url" : "http://in-iml-as1.ms.fcm:9500/iban-management-layer/ws/api"
+  } ],
+  "tags" : [ {
+    "name" : "IMLProvider",
+    "description" : "IMLProvider"
+  } ],
+  "paths" : {
+    "/tokenize" : {
+      "post" : {
+        "tags" : [ "IMLProvider" ],
+        "summary" : "Tokenize",
+        "description" : "Service de jetonisation : Retourne la liste de tokens correspondant à une liste d'IBAN",
+        "operationId" : "tokenize_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InParametersTokenize"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Succès",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OutParametersTokenize"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Erreur en entrée",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Error"
+                },
+                "example" : {
+                  "code" : 4000,
+                  "message" : "Invalid or missing string"
+                }
+              },
+              "text/plain" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Error"
+                },
+                "example" : {
+                  "code" : 4000,
+                  "message" : "Invalid or missing string"
+                }
+              }
+            }
+          },
+          "503" : {
+            "description" : "OPSI indisponible",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Error"
+                },
+                "example" : {
+                  "code" : 5030,
+                  "message" : "OPSI unreachable",
+                  "appId" : "KARANBOL"
+                }
+              },
+              "text/plain" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Error"
+                },
+                "example" : {
+                  "code" : 5030,
+                  "message" : "OPSI unreachable",
+                  "appId" : "KARANBOL"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Erreur interne",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Error"
+                },
+                "example" : {
+                  "code" : 100,
+                  "message" : ""
+                }
+              },
+              "text/plain" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Error"
+                },
+                "example" : {
+                  "code" : 100,
+                  "message" : ""
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/untokenize" : {
+      "post" : {
+        "tags" : [ "IMLProvider" ],
+        "summary" : "Untokenize",
+        "description" : "Service de déjetonisation : Retourne la liste d'IBAN correspondant à une liste de tokens",
+        "operationId" : "untokenize_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/InParametersUntokenize"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Succès",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OutParamatersUntokenize"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Erreur en entrée",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Error"
+                },
+                "example" : {
+                  "code" : 4000,
+                  "message" : "Invalid or missing string"
+                }
+              },
+              "text/plain" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Error"
+                },
+                "example" : {
+                  "code" : 4000,
+                  "message" : "Invalid or missing string"
+                }
+              }
+            }
+          },
+          "503" : {
+            "description" : "OPSI indisponible",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Error"
+                },
+                "example" : {
+                  "code" : 5030,
+                  "message" : "OPSI unreachable",
+                  "appId" : "KARANBOL"
+                }
+              },
+              "text/plain" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Error"
+                },
+                "example" : {
+                  "code" : 5030,
+                  "message" : "OPSI unreachable",
+                  "appId" : "KARANBOL"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Erreur interne",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Error"
+                },
+                "example" : {
+                  "code" : 100,
+                  "message" : ""
+                }
+              },
+              "text/plain" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Error"
+                },
+                "example" : {
+                  "code" : 100,
+                  "message" : ""
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "OutParametersTokenize" : {
+        "required" : [ "appId", "tokenizedBankAccounts" ],
+        "type" : "object",
+        "properties" : {
+          "appId" : {
+            "type" : "string",
+            "description" : "Même identifiant unique de l’application passé en entrée",
+            "example" : "CLEMENTINE"
+          },
+          "userId" : {
+            "type" : "string",
+            "description" : "Même identifiant de l’utilisateur applicatif passé en entrée"
+          },
+          "tokenizedBankAccounts" : {
+            "type" : "array",
+            "description" : "Liste de données bancaires jetonisées (jetons)",
+            "items" : {
+              "$ref" : "#/components/schemas/TokenizedBankAccount"
+            }
+          }
+        }
+      },
+      "Token" : {
+        "required" : [ "accountNumber", "bankBranchIdentifier", "bankIdentifier", "codeIban", "ribCheckDigits" ],
+        "type" : "object",
+        "properties" : {
+          "codeIban" : {
+            "type" : "string",
+            "description" : "Les 4 premiers caractères du jeton ",
+            "example" : "FR79"
+          },
+          "bankIdentifier" : {
+            "type" : "string",
+            "description" : "Code banque du jeton ",
+            "example" : "30006"
+          },
+          "bankBranchIdentifier" : {
+            "type" : "string",
+            "description" : "Code guichet du jeton ",
+            "example" : "00148"
+          },
+          "accountNumber" : {
+            "type" : "string",
+            "description" : "Numéro de compte du jeton ",
+            "example" : "YZPWWLX8901"
+          },
+          "ribCheckDigits" : {
+            "type" : "string",
+            "description" : "Clé RIB du jeton ",
+            "example" : "01"
+          }
+        },
+        "description" : "Jeton"
+      },
+      "TokenizedBankAccount" : {
+        "required" : [ "bankBranchName", "bankName", "codeBic", "status", "token", "uid" ],
+        "type" : "object",
+        "properties" : {
+          "uid" : {
+            "type" : "string",
+            "description" : "Identifiant unique de l’information bancaire tokenisé",
+            "example" : "1"
+          },
+          "token" : {
+            "$ref" : "#/components/schemas/Token"
+          },
+          "bankName" : {
+            "type" : "string",
+            "description" : "Libellé de la banque ",
+            "example" : "CREDIT AGRICOLE S A"
+          },
+          "bankBranchName" : {
+            "type" : "string",
+            "description" : "Libellé du pays ",
+            "example" : "FRANCE"
+          },
+          "codeBic" : {
+            "type" : "string",
+            "description" : "Identifiant international de la banque",
+            "example" : "AGRIFRPPXXX"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "Statut de la demande de jetonisation ",
+            "example" : "TOKENIZED"
+          }
+        },
+        "description" : "Liste de données bancaires jetonisées (jetons)"
+      },
+      "Error" : {
+        "type" : "object",
+        "properties" : {
+          "appId" : {
+            "type" : "string"
+          },
+          "userId" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string",
+            "description" : "Code d'erreur"
+          },
+          "message" : {
+            "type" : "string",
+            "description" : "Message d'erreur"
+          },
+          "detail" : {
+            "type" : "string",
+            "description" : "Détails"
+          }
+        }
+      },
+      "InParametersTokenize" : {
+        "required" : [ "appId", "uniqueBankAccounts" ],
+        "type" : "object",
+        "properties" : {
+          "appId" : {
+            "type" : "string",
+            "description" : "Identifiant unique de l’application",
+            "example" : "CLEMENTINE"
+          },
+          "userId" : {
+            "type" : "string",
+            "description" : "Identifiant unique de l’utilisateur applicatif à l’origine de l’appel",
+            "example" : "CUID"
+          },
+          "uniqueBankAccounts" : {
+            "type" : "array",
+            "description" : "Liste de données bancaires",
+            "items" : {
+              "$ref" : "#/components/schemas/UniqueBankAccount"
+            }
+          }
+        }
+      },
+      "UniqueBankAccount" : {
+        "required" : [ "bankAccount", "uid" ],
+        "type" : "object",
+        "properties" : {
+          "uid" : {
+            "type" : "string",
+            "description" : "Identifiant unique de l’information bancaire",
+            "example" : "1"
+          },
+          "bankAccount" : {
+            "type" : "string",
+            "description" : "Donnée bancaire (RIB ou IBAN) ",
+            "example" : "FR7630006000011234567890189"
+          }
+        },
+        "description" : "Liste de données bancaires"
+      },
+      "OutParamatersUntokenize" : {
+        "required" : [ "appId" ],
+        "type" : "object",
+        "properties" : {
+          "appId" : {
+            "type" : "string",
+            "description" : "Même identifiant unique de l’application passé en entrée",
+            "example" : "KARANBOL"
+          },
+          "userId" : {
+            "type" : "string",
+            "description" : "Même identifiant de l’utilisateur applicatif passé en entrée",
+            "example" : "AD\\herm0001"
+          },
+          "untokenizedBankAccounts" : {
+            "type" : "array",
+            "description" : "Liste d’informations bancaires (données déjetonisées) ",
+            "items" : {
+              "$ref" : "#/components/schemas/UntokenizedBankAccount"
+            }
+          }
+        }
+      },
+      "RIB" : {
+        "type" : "object",
+        "properties" : {
+          "bankIdentifier" : {
+            "type" : "string",
+            "description" : "Le code banque ",
+            "example" : "30006"
+          },
+          "bankBranchIdentifier" : {
+            "type" : "string",
+            "description" : "Le code guichet",
+            "example" : "00001"
+          },
+          "accountNumber" : {
+            "type" : "string",
+            "description" : "Le numéro de compte ",
+            "example" : "12345678901"
+          },
+          "ribCheckDigits" : {
+            "type" : "string",
+            "description" : "La clé RIB ",
+            "example" : "89"
+          }
+        },
+        "description" : "Objet rib représentant un format découpé du RIB "
+      },
+      "UntokenizedBankAccount" : {
+        "type" : "object",
+        "properties" : {
+          "uid" : {
+            "type" : "string",
+            "description" : "Identifiant unique de l’information bancaire ",
+            "example" : "1"
+          },
+          "iban" : {
+            "type" : "string",
+            "description" : "IBAN",
+            "example" : "FR7630006000011234567890189"
+          },
+          "codeIban" : {
+            "type" : "string",
+            "description" : "Les 4 premiers caractères de l’IBAN ",
+            "example" : "FR76"
+          },
+          "rib" : {
+            "$ref" : "#/components/schemas/RIB"
+          },
+          "bankName" : {
+            "type" : "string",
+            "description" : "Libellé de la banque ",
+            "example" : "CREDIT AGRICOLE S A"
+          },
+          "bankBranchName" : {
+            "type" : "string",
+            "description" : "Libellé du pays ",
+            "example" : "FRANCE"
+          },
+          "codeBic" : {
+            "type" : "string",
+            "description" : "Identifiant international de la banque ",
+            "example" : "AGRIFRPPXXX"
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "Statut de la déjetonisation ",
+            "example" : "UNTOKENIZED"
+          }
+        },
+        "description" : "Liste d’informations bancaires (données déjetonisées) "
+      },
+      "InParametersUntokenize" : {
+        "required" : [ "appId", "uniqueTokens" ],
+        "type" : "object",
+        "properties" : {
+          "appId" : {
+            "type" : "string",
+            "description" : "Identifiant unique de l’application",
+            "example" : "KARANBOL"
+          },
+          "userId" : {
+            "type" : "string",
+            "description" : "Identifiant unique de l’utilisateur applicatif à l’origine de l’appel",
+            "example" : "AD\\herm0001"
+          },
+          "uniqueTokens" : {
+            "type" : "array",
+            "description" : "Liste de jetons ",
+            "items" : {
+              "$ref" : "#/components/schemas/UniqueToken"
+            }
+          }
+        }
+      },
+      "UniqueToken" : {
+        "required" : [ "token", "uid" ],
+        "type" : "object",
+        "properties" : {
+          "uid" : {
+            "type" : "string",
+            "description" : "Identifiant unique de l’information bancaire tokenisé",
+            "example" : "1"
+          },
+          "token" : {
+            "type" : "string",
+            "description" : "Jeton",
+            "example" : "FR793000600148YZPWWLX890101"
+          }
+        },
+        "description" : "Liste de jetons "
+      }
+    }
+  }
+}
