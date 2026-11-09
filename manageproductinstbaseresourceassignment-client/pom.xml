@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.orangecaraibe.client</groupId>
+    <artifactId>manageproductinstbaseresourceassignment-client</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <name>ManageProductInstBaseResourceAssignment SOAP client (Apache CXF 3.4)</name>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <cxf.version>3.4.10</cxf.version>
+
+        <!--
+            WSDL used by the "generate" profile (mvn -Pgenerate generate-sources).
+            Local copy: manageProductInstBaseResourceAssignment.wsdl (binding + service) imports ManageProductInstBaseResourceAssignment.wsdl
+            (portType + all XSD schemas inline). Override to regenerate from the live service:
+              -Dwsdl.url="http://enra.gitg.ms.fcm/soa/manageProductInstBaseResourceAssignment?wsdl"
+        -->
+        <wsdl.url>${project.basedir}/wsdl/manageProductInstBaseResourceAssignment.wsdl</wsdl.url>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-frontend-jaxws</artifactId>
+            <version>${cxf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-transports-http</artifactId>
+            <version>${cxf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-features-logging</artifactId>
+            <version>${cxf.version}</version>
+        </dependency>
+
+        <!-- Required when running on Java 11+ (removed from the JDK) -->
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+            <version>1.3.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.36</version>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>${project.basedir}/wsdl</directory>
+                <targetPath>wsdl</targetPath>
+            </resource>
+        </resources>
+        <plugins>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>com.orangecaraibe.client.manageproductinstbaseresourceassignment.ManageProductInstBaseResourceAssignmentClientMain</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- Regenerates the JAX-WS/JAXB classes into src/main/java: mvn -Pgenerate generate-sources -->
+    <profiles>
+        <profile>
+            <id>generate</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.cxf</groupId>
+                        <artifactId>cxf-codegen-plugin</artifactId>
+                        <version>${cxf.version}</version>
+                        <executions>
+                            <execution>
+                                <id>generate-sources</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>wsdl2java</goal>
+                                </goals>
+                                <configuration>
+                                    <sourceRoot>${project.basedir}/src/main/java</sourceRoot>
+                                    <wsdlOptions>
+                                        <wsdlOption>
+                                            <wsdl>${wsdl.url}</wsdl>
+                                            <extraargs>
+                                        <!-- Own packages (com.orangecaraibe.enra.*): the common model differs from other
+                                             Orange Caraibe services, so it must not share their packages -->
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Interfaces/ManageProductInstBaseResourceAssignment/Schemas=com.orangecaraibe.enra.interfaces.manageproductinstbaseresourceassignment.schemas</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Interfaces/ManageStock/Schemas=com.orangecaraibe.enra.interfaces.managestock.schemas</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/CommonBusiness/Agreement=com.orangecaraibe.enra.model.commonbusiness.agreement</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/CommonBusiness/Identity=com.orangecaraibe.enra.model.commonbusiness.identity</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/CommonBusiness/Interaction=com.orangecaraibe.enra.model.commonbusiness.interaction</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/CommonBusiness/Location=com.orangecaraibe.enra.model.commonbusiness.location</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/CommonBusiness/Party=com.orangecaraibe.enra.model.commonbusiness.party</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/CommonBusiness/Party/ContactMethods=com.orangecaraibe.enra.model.commonbusiness.party.contactmethods</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/CommonBusiness/Party/PaymentMeans=com.orangecaraibe.enra.model.commonbusiness.party.paymentmeans</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/CommonBusiness/Party/Right=com.orangecaraibe.enra.model.commonbusiness.party.right</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/CommonBusiness/Party/Role=com.orangecaraibe.enra.model.commonbusiness.party.role</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/CommonBusiness/TroubleTicket=com.orangecaraibe.enra.model.commonbusiness.troubleticket</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/Commons=com.orangecaraibe.enra.model.commons</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/Commons/Criteria=com.orangecaraibe.enra.model.commons.criteria</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/Commons/Exception=com.orangecaraibe.enra.model.commons.exception</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/CustomerDomain/Customer=com.orangecaraibe.enra.model.customerdomain.customer</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/CustomerDomain/CustomerBilling=com.orangecaraibe.enra.model.customerdomain.customerbilling</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/CustomerDomain/CustomerBilling/Consumption=com.orangecaraibe.enra.model.customerdomain.customerbilling.consumption</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/CustomerDomain/CustomerBilling/Payment=com.orangecaraibe.enra.model.customerdomain.customerbilling.payment</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/CustomerDomain/CustomerBilling/Rating=com.orangecaraibe.enra.model.customerdomain.customerbilling.rating</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/CustomerDomain/CustomerLoyalty=com.orangecaraibe.enra.model.customerdomain.customerloyalty</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/CustomerDomain/CustomerOrder=com.orangecaraibe.enra.model.customerdomain.customerorder</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/CustomerDomain/CustomerProblem=com.orangecaraibe.enra.model.customerdomain.customerproblem</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/CustomerDomain/Invoicing=com.orangecaraibe.enra.model.customerdomain.invoicing</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/MarketSales/MarketSegment=com.orangecaraibe.enra.model.marketsales.marketsegment</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/MarketSales/MarketingCampaigns=com.orangecaraibe.enra.model.marketsales.marketingcampaigns</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/OfferingAndProducts/CommercialCatalogue=com.orangecaraibe.enra.model.offeringandproducts.commercialcatalogue</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/OfferingAndProducts/CommercialInstalledBase=com.orangecaraibe.enra.model.offeringandproducts.commercialinstalledbase</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/OfferingAndProducts/ProductInstalledBase=com.orangecaraibe.enra.model.offeringandproducts.productinstalledbase</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/OfferingAndProducts/Productcatalogue=com.orangecaraibe.enra.model.offeringandproducts.productcatalogue</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/ResourceDomain/ResourceCatalogue=com.orangecaraibe.enra.model.resourcedomain.resourcecatalogue</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Model/ResourceDomain/ResourceInstalledBase=com.orangecaraibe.enra.model.resourcedomain.resourceinstalledbase</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.w3.org/2005/05/xmlmime=com.orangecaraibe.enra.xmlmime</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://www.orangecaraibe.com/soa/v2/Interfaces/ManageProductInstBaseResourceAssignment=com.orangecaraibe.enra.manageproductinstbaseresourceassignment</extraarg>
+                                        <extraarg>-p</extraarg>
+                                        <extraarg>http://provider.soa.installedbase.enablers.orangecaraibe.com/=com.orangecaraibe.enra.manageproductinstbaseresourceassignment.service</extraarg>
+                                                <extraarg>-wsdlLocation</extraarg>
+                                                <extraarg>classpath:wsdl/manageProductInstBaseResourceAssignment.wsdl</extraarg>
+                                                <extraarg>-autoNameResolution</extraarg>
+                                                <extraarg>-xjc-npa</extraarg>
+                                            </extraargs>
+                                        </wsdlOption>
+                                    </wsdlOptions>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

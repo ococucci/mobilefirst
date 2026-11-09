@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://provider.soa.installedbase.enablers.orangecaraibe.com/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:ns3="http://schemas.xmlsoap.org/soap/http" xmlns:ns1="http://www.orangecaraibe.com/soa/v2/Interfaces/ManageProductInstBaseResourceAssignment" name="ManageProductInstBaseResourceAssignmentProviderService" targetNamespace="http://provider.soa.installedbase.enablers.orangecaraibe.com/">
+  <wsdl:import location="ManageProductInstBaseResourceAssignment.wsdl" namespace="http://www.orangecaraibe.com/soa/v2/Interfaces/ManageProductInstBaseResourceAssignment">
+    </wsdl:import>
+  <wsdl:binding name="ManageProductInstBaseResourceAssignmentProviderServiceSoapBinding" type="ns1:ManageProductInstBaseResourceAssignment">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="recycleInstalledPublicKey">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManageProductInstBaseResourceAssignment/recycleInstalledPublicKey" style="document"/>
+      <wsdl:input name="recycleInstalledPublicKey">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="recycleInstalledPublicKeyResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="RecycleInstalledPublicKeyException">
+        <soap:fault name="RecycleInstalledPublicKeyException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="reserveInstalledPublicKey">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManageProductInstBaseResourceAssignment/reserveInstalledPublicKey" style="document"/>
+      <wsdl:input name="reserveInstalledPublicKey">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="reserveInstalledPublicKeyResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="ReserveInstalledPublicKeyException">
+        <soap:fault name="ReserveInstalledPublicKeyException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="cancelInstalledPublicKey">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManageProductInstBaseResourceAssignment/cancelInstalledPublicKey" style="document"/>
+      <wsdl:input name="cancelInstalledPublicKey">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="cancelInstalledPublicKeyResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="CancelInstalledPublicKeyException">
+        <soap:fault name="CancelInstalledPublicKeyException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="releaseInstalledPublicKey">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManageProductInstBaseResourceAssignment/releaseInstalledPublicKey" style="document"/>
+      <wsdl:input name="releaseInstalledPublicKey">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="releaseInstalledPublicKeyResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="ReleaseInstalledPublicKeyException">
+        <soap:fault name="ReleaseInstalledPublicKeyException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="checkInstalledPublicKey">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManageProductInstBaseResourceAssignment/checkInstalledPublicKey" style="document"/>
+      <wsdl:input name="checkInstalledPublicKey">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="checkInstalledPublicKeyResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="CheckInstalledPublicKeyException">
+        <soap:fault name="CheckInstalledPublicKeyException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="recycleAndReserveInstalledPublicKey">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManageProductInstBaseResourceAssignment/recycleAndReserveInstalledPublicKey" style="document"/>
+      <wsdl:input name="recycleAndReserveInstalledPublicKey">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="recycleAndReserveInstalledPublicKeyResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="RecycleAndReserveInstalledPublicKeyException">
+        <soap:fault name="RecycleAndReserveInstalledPublicKeyException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="findAndGetInstalledPublicKey">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManageProductInstBaseResourceAssignment/findAndGetInstalledPublicKey" style="document"/>
+      <wsdl:input name="findAndGetInstalledPublicKey">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="findAndGetInstalledPublicKeyResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="FindAndGetInstalledPublicKeyException">
+        <soap:fault name="FindAndGetInstalledPublicKeyException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="confirmInstalledPublicKey">
+      <soap:operation soapAction="http://www.orangecaraibe.com/soa/v2/Interfaces/ManageProductInstBaseResourceAssignment/confirmInstalledPublicKey" style="document"/>
+      <wsdl:input name="confirmInstalledPublicKey">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="confirmInstalledPublicKeyResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="ConfirmInstalledPublicKeyException">
+        <soap:fault name="ConfirmInstalledPublicKeyException" use="literal"/>
+      </wsdl:fault>
+      <wsdl:fault name="InterfaceUnavailableException">
+        <soap:fault name="InterfaceUnavailableException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="ManageProductInstBaseResourceAssignmentProviderService">
+    <wsdl:port binding="tns:ManageProductInstBaseResourceAssignmentProviderServiceSoapBinding" name="ManageProductInstBaseResourceAssignmentProviderPort">
+      <soap:address location="http://enra.gitg.ms.fcm/soa/manageProductInstBaseResourceAssignment"/>
+    </wsdl:port>
+  </wsdl:service></wsdl:definitions>
