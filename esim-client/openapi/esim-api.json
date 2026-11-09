@@ -1,0 +1,965 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "description" : "REST Application",
+    "version" : "v2",
+    "title" : "eSIM Consumer REST API",
+    "contact" : {
+      "name" : "renaud.jarnier@orange.com"
+    },
+    "license" : {
+      "name" : "Apache 2.0 License",
+      "url" : "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "basePath" : "/enabler-esim/api/api",
+  "tags" : [ {
+    "name" : "Notifications"
+  }, {
+    "name" : "Profiles"
+  }, {
+    "name" : "ServiceOrder"
+  } ],
+  "schemes" : [ "http", "https" ],
+  "paths" : {
+    "/gsma/rsp2/es2plus/handleDownloadProgressInfo" : {
+      "post" : {
+        "tags" : [ "Notifications" ],
+        "summary" : "Post a notification resource",
+        "description" : "",
+        "operationId" : "handleDownloadProgressInfo",
+        "consumes" : [ "application/json" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/HandleDownloadProgressInfoRequest"
+          }
+        } ],
+        "responses" : {
+          "default" : {
+            "description" : "successful operation"
+          }
+        }
+      }
+    },
+    "/profiles" : {
+      "post" : {
+        "tags" : [ "Profiles" ],
+        "summary" : "Get an eSIM profile information for a given MSISDN and profileType",
+        "description" : "",
+        "operationId" : "profilesPost",
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "name" : "X-ORANGE-Application-Id",
+          "in" : "header",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "X-ORANGE-User-Id",
+          "in" : "header",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/EsimProfileRequest"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Information about new allocated eSIM Profile in case of success.",
+            "schema" : {
+              "$ref" : "#/definitions/EsimProfileResponse"
+            }
+          },
+          "400" : {
+            "description" : "Bad request if one required parameters is malformed or missing.",
+            "schema" : {
+              "$ref" : "#/definitions/Error"
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - resquester id missing or unknown ",
+            "schema" : {
+              "$ref" : "#/definitions/Error"
+            }
+          },
+          "424" : {
+            "description" : "Failed Dependency : this status code means that the method could not be performed on the resource because the requested action depended on another action and that action failed.",
+            "schema" : {
+              "$ref" : "#/definitions/SourceError"
+            }
+          },
+          "500" : {
+            "description" : "Internal server error ",
+            "schema" : {
+              "$ref" : "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/profiles/allocate" : {
+      "post" : {
+        "tags" : [ "Profiles" ],
+        "summary" : "Allocate an eSIM profile onto SM-DP+ server and get eSIM profile data back from SIM card server.",
+        "description" : "",
+        "operationId" : "profilesAllocatePost",
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "name" : "X-ORANGE-Application-Id",
+          "in" : "header",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "X-ORANGE-User-Id",
+          "in" : "header",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/AllocateProfileRequest"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Information about new allocated eSIM Profile in case of success.",
+            "schema" : {
+              "$ref" : "#/definitions/AllocateProfileResponse"
+            }
+          },
+          "400" : {
+            "description" : "Bad request if one required parameters is malformed or missing.",
+            "schema" : {
+              "$ref" : "#/definitions/Error"
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - resquester id missing or unknown ",
+            "schema" : {
+              "$ref" : "#/definitions/Error"
+            }
+          },
+          "424" : {
+            "description" : "Failed Dependency : this status code means that the method could not be performed on the resource because the requested action depended on another action and that action failed.",
+            "schema" : {
+              "$ref" : "#/definitions/SourceError"
+            }
+          },
+          "500" : {
+            "description" : "Internal server error ",
+            "schema" : {
+              "$ref" : "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/profiles/{iccid}/cancel" : {
+      "post" : {
+        "tags" : [ "Profiles" ],
+        "summary" : "Cancel the use for an eSIM profile onto SM-DP+ server. This eSIM profile must not have been downloaded .",
+        "description" : "",
+        "operationId" : "profilesIccidCancelPost",
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "name" : "X-ORANGE-Application-Id",
+          "in" : "header",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "X-ORANGE-User-Id",
+          "in" : "header",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "iccid",
+          "in" : "path",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/CancelProfileRequest"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Information about delivered eSIM Profile in case of success.",
+            "schema" : {
+              "$ref" : "#/definitions/CancelProfileResponse"
+            }
+          },
+          "400" : {
+            "description" : "Bad request if one required parameters is malformed or missing.",
+            "schema" : {
+              "$ref" : "#/definitions/Error"
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - resquester id missing or unknown ",
+            "schema" : {
+              "$ref" : "#/definitions/Error"
+            }
+          },
+          "404" : {
+            "description" : "Not Found : no eSIM profile could be found with the specified ICCID.",
+            "schema" : {
+              "$ref" : "#/definitions/Error"
+            }
+          },
+          "424" : {
+            "description" : "Failed Dependency : this status code means that the method could not be performed on the resource because the requested action depended on another action and that action failed.",
+            "schema" : {
+              "$ref" : "#/definitions/SourceError"
+            }
+          },
+          "500" : {
+            "description" : "Internal server error ",
+            "schema" : {
+              "$ref" : "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/profiles/{iccid}/deliver" : {
+      "post" : {
+        "tags" : [ "Profiles" ],
+        "summary" : "Confirm the use for an eSIM profile onto SM-DP+ server. This eSIM profile must have been allocated first.",
+        "description" : "",
+        "operationId" : "profilesIccidDeliverPost",
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "name" : "X-ORANGE-Application-Id",
+          "in" : "header",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "X-ORANGE-User-Id",
+          "in" : "header",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "iccid",
+          "in" : "path",
+          "required" : true,
+          "type" : "string"
+        }, {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/DeliverProfileRequest"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Information about delivered eSIM Profile in case of success.",
+            "schema" : {
+              "$ref" : "#/definitions/DeliverProfileResponse"
+            }
+          },
+          "400" : {
+            "description" : "Bad request if one required parameters is malformed or missing.",
+            "schema" : {
+              "$ref" : "#/definitions/Error"
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - resquester id missing or unknown ",
+            "schema" : {
+              "$ref" : "#/definitions/Error"
+            }
+          },
+          "404" : {
+            "description" : "Not Found : no eSIM profile could be found with the specified ICCID.",
+            "schema" : {
+              "$ref" : "#/definitions/Error"
+            }
+          },
+          "424" : {
+            "description" : "Failed Dependency : this status code means that the method could not be performed on the resource because the requested action depended on another action and that action failed.",
+            "schema" : {
+              "$ref" : "#/definitions/SourceError"
+            }
+          },
+          "500" : {
+            "description" : "Internal server error ",
+            "schema" : {
+              "$ref" : "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/profiles/{iccid}" : {
+      "get" : {
+        "tags" : [ "Profiles" ],
+        "summary" : "Get the eSIM profile identified with the ICCID in the path.",
+        "description" : "",
+        "operationId" : "profilesIccidGet",
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "parameters" : [ {
+          "name" : "X-ORANGE-Application-Id",
+          "in" : "header",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "X-ORANGE-User-Id",
+          "in" : "header",
+          "required" : false,
+          "type" : "string"
+        }, {
+          "name" : "iccid",
+          "in" : "path",
+          "required" : true,
+          "type" : "string"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The profile data.",
+            "schema" : {
+              "$ref" : "#/definitions/GetProfileResponse"
+            }
+          },
+          "400" : {
+            "description" : "Bad request if one required parameters is malformed or missing.",
+            "schema" : {
+              "$ref" : "#/definitions/Error"
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - resquester id missing or unknown ",
+            "schema" : {
+              "$ref" : "#/definitions/Error"
+            }
+          },
+          "404" : {
+            "description" : "Not Found : no eSIM profile could be found with the specified ICCID.",
+            "schema" : {
+              "$ref" : "#/definitions/Error"
+            }
+          },
+          "500" : {
+            "description" : "Internal server error ",
+            "schema" : {
+              "$ref" : "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/profiles/status" : {
+      "get" : {
+        "tags" : [ "Profiles" ],
+        "summary" : "Get the profiles API availability.",
+        "description" : "",
+        "operationId" : "profilesStatusGet",
+        "consumes" : [ "application/json" ],
+        "produces" : [ "application/json" ],
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "The profile data.",
+            "schema" : {
+              "$ref" : "#/definitions/GetStatusResponse"
+            }
+          }
+        }
+      }
+    },
+    "/serviceOrder" : {
+      "post" : {
+        "tags" : [ "ServiceOrder" ],
+        "summary" : "Creates a ServiceOrder",
+        "description" : "",
+        "operationId" : "createServiceOrder",
+        "consumes" : [ "application/json;charset=utf-8" ],
+        "produces" : [ "application/json;charset=utf-8" ],
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/ServiceOrderCreate"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Created",
+            "schema" : {
+              "$ref" : "#/definitions/ServiceOrder"
+            }
+          },
+          "400" : {
+            "description" : "Bad Request  ",
+            "schema" : {
+              "$ref" : "#/definitions/EsimProfileError"
+            }
+          },
+          "404" : {
+            "description" : "Not Found  ",
+            "schema" : {
+              "$ref" : "#/definitions/EsimProfileError"
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error  ",
+            "schema" : {
+              "$ref" : "#/definitions/EsimProfileError"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions" : {
+    "HandleDownloadProgressInfoRequest" : {
+      "type" : "object",
+      "required" : [ "iccid", "notificationPointId", "notificationPointStatus", "profileType", "timestamp" ],
+      "properties" : {
+        "header" : {
+          "$ref" : "#/definitions/Header"
+        },
+        "eid" : {
+          "type" : "string",
+          "description" : "EID as described in SGP.02"
+        },
+        "iccid" : {
+          "type" : "string",
+          "description" : "ICCID as described in ITU-T E.118"
+        },
+        "profileType" : {
+          "type" : "string",
+          "description" : "Content free information defined by the Operator (e.g.‘P9054-2’)"
+        },
+        "timestamp" : {
+          "type" : "string",
+          "description" : "Date and time when the operation has been performed, in string format as specified by W3C: YYYY-MM-DDThh:mm:ssTZD (E.g. 2001-12-17T09:30:47Z)"
+        },
+        "matchingId" : {
+          "type" : "string",
+          "description" : "OPTIONAL - The matchingId from the procedure request"
+        },
+        "smdpAddress" : {
+          "type" : "string",
+          "description" : "OPTIONAL - The SM-DP address of the affected DP+"
+        },
+        "lastModified" : {
+          "type" : "string",
+          "description" : "OPTIONAL - Date and time when the profile was last updated. Not affected by profile registration"
+        },
+        "imei" : {
+          "type" : "string",
+          "description" : "OPTIONAL - IMEI of the device"
+        },
+        "tac" : {
+          "type" : "string",
+          "description" : "OPTIONAL - TAC of the device"
+        },
+        "notificationPointId" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "Identification of the step reached in the procedure"
+        },
+        "notificationPointStatus" : {
+          "$ref" : "#/definitions/NotificationPointStatus"
+        },
+        "resultData" : {
+          "type" : "string",
+          "description" : "base64 encoded binary data containing the Result data contained in the ProfileInstallationResult"
+        }
+      }
+    },
+    "Header" : {
+      "type" : "object",
+      "required" : [ "functionCallIdentifier", "functionRequesterIdentifier" ],
+      "properties" : {
+        "functionRequesterIdentifier" : {
+          "type" : "string",
+          "description" : "OID of the function requester"
+        },
+        "functionCallIdentifier" : {
+          "type" : "string",
+          "description" : "identification of the function call: HandleDownloadProgressInfo"
+        }
+      }
+    },
+    "NotificationPointStatus" : {
+      "type" : "object",
+      "required" : [ "status" ],
+      "properties" : {
+        "status" : {
+          "type" : "string",
+          "description" : "Executed-Success, Executed-WithWarning, Failed or Expired"
+        },
+        "statusCodeData" : {
+          "$ref" : "#/definitions/StatusCodeData"
+        }
+      }
+    },
+    "StatusCodeData" : {
+      "type" : "object",
+      "required" : [ "reasonCode", "subjectCode" ],
+      "properties" : {
+        "subjectCode" : {
+          "type" : "string",
+          "description" : "OID of the subject code"
+        },
+        "reasonCode" : {
+          "type" : "string",
+          "description" : "OID of the reason code"
+        },
+        "subjectIdentifier" : {
+          "type" : "string",
+          "description" : "Identifier of the subject"
+        },
+        "message" : {
+          "type" : "string",
+          "description" : "Textual and human readable explanation"
+        }
+      }
+    },
+    "EsimProfileResponse" : {
+      "type" : "object",
+      "required" : [ "iccid" ],
+      "properties" : {
+        "iccid" : {
+          "type" : "string",
+          "description" : "Integrated Circuit Card Identifier Il s'agit d'un identifiant de 19 (20 digits avec bourrage) qui identifie de manière unique un profile eSIM au niveau mondial. Il est retourné suite à la demande de réservation du profil eSIM."
+        },
+        "activationCode" : {
+          "type" : "string",
+          "description" : "Ce code est retourné par enabler eSIM si l'appel est effectué en définissant le profileStatus à \"downloadable\" ou \"downloadableWithConfirmationCode\" Le code d'activation retourné permet de générer le QR Code nécessaire au téléchargement du profil eSIM."
+        },
+        "confirmationCode" : {
+          "type" : "string",
+          "description" : "Ce code est retourné en complément de l'activationCode si l'appel est effectué en définissant le profileStatus à \"downloadableWithConfirmationCode\". Le code de confirmation permet de sécuriser le téléchargement du profil (dépend des canaux). Il est généré par le module eSIM qui le transmet à  SM-DP+ dans le cas où le profileStatus est définit avec \"downloadableWithConfirmationCode\"."
+        }
+      }
+    },
+    "Error" : {
+      "type" : "object",
+      "required" : [ "code", "message" ],
+      "properties" : {
+        "code" : {
+          "type" : "string",
+          "description" : "Functional error code defined by the Service."
+        },
+        "message" : {
+          "type" : "string",
+          "description" : "Description of the functional error."
+        }
+      },
+      "description" : "A Service error."
+    },
+    "SourceData" : {
+      "type" : "object",
+      "required" : [ "httpCode", "name" ],
+      "properties" : {
+        "name" : {
+          "type" : "string",
+          "description" : "Reference of the system at the origin of the error."
+        },
+        "httpCode" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "HTTP status code returned by source system."
+        },
+        "error" : {
+          "type" : "string",
+          "description" : "Raw source error message (as text)."
+        }
+      },
+      "description" : "Nested object describing the source system and error which cause a failure."
+    },
+    "SourceError" : {
+      "type" : "object",
+      "required" : [ "source" ],
+      "properties" : {
+        "source" : {
+          "$ref" : "#/definitions/SourceData"
+        }
+      },
+      "description" : "Object describing the source cause of a functional error or failure during an operation."
+    },
+    "EsimProfileRequest" : {
+      "type" : "object",
+      "properties" : {
+        "profileType" : {
+          "type" : "string",
+          "description" : "Profile type requested for the new eSIM profile to allocate."
+        },
+        "msisdn" : {
+          "type" : "string",
+          "description" : "obligatoire pour intérroger la base de livraisons"
+        },
+        "profileStatus" : {
+          "type" : "string"
+        }
+      },
+      "description" : "Recuperer un profil disponible pour un MSISDN"
+    },
+    "AllocateProfileResponse" : {
+      "type" : "object",
+      "required" : [ "iccid", "imsi" ],
+      "properties" : {
+        "iccid" : {
+          "type" : "string",
+          "description" : "The ICCID (Integrated Circuit Card IDentifier, i.e. eSIM profile identifier) identifying the new eSIM profile allocated. The ICCID is a numeric value of 20 digits."
+        },
+        "imsi" : {
+          "type" : "string",
+          "description" : "The Subscriber identifier associated to the new eSIM profile allocated. The IMSI is a numeric value of 15 digits."
+        }
+      },
+      "description" : "Data returned as response to eSIM Profile allocate request."
+    },
+    "AllocateProfileRequest" : {
+      "type" : "object",
+      "required" : [ "profileType" ],
+      "properties" : {
+        "profileType" : {
+          "type" : "string",
+          "description" : "Profile type requested for the new eSIM profile to allocate."
+        },
+        "cid" : {
+          "type" : "string",
+          "description" : "The identifier of customer contract. Generally MSISDN(590690000000)."
+        },
+        "eid" : {
+          "type" : "string",
+          "description" : "The EID identifying the eUICC (embedded Universal Integrated Circuit Card) to link to the eSIM Profile. The EID must be a numeric value of 32 digits and respect the following control: (Value(EID) modulo 97) = 1"
+        }
+      },
+      "description" : "Data required to allocate a new eSIM Profile"
+    },
+    "CancelProfileResponse" : {
+      "type" : "object",
+      "required" : [ "finalProfileStatusIndicator" ],
+      "properties" : {
+        "finalProfileStatusIndicator" : {
+          "type" : "string",
+          "description" : "The final status executed."
+        }
+      },
+      "description" : "status of cancel action."
+    },
+    "CancelProfileRequest" : {
+      "type" : "object",
+      "required" : [ "finalProfileStatusIndicator" ],
+      "properties" : {
+        "finalProfileStatusIndicator" : {
+          "type" : "string",
+          "description" : "The final status wanted."
+        },
+        "eid" : {
+          "type" : "string"
+        }
+      },
+      "description" : "Data required to cancel a non downloaded eSIM Profile."
+    },
+    "DeliverProfileResponse" : {
+      "type" : "object",
+      "required" : [ "iccid" ],
+      "properties" : {
+        "iccid" : {
+          "type" : "string",
+          "description" : "The ICCID (Integrated Circuit Card IDentifier, i.e. eSIM profile identifier) identifying the new eSIM profile allocated. The ICCID is a numeric value of 20 digits."
+        },
+        "imsi" : {
+          "type" : "string",
+          "description" : "The Subscriber identifier associated to the new eSIM profile allocated. The IMSI is a numeric value of 15 digits."
+        },
+        "eid" : {
+          "type" : "string",
+          "description" : "The EID identifying the eUICC (embedded Universal Integrated Circuit Card) linked to the eSIM Profile. The EID must be a numeric value of 32 digits. It is always present in this response when the deliveryMode is set to \"defaultSMDPplus\"."
+        },
+        "activationCode" : {
+          "type" : "string",
+          "description" : "A code built using the SM-DP+ address, the MatchingID and the confirmationCode if any is specified as parameter. It is always present in this response when the deliveryMode is set to \"AC\"."
+        },
+        "matchingId" : {
+          "type" : "string",
+          "description" : "Reference of the eSIM profile to be downloaded. It is always present in this response when the deliveryMode is set to \"AC\"."
+        },
+        "confirmationCode" : {
+          "type" : "string",
+          "description" : "A code used to authorise the usage of the MatchingID to confirm the download and installation of the eSIM Profile. It can be present (optional) in this response when the deliveryMode is set to \"AC\"."
+        },
+        "smdpAddress" : {
+          "type" : "string",
+          "description" : "as defined in SGP.22"
+        }
+      },
+      "description" : "Data returned as response to eSIM Profile delivery request."
+    },
+    "DeliverProfileRequest" : {
+      "type" : "object",
+      "required" : [ "deliveryMode" ],
+      "properties" : {
+        "deliveryMode" : {
+          "type" : "string",
+          "description" : "Required delivery mode to deliver the specified eSIM Profile. Possible values are : \"defaultSMDPplus\", \"AC\", \"SMDS\". This value determines which others fields are required or not according to the following rules:  * __defaultSMDPplus__:     - eid is required if it was not sent in the previous allocation call    - smdsAddress should not be set  * __AC__: (Activation Code)    - if the matchingId is not present, SM-DP+ will generates a new matchingId for _ActivationCodeToken_    - smdsAddress should not be set  * __SMDS__:    - eid is required if it was not sent in the previous allocation call    - if the matchingId is present, it will be used as EventID    - smdsAddress is required"
+        },
+        "eid" : {
+          "type" : "string",
+          "description" : "The EID identifying the eUICC (embedded Universal Integrated Circuit Card) to link to the eSIM Profile. The EID must be a numeric value of 32 digits and respect the following control: (Value(EID) modulo 97) = 1. _See the description of field deliveryMode for the usage rules._"
+        },
+        "matchingId" : {
+          "type" : "string",
+          "description" : "Reference of the eSIM profile to be downloaded. _See the description of field deliveryMode for the usage rules._"
+        },
+        "confirmationCode" : {
+          "type" : "string",
+          "description" : "A code used to authorise the usage of the MatchingID to confirm the download and installation of the eSIM Profile. _See the description of field deliveryMode for the usage rules._"
+        },
+        "smdsAddress" : {
+          "type" : "string",
+          "description" : "The SM-DS address to be used for Event Registration with the SM-DP+ server. _See the description of field deliveryMode for the usage rules._"
+        }
+      },
+      "description" : "Data required to deliver a previously allocated eSIM Profile."
+    },
+    "GetProfileResponse" : {
+      "type" : "object",
+      "required" : [ "iccid", "imsi", "lastOperationDone", "lastOperationResult", "profileStatus", "profileType" ],
+      "properties" : {
+        "iccid" : {
+          "type" : "string",
+          "description" : "The ICCID (Integrated Circuit Card IDentifier, i.e. eSIM profile identifier) identifying the new eSIM profile allocated. The ICCID is a numeric value of 20 digits."
+        },
+        "imsi" : {
+          "type" : "string",
+          "description" : "The Subscriber identifier associated to the new eSIM profile allocated. The IMSI is a numeric value of 15 digits."
+        },
+        "profileType" : {
+          "type" : "string",
+          "description" : "The requested profile type identifier for this eSIM profile."
+        },
+        "cid" : {
+          "type" : "string",
+          "description" : "The contract identifier."
+        },
+        "profileStatus" : {
+          "type" : "string",
+          "description" : "The state of the profile resulting from a successful operation. The values to consider are ALLOCATED, LINKED, RELEASED, DOWNLOADED, INSTALLED, ENABLED, DISABLED, DELETED, ERROR. Other values are possible due to SMDP+ vendors proprietary implementation, but they should not to be considered as exploitable values."
+        },
+        "lastOperationDone" : {
+          "type" : "string",
+          "description" : "The last operation attempted on the profile."
+        },
+        "lastOperationResult" : {
+          "type" : "string",
+          "description" : "The result of the last operation attempted on the profile. If lastOperationResult is 'failed', then lastOperationErrorDetails is present."
+        },
+        "lastOperationErrorDetails" : {
+          "$ref" : "#/definitions/SourceError"
+        },
+        "deliveryMode" : {
+          "type" : "string",
+          "description" : "The delivery mode of the eSIM profile."
+        },
+        "eid" : {
+          "type" : "string",
+          "description" : "The EID identifying the eUICC (embedded Universal Integrated Circuit Card) linked to the eSIM profile. The EID must be a numeric value of 32 digits."
+        },
+        "activationCode" : {
+          "type" : "string",
+          "description" : "The activation code for the profile. Present only if deliveryMode=AC and profileStatus=RELEASED."
+        },
+        "matchingId" : {
+          "type" : "string",
+          "description" : "The matching ID of the profile. Present only if deliveryMode=AC and profileStatus=RELEASED."
+        },
+        "confirmationCode" : {
+          "type" : "string",
+          "description" : "The activation code for the profile. Present only if exists and deliveryMode=AC and profileStatus=RELEASED."
+        },
+        "smdsAddress" : {
+          "type" : "string",
+          "description" : "The matching ID of the profile. Present only if deliveryMode=SMDS and profileStatus=RELEASED."
+        }
+      },
+      "description" : "Profile data for the GET profile API."
+    },
+    "GetStatusResponse" : {
+      "type" : "object",
+      "required" : [ "name", "status", "version" ],
+      "properties" : {
+        "name" : {
+          "type" : "string",
+          "description" : "The name of the API='profiles'."
+        },
+        "status" : {
+          "type" : "string",
+          "description" : "The status of the API='ok'."
+        },
+        "version" : {
+          "type" : "string",
+          "description" : "The version of the API. exp 2.0"
+        }
+      },
+      "description" : "Data returned as response to GET Profile Status request."
+    },
+    "Characteristic" : {
+      "type" : "object",
+      "required" : [ "name", "value" ],
+      "properties" : {
+        "name" : {
+          "type" : "string"
+        },
+        "value" : {
+          "type" : "string"
+        }
+      }
+    },
+    "ESimProfile" : {
+      "type" : "object",
+      "properties" : {
+        "id" : {
+          "type" : "string"
+        },
+        "serviceType" : {
+          "type" : "string"
+        },
+        "serviceCharacteristic" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/Characteristic"
+          }
+        },
+        "supportingResource" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/ResourceRef"
+          }
+        },
+        "msisdn" : {
+          "type" : "string"
+        },
+        "matchingId" : {
+          "type" : "string"
+        },
+        "profileType" : {
+          "type" : "string"
+        },
+        "profileStatus" : {
+          "type" : "string"
+        },
+        "confirmationCode" : {
+          "type" : "string"
+        },
+        "@type" : {
+          "type" : "string"
+        }
+      }
+    },
+    "ResourceRef" : {
+      "type" : "object",
+      "required" : [ "id" ],
+      "properties" : {
+        "id" : {
+          "type" : "string"
+        },
+        "@type" : {
+          "type" : "string"
+        }
+      }
+    },
+    "ServiceOrder" : {
+      "type" : "object",
+      "properties" : {
+        "serviceOrderItem" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/ServiceOrderItem"
+          }
+        },
+        "state" : {
+          "type" : "string",
+          "enum" : [ "acknowledged" ]
+        }
+      }
+    },
+    "ServiceOrderItem" : {
+      "type" : "object",
+      "required" : [ "action", "id", "service" ],
+      "properties" : {
+        "id" : {
+          "type" : "string"
+        },
+        "action" : {
+          "type" : "string",
+          "enum" : [ "preparation" ]
+        },
+        "service" : {
+          "$ref" : "#/definitions/ESimProfile"
+        },
+        "@type" : {
+          "type" : "string"
+        }
+      }
+    },
+    "EsimProfileData" : {
+      "type" : "object",
+      "properties" : {
+        "iccid" : {
+          "type" : "string"
+        },
+        "eid" : {
+          "type" : "string"
+        },
+        "profileType" : {
+          "type" : "string"
+        },
+        "profileStatus" : {
+          "type" : "string"
+        }
+      }
+    },
+    "EsimProfileError" : {
+      "type" : "object",
+      "required" : [ "code", "message" ],
+      "properties" : {
+        "data" : {
+          "$ref" : "#/definitions/EsimProfileData"
+        },
+        "code" : {
+          "type" : "string",
+          "description" : "Functional error code defined by the Service."
+        },
+        "message" : {
+          "type" : "string",
+          "description" : "Description of the functional error."
+        }
+      },
+      "description" : "A Service error."
+    },
+    "ServiceOrderCreate" : {
+      "type" : "object",
+      "required" : [ "serviceOrderItem" ],
+      "properties" : {
+        "serviceOrderItem" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/ServiceOrderItem"
+          }
+        }
+      }
+    }
+  }
+}
