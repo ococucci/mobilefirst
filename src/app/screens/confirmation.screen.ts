@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { OrderApi, OrderRequest } from '../api/order.api';
 import { formatDate, formatEuro, formatMsisdn, maskIban } from '../domain/format';
 import { FLOW_LABELS, Screen, SIM_REASONS } from '../domain/models';
-import { requiresContract } from '../domain/rules';
+import { levelLabel, requiresContract } from '../domain/rules';
 import { OrderStore } from '../store/order.store';
 import { Page } from '../ui/page';
 import { run } from '../ui/run';
@@ -118,9 +118,19 @@ export class ConfirmationScreen {
       cards.push({
         k: 'Matériel et paiement',
         v: `${h.simType === 'esim' ? 'eSIM' : 'SIM physique'} · ${card ? 'Puce à régler en caisse' : 'SEPA'}`,
-        s: card ? `ICCID ${h.iccid}` : `IBAN ${maskIban(d.sepa.iban)}${h.withTerminal ? ' · terminal en caisse' : ''}`,
+        s: card ? `ICCID ${h.iccid}` : `IBAN ${maskIban(d.sepa.iban)}`,
         edit: 'materiel',
       });
+      const t = s.selectedTerminal();
+      if (t) {
+        const level = levelLabel(s.selectedOffer()!.level);
+        cards.push({
+          k: 'Terminal',
+          v: `${t.terminal.brand} ${t.terminal.model}${t.color ? ' · ' + t.color.label : ''}`,
+          s: `${formatEuro(s.terminalPrice())} (tarif ${level}) à régler en caisse · IMEI ${h.imei}`,
+          edit: 'materiel',
+        });
+      }
       return cards;
     }
 
@@ -206,7 +216,9 @@ export class ConfirmationScreen {
           options: d.options,
           openMlSponsor,
           sim: { type: d.hardware.simType, iccid },
-          terminal: d.hardware.withTerminal && !card ? { id: d.hardware.terminalId, imei: d.hardware.imei } : null,
+          terminal: d.hardware.withTerminal && !card
+            ? { id: d.hardware.terminalId, colorId: d.hardware.terminalColorId, imei: d.hardware.imei }
+            : null,
           sepaMandateRef: card ? null : d.sepa.mandateRef,
         };
       }

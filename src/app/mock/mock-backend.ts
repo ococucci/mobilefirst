@@ -3,7 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { defer, delay, of, throwError } from 'rxjs';
 import type { OrderRequest } from '../api/order.api';
 import { APP_CONFIG } from '../config';
-import { Address, Customer, FLOW_LABELS, Identity, Score } from '../domain/models';
+import { Address, Customer, FLOW_LABELS, Identity, Score, Terminal } from '../domain/models';
 import {
   acquisitionCashDue,
   compact,
@@ -14,6 +14,7 @@ import {
   requiresContract,
   round,
   simChangeFee,
+  terminalPrice,
 } from '../domain/rules';
 import {
   ADDRESSES,
@@ -70,6 +71,8 @@ export class MockBackend {
   private readonly pending = new Set(PENDING_ORDER_LINES);
   private readonly reserved = new Set<string>();
   private readonly stock = new Set(ICCID_STOCK);
+  /** Terminaux avec leur stock par couleur, décrémenté à chaque commande. */
+  private readonly terminals: Terminal[] = structuredClone(TERMINALS);
   private readonly mandates = new Set<string>();
   private readonly contracts = new Map<string, Blob>();
   private readonly cashDue = new Map<string, number>();
@@ -87,7 +90,7 @@ export class MockBackend {
     ['GET', /^\/catalog\/offers$/, () => ok(OFFERS)],
     ['GET', /^\/numbers\/available$/, () => ok(AVAILABLE_NUMBERS.filter((n) => !this.reserved.has(n)))],
     ['POST', /^\/open-ml\/sponsor-checks$/, (_, req) => ok({ valid: SPONSORS.includes(digits(this.body<{ sponsor: string }>(req).sponsor ?? '')) })],
-    ['GET', /^\/hardware\/terminals$/, () => ok(TERMINALS)],
+    ['GET', /^\/hardware\/terminals$/, () => ok(this.terminals)],
     ['POST', /^\/hardware\/iccid-checks$/, (_, req) => ok({ result: this.checkIccid(this.body<{ iccid: string }>(req).iccid ?? '') })],
     ['POST', /^\/hardware\/sim-scans$/, () => ok({ iccid: [...this.stock][Math.floor(Math.random() * this.stock.size)] ?? '' })],
     ['GET', /^\/addresses$/, (_, req) => this.addresses(req.params.get('q') ?? '')],
@@ -210,12 +213,17 @@ export class MockBackend {
     if (!requiresContract(request.flow)) throw refused("Aucun contrat n'est généré pour une modification d'options.");
     const customer = this.customer(request.customerId);
     const offer = OFFERS.find((o) => o.id === request.offerId);
+    const terminal = this.terminals.find((t) => t.id === request.terminal?.id);
+    const color = terminal?.colors.find((c) => c.id === request.terminal?.colorId);
     const lines = [
       `Objet : ${FLOW_LABELS[request.flow]}`,
       `Client : ${customer.id} - ${customer.identity.civilite} ${customer.identity.prenom} ${customer.identity.nom}`,
       `Ligne : ${this.msisdn(request)}`,
       ...(offer ? [`Offre : ${offer.label} - ${offer.price.toFixed(2)} EUR/mois`] : []),
       ...(offer?.promo ? [`Remise : ${offer.promo.label}`] : []),
+      ...(terminal && offer
+        ? [`Terminal : ${terminal.brand} ${terminal.model} ${color?.label ?? ''} - ${terminalPrice(terminal, offer).toFixed(2)} EUR (tarif ${offer.level}) - IMEI ${request.terminal?.imei}`]
+        : []),
       ...(request.sim ? [`SIM : ${request.sim.type === 'esim' ? 'eSIM' : 'SIM physique'} - ICCID ${request.sim.iccid}`] : []),
       '',
       `Édité le ${new Date().toLocaleString('fr-FR')} par Orange Order First (mode démonstration).`,
@@ -249,14 +257,19 @@ export class MockBackend {
     }
 
     const offer = OFFERS.find((o) => o.id === r.offerId);
-    const terminalPrice = r.terminal ? (TERMINALS.find((t) => t.id === r.terminal?.id)?.price ?? 0) : 0;
-    const cashDue = r.flow === 'acquisition' ? acquisitionCashDue(offer, terminalPrice) : r.flow === 'sim' ? simChangeFee(r.simReason ?? null) : 0;
+    const terminal = r.terminal ? this.terminals.find((t) => t.id === r.terminal?.id) : undefined;
+    const color = terminal?.colors.find((c) => c.id === r.terminal?.colorId);
+    if (r.terminal && (!terminal || !color)) throw invalid({ terminal: 'Terminal inconnu.' });
+    if (color && color.stock < 1) throw refused(`${terminal?.model} ${color.label} : plus de stock en boutique.`);
+    const price = terminal && offer ? terminalPrice(terminal, offer) : 0;
+    const cashDue = r.flow === 'acquisition' ? acquisitionCashDue(offer, price) : r.flow === 'sim' ? simChangeFee(r.simReason ?? null) : 0;
     const orderNumber = `CMD-${new Date().getFullYear()}-${String(this.orderSequence++).padStart(7, '0')}`;
     const createdAt = new Date().toISOString();
 
     this.pending.add(msisdn);
     if (r.number?.mode === 'nouveau') this.reserved.add(digits(r.number.msisdn));
     if (r.sim) this.stock.delete(compact(r.sim.iccid));
+    if (color) color.stock--;
     this.cashDue.set(orderNumber, round(cashDue));
     console.info('[PubSub bouchonné] orange-order-first.mobile.order-validated', { orderNumber, createdAt, msisdn, cashDue, order: r });
     return created({ orderNumber, createdAt, cashDue: round(cashDue) });

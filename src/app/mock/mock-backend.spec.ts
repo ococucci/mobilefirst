@@ -26,6 +26,23 @@ describe('bouchons intégrés (mode mock)', () => {
     expect(offers.find((o) => o.id === 'bl-20')?.promo).toBeNull();
   });
 
+  it('terminal au tarif du niveau de l’offre, stock décrémenté', async () => {
+    type T = { id: string; prices: Record<string, number>; colors: { id: string; stock: number }[] };
+    const stockOf = async () =>
+      (await firstValueFrom(http.get<T[]>(`${api}/hardware/terminals`))).find((t) => t.id === 'ip16-128')!.colors.find((c) => c.id === 'ip16-128-bleu')!.stock;
+    expect(await stockOf()).toBe(13);
+    const order = {
+      flow: 'acquisition', customerId: 'CL-000101', offerId: 'bl-60', number: { mode: 'nouveau', msisdn: '0690123480' },
+      terminal: { id: 'ip16-128', colorId: 'ip16-128-bleu', imei: '490154203237518' },
+    };
+    const { documentId } = await firstValueFrom(http.post<{ documentId: string }>(`${api}/contracts`, order));
+    const created = await firstValueFrom(
+      http.post<{ cashDue: number }>(`${api}/orders`, { ...order, contractRef: documentId, contractSigned: true, cgvAccepted: true, privacyAccepted: true }),
+    );
+    expect(created.cashDue).toBe(829); // bl-60 est une offre Silver
+    expect(await stockOf()).toBe(12);
+  });
+
   it('complétion d’adresse', async () => {
     const res = await firstValueFrom(http.get<unknown[]>(`${api}/addresses`, { params: { q: 'Flamboyants' } }));
     expect(res.length).toBe(1);

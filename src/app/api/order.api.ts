@@ -19,7 +19,8 @@ export interface OrderRequest {
   options?: string[];
   openMlSponsor?: string | null;
   sim?: { type: SimType; iccid: string };
-  terminal?: { id: string; imei: string } | null;
+  /** Modèle et couleur choisis ; le serveur applique le prix du niveau de l'offre. */
+  terminal?: { id: string; colorId: string; imei: string } | null;
   sepaMandateRef?: string | null;
   simReason?: string | null;
   contractRef?: string | null;

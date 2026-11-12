@@ -1,10 +1,10 @@
-import { Component, inject, signal, viewChild } from '@angular/core';
+import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { HardwareApi } from '../api/hardware.api';
 import { OrderApi } from '../api/order.api';
 import { formatEuro } from '../domain/format';
 import { CARD_SIM_PRICE, Terminal } from '../domain/models';
-import { sepaErrors, terminalErrors } from '../domain/validation';
+import { levelLabel, terminalBrands, terminalStock } from '../domain/rules';
+import { sepaErrors, TerminalField, terminalErrors } from '../domain/validation';
 import { OrderStore } from '../store/order.store';
 import { Page } from '../ui/page';
 import { SimBlock } from '../ui/sim-block';
@@ -38,24 +38,60 @@ import { CORRECT_FIELDS, FieldError, focusFirstError } from '../ui/field-error';
             </button>
           </div>
           @if (h.withTerminal) {
-            <div class="grid2" style="margin-top: 1rem">
+            <div class="terminal-grid" style="margin-top: 1rem">
               <div class="field">
-                <label for="terminal">Terminal</label>
-                <select id="terminal" [ngModel]="h.terminalId" (ngModelChange)="selectTerminal($event)"
-                  [class.ko]="terr('terminalId')" [attr.aria-invalid]="!!terr('terminalId')" aria-describedby="terminal-error">
-                  <option value="" disabled>Choisir un terminal</option>
-                  @for (t of terminals(); track t.id) { <option [value]="t.id">{{ t.label }} · {{ euro(t.price) }}</option> }
+                <label for="brand">Marque</label>
+                <select id="brand" [ngModel]="h.terminalBrand" (ngModelChange)="selectBrand($event)"
+                  [class.ko]="terr('terminalBrand')" [attr.aria-invalid]="!!terr('terminalBrand')" aria-describedby="brand-error">
+                  <option value="">Marque…</option>
+                  @for (b of brands(); track b) { <option [value]="b">{{ b }}</option> }
                 </select>
-                <app-field-error for="terminal" [message]="terr('terminalId')" />
+                <app-field-error for="brand" [message]="terr('terminalBrand')" />
               </div>
+              <div class="field">
+                <label for="model">Modèle</label>
+                <select id="model" [ngModel]="h.terminalId" (ngModelChange)="selectModel($event)" [disabled]="!h.terminalBrand"
+                  [class.ko]="terr('terminalId')" [attr.aria-invalid]="!!terr('terminalId')" aria-describedby="model-error">
+                  <option value="">Modèle…</option>
+                  @for (t of models(); track t.id) {
+                    @let qty = stock(t);
+                    <option [value]="t.id" [disabled]="!qty">{{ t.model }} ({{ qty }})</option>
+                  }
+                </select>
+                <app-field-error for="model" [message]="terr('terminalId')" />
+              </div>
+              <div class="field">
+                <label for="color">Couleur</label>
+                <select id="color" [ngModel]="h.terminalColorId" (ngModelChange)="h.terminalColorId = $event" [disabled]="!selected()"
+                  [class.ko]="terr('terminalColorId')" [attr.aria-invalid]="!!terr('terminalColorId')" aria-describedby="color-error">
+                  <option value="">Couleur…</option>
+                  @for (c of selected()?.terminal?.colors ?? []; track c.id) {
+                    <option [value]="c.id" [disabled]="!c.stock">{{ c.label }} ({{ c.stock }})</option>
+                  }
+                </select>
+                <app-field-error for="color" [message]="terr('terminalColorId')" />
+              </div>
+              <div class="field">
+                <label for="qty">Quantité</label>
+                <input id="qty" type="number" value="1" disabled />
+              </div>
+            </div>
+            <div class="grid2">
               <div class="field">
                 <label for="imei">IMEI</label>
                 <input id="imei" inputmode="numeric" autocomplete="off" [(ngModel)]="h.imei"
                   [class.ko]="terr('imei')" [attr.aria-invalid]="!!terr('imei')" aria-describedby="imei-error" />
                 <app-field-error for="imei" [message]="terr('imei')" />
               </div>
+              @if (selected(); as t) {
+                <div class="field">
+                  <span class="label">Prix du terminal</span>
+                  <span class="terminal-price">{{ euro(store.terminalPrice()) }}</span>
+                  <span class="msg">Tarif {{ level() }} (niveau de l'offre {{ store.selectedOffer()?.label }})</span>
+                </div>
+              }
             </div>
-            <p class="small muted">Le terminal est géré par l'enabler si-financier et réglé en caisse.</p>
+            <p class="small muted">Le terminal est géré par l'enabler si-financier et réglé en caisse. Son prix dépend du niveau de l'offre choisie.</p>
           }
         </div>
 
@@ -83,11 +119,18 @@ import { CORRECT_FIELDS, FieldError, focusFirstError } from '../ui/field-error';
 })
 export class MaterielScreen {
   protected readonly store = inject(OrderStore);
-  private readonly hardware = inject(HardwareApi);
   private readonly orders = inject(OrderApi);
   private readonly simBlock = viewChild.required(SimBlock);
 
-  protected readonly terminals = signal<Terminal[]>([]);
+  protected readonly brands = computed(() => terminalBrands(this.store.terminals()));
+  /** Marque choisie, pour recalculer la liste des modèles. */
+  private readonly brand = signal(this.store.draft.hardware.terminalBrand);
+  protected readonly models = computed(() =>
+    this.store.terminals()
+      .filter((t) => t.brand === this.brand())
+      .sort((a, b) => a.model.localeCompare(b.model, 'fr', { numeric: true })),
+  );
+  protected readonly stock = terminalStock;
   protected readonly busy = signal(false);
   protected readonly submitted = signal(false);
   protected readonly cardSimPrice = CARD_SIM_PRICE;
@@ -99,20 +142,41 @@ export class MaterielScreen {
       const i = this.store.draft.identity;
       sepa.holder = `${i.prenom} ${i.nom}`.trim();
     }
-    void run(null, async () => this.terminals.set(await this.hardware.terminals()));
+    void run(null, () => this.store.loadTerminals());
   }
 
   protected isCard(): boolean {
     return this.store.selectedOffer()?.family === 'prepaye';
   }
 
-  protected selectTerminal(id: string): void {
-    const h = this.store.draft.hardware;
-    h.terminalId = id;
-    h.terminalPrice = this.terminals().find((t) => t.id === id)?.price ?? 0;
+  /** Modèle choisi (avec sa couleur éventuelle). */
+  protected selected(): { terminal: Terminal } | null {
+    return this.store.selectedTerminal();
   }
 
-  protected terr(field: 'terminalId' | 'imei'): string | null {
+  protected level(): string {
+    const offer = this.store.selectedOffer();
+    return offer ? levelLabel(offer.level) : '';
+  }
+
+  /** Changer de marque efface le modèle et la couleur. */
+  protected selectBrand(brand: string): void {
+    const h = this.store.draft.hardware;
+    h.terminalBrand = brand;
+    this.brand.set(brand);
+    h.terminalId = '';
+    h.terminalColorId = '';
+  }
+
+  /** Changer de modèle efface la couleur, sauf s'il n'en reste qu'une en stock : elle est alors présélectionnée. */
+  protected selectModel(id: string): void {
+    const h = this.store.draft.hardware;
+    h.terminalId = id;
+    const available = this.store.terminals().find((t) => t.id === id)?.colors.filter((c) => c.stock > 0) ?? [];
+    h.terminalColorId = available.length === 1 ? available[0].id : '';
+  }
+
+  protected terr(field: TerminalField): string | null {
     return this.submitted() ? (terminalErrors(this.store.draft.hardware)[field] ?? null) : null;
   }
 

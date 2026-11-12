@@ -1,6 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { ApiErrors } from '../api/api-base';
 import { CatalogApi } from '../api/catalog.api';
+import { HardwareApi } from '../api/hardware.api';
 import {
   Address,
   Customer,
@@ -14,15 +15,19 @@ import {
   Score,
   Screen,
   SimType,
+  Terminal,
+  TerminalColor,
 } from '../domain/models';
 import {
   acquisitionCashDue,
+  blockedOptions,
   monthly,
   MonthlyBreakdown,
   optionsDiff,
   OptionsDiff,
   simChangeFee,
   stepsFor,
+  terminalPrice,
 } from '../domain/rules';
 
 export type CustomerStatus = 'connu' | 'controle' | 'cree';
@@ -65,8 +70,11 @@ export interface Draft {
     iccid: string;
     iccidValid: boolean;
     withTerminal: boolean;
+    terminalBrand: string;
+    /** Modèle choisi. */
     terminalId: string;
-    terminalPrice: number;
+    /** Couleur choisie (référence de stock). */
+    terminalColorId: string;
     imei: string;
   };
   sepa: { holder: string; iban: string; mandateRef: string | null };
@@ -91,8 +99,9 @@ const emptyDraft = (): Draft => ({
     iccid: '',
     iccidValid: false,
     withTerminal: false,
+    terminalBrand: '',
     terminalId: '',
-    terminalPrice: 0,
+    terminalColorId: '',
     imei: '',
   },
   sepa: { holder: '', iban: '', mandateRef: null },
@@ -105,6 +114,7 @@ const emptyDraft = (): Draft => ({
 @Injectable({ providedIn: 'root' })
 export class OrderStore {
   private readonly catalogApi = inject(CatalogApi);
+  private readonly hardwareApi = inject(HardwareApi);
   private readonly apiErrors = inject(ApiErrors);
 
   readonly screen = signal<Screen>('identification');
@@ -120,6 +130,8 @@ export class OrderStore {
   readonly flowChoice = signal<Flow | null>(null);
 
   readonly offers = signal<Offer[]>([]);
+  /** Terminaux et stock boutique, chargés à l'écran Matériel et paiement. */
+  readonly terminals = signal<Terminal[]>([]);
 
   draft: Draft = emptyDraft();
 
@@ -127,6 +139,10 @@ export class OrderStore {
 
   async loadCatalog(): Promise<void> {
     this.offers.set(await this.catalogApi.offers());
+  }
+
+  async loadTerminals(): Promise<void> {
+    this.terminals.set(await this.hardwareApi.terminals());
   }
 
   go(screen: Screen): void {
@@ -192,12 +208,32 @@ export class OrderStore {
     return this.optionsOffer()?.options.find((o) => o.id === id);
   }
 
+  /** Options non actives bloquées par une option incompatible, avec le libellé de l'option qui les bloque. */
+  blockedOptions(): Map<string, string> {
+    return blockedOptions(this.optionsOffer(), this.draft.options);
+  }
+
   selectedOffer(): Offer | undefined {
     return this.offer(this.draft.offerId);
   }
 
   selectedLine(): Line | undefined {
     return this.customer()?.lines.find((l) => l.msisdn === this.draft.lineMsisdn);
+  }
+
+  /** Terminal ajouté à la commande (modèle et couleur), s'il y en a un. */
+  selectedTerminal(): { terminal: Terminal; color: TerminalColor | undefined } | null {
+    const h = this.draft.hardware;
+    if (!h.withTerminal || this.selectedOffer()?.family === 'prepaye') return null;
+    const terminal = this.terminals().find((t) => t.id === h.terminalId);
+    return terminal ? { terminal, color: terminal.colors.find((c) => c.id === h.terminalColorId) } : null;
+  }
+
+  /** Prix du terminal choisi au niveau de l'offre choisie ; 0 sans terminal. */
+  terminalPrice(): number {
+    const offer = this.selectedOffer();
+    const t = this.selectedTerminal();
+    return offer && t ? terminalPrice(t.terminal, offer) : 0;
   }
 
   breakdown(): MonthlyBreakdown | null {
@@ -213,7 +249,7 @@ export class OrderStore {
   cashDue(): number {
     switch (this.flow()) {
       case 'acquisition':
-        return acquisitionCashDue(this.selectedOffer(), this.draft.hardware.withTerminal ? this.draft.hardware.terminalPrice : 0);
+        return acquisitionCashDue(this.selectedOffer(), this.terminalPrice());
       case 'sim':
         return simChangeFee(this.draft.simReason);
       default:

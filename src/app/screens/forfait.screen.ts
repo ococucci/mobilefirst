@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { CatalogApi } from '../api/catalog.api';
 import { formatEuro, formatMsisdn } from '../domain/format';
 import { DONOR_OPERATORS, FAMILIES, FamilyId, Offer } from '../domain/models';
-import { allowedFamilies, isOpenMlAvailable, openMlDiscount } from '../domain/rules';
+import { allowedFamilies, compatibleOptions, isOpenMlAvailable, levelLabel, openMlDiscount } from '../domain/rules';
 import { NumberChoice, numberErrors, sponsorError } from '../domain/validation';
 import { OrderStore } from '../store/order.store';
 import { CustomerBanner } from '../ui/customer-banner';
@@ -119,6 +119,7 @@ import { run } from '../ui/run';
                 <span class="body">
                   <span class="title" style="display: block">{{ o.label }}</span>
                   <span class="sub" style="display: block">{{ o.detail }}</span>
+                  <span class="badge level" [attr.data-level]="o.level">{{ levelLabel(o.level) }}</span>
                   @if (current) { <span class="badge gray">Offre actuelle</span> }
                   @else if (o.promo) { <span class="badge orange">{{ o.promo.label }}</span> }
                 </span>
@@ -164,15 +165,20 @@ import { run } from '../ui/run';
       <div class="card">
         <h2>Options mobile</h2>
         @if (store.selectedOffer(); as offer) {
+          @let blocked = store.blockedOptions();
           @for (o of offer.options; track o.id) {
-            <label class="check" [class.disabled]="o.included">
-              <span class="body">{{ o.label }}</span>
+            @let blocker = blocked.get(o.id);
+            <label class="check" [class.disabled]="o.included || blocker">
+              <span class="body">
+                {{ o.label }}
+                @if (blocker) { <span class="incompatible">Incompatible avec {{ blocker }}</span> }
+              </span>
               @if (o.included) {
                 <span class="badge green">Incluse</span>
               } @else {
                 <span class="price">+{{ euro(o.price) }}/mois</span>
               }
-              <input type="checkbox" [disabled]="o.included" [checked]="o.included || d.options.includes(o.id)"
+              <input type="checkbox" [disabled]="o.included || !!blocker" [checked]="o.included || d.options.includes(o.id)"
                 (change)="setOption(o.id, $any($event.target).checked)" />
             </label>
           } @empty {
@@ -202,6 +208,7 @@ export class ForfaitScreen {
 
   protected readonly fmt = formatMsisdn;
   protected readonly euro = formatEuro;
+  protected readonly levelLabel = levelLabel;
 
   protected readonly allowed = computed(() => allowedFamilies(this.store.score() ?? 'vert'));
   protected readonly familyOffers = computed(() => this.store.offers().filter((o) => o.family === this.familyId()));
@@ -248,8 +255,9 @@ export class ForfaitScreen {
   protected selectOffer(offer: Offer): void {
     const d = this.store.draft;
     d.offerId = offer.id;
-    // On garde les options choisies que la nouvelle offre propose (hors options incluses, toujours actives).
-    d.options = d.options.filter((id) => offer.options.some((o) => o.id === id && !o.included));
+    // On garde les options choisies que la nouvelle offre propose, sauf les options incluses (toujours actives)
+    // et celles devenues incompatibles avec une option incluse de la nouvelle offre.
+    d.options = compatibleOptions(offer, d.options);
     if (!this.openMlAvailable()) d.openMl = { enabled: false, sponsor: '', valid: null };
   }
 

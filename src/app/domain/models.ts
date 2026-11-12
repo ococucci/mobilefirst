@@ -75,9 +75,14 @@ export interface Family {
   label: string;
 }
 
+/** Niveau de l'offre : détermine le tarif (niveau de subvention) des terminaux. */
+export type OfferLevel = 'bronze' | 'silver' | 'gold' | 'platinum';
+
 export interface Offer {
   id: string;
   family: FamilyId;
+  /** Niveau de l'offre : le terminal est vendu au tarif de ce niveau. */
+  level: OfferLevel;
   label: string;
   detail: string;
   /** Prix mensuel en euros (0 pour la Carte Prépayée). */
@@ -96,6 +101,11 @@ export interface OfferOption {
   price: number;
   /** Option incluse dans l'offre : gratuite et toujours active. */
   included: boolean;
+  /**
+   * Options (identifiants) incompatibles avec celle-ci : tant qu'elle est active, elles ne peuvent pas être choisies.
+   * L'incompatibilité vaut dans les deux sens, même si elle n'est déclarée que sur l'une des deux options.
+   */
+  incompatibleOptions: string[];
 }
 
 export interface Promo {
@@ -105,10 +115,21 @@ export interface Promo {
   durationMonths: number;
 }
 
-export interface Terminal {
+/** Couleur d'un modèle de terminal, avec son stock boutique. */
+export interface TerminalColor {
   id: string;
   label: string;
-  price: number;
+  stock: number;
+}
+
+/** Modèle de terminal : prix selon le niveau de l'offre, stock par couleur. */
+export interface Terminal {
+  id: string;
+  brand: string;
+  model: string;
+  /** Prix du terminal (en euros) pour chaque niveau d'offre. */
+  prices: Record<OfferLevel, number>;
+  colors: TerminalColor[];
 }
 
 export interface SimReason {
@@ -130,6 +151,13 @@ export const FAMILIES: Family[] = [
   { id: 'non-bloque', label: 'Forfait non bloqué' },
   { id: 'internet', label: 'Forfait Internet Everywhere et 4G/5G Home' },
   { id: 'prepaye', label: 'Carte Prépayée' },
+];
+
+export const OFFER_LEVELS: { id: OfferLevel; label: string }[] = [
+  { id: 'bronze', label: 'Bronze' },
+  { id: 'silver', label: 'Silver' },
+  { id: 'gold', label: 'Gold' },
+  { id: 'platinum', label: 'Platinum' },
 ];
 
 export const SIM_REASONS: SimReason[] = [

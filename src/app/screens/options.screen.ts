@@ -18,18 +18,26 @@ import { Page } from '../ui/page';
       }
       <div class="card">
         <h2>Options mobile</h2>
-        <p class="muted small">Cochez pour ajouter, décochez pour retirer. Les options actives sont cochées.</p>
+        <p class="muted small">
+          Cochez pour ajouter, décochez pour retirer. Les options actives sont cochées. Une option incompatible avec une
+          option cochée est grisée : décochez d'abord l'option qui la bloque.
+        </p>
+        @let blocked = store.blockedOptions();
         @for (o of store.optionsOffer()?.options ?? []; track o.id) {
           @let active = o.included || line?.options?.includes(o.id);
           @let checked = o.included || d.options.includes(o.id);
-          <label class="check" [class.disabled]="o.included">
-            <span class="body">{{ o.label }}</span>
+          @let blocker = blocked.get(o.id);
+          <label class="check" [class.disabled]="o.included || blocker">
+            <span class="body">
+              {{ o.label }}
+              @if (blocker) { <span class="incompatible">Incompatible avec {{ blocker }}</span> }
+            </span>
             @if (o.included) { <span class="badge green">Incluse</span> }
             @else if (active && checked) { <span class="badge green">Active</span> }
             @else if (!active && checked) { <span class="badge orange">À ajouter</span> }
             @else if (active && !checked) { <span class="badge soft">À retirer</span> }
             @if (!o.included) { <span class="price">+{{ euro(o.price) }}/mois</span> }
-            <input type="checkbox" [disabled]="o.included" [checked]="checked" (change)="setOption(o.id, $any($event.target).checked)" />
+            <input type="checkbox" [disabled]="o.included || !!blocker" [checked]="checked" (change)="setOption(o.id, $any($event.target).checked)" />
           </label>
         } @empty {
           <p class="muted">Aucune option n'est proposée avec l'offre actuelle de cette ligne.</p>

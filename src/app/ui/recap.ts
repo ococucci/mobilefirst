@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { FLOW_LABELS, SIM_REASONS } from '../domain/models';
 import { formatEuro, formatMsisdn } from '../domain/format';
-import { selectedOptions } from '../domain/rules';
+import { levelLabel, selectedOptions } from '../domain/rules';
 import { OrderStore } from '../store/order.store';
 
 interface Row {
@@ -86,6 +86,7 @@ export class Recap {
       const b = s.breakdown();
       if (offer && b) {
         rows.push({ k: flow === 'forfait' ? 'Nouvelle offre' : offer.label, v: flow === 'forfait' ? offer.label : formatEuro(b.base), cls: 'sep' });
+        rows.push({ k: 'Niveau', v: levelLabel(offer.level) });
         if (flow === 'forfait') rows.push({ k: 'Prix', v: formatEuro(b.base) });
         for (const o of selectedOptions(offer, d.options)) {
           rows.push({ k: o.label, v: o.included ? 'Incluse' : '+' + formatEuro(o.price) });
@@ -112,7 +113,11 @@ export class Recap {
     }
 
     if (flow === 'acquisition' && s.selectedOffer()) {
-      rows.push({ k: 'À régler en caisse', v: formatEuro(s.cashDue()) });
+      const t = s.selectedTerminal();
+      if (t) {
+        rows.push({ k: `${t.terminal.model}${t.color ? ' ' + t.color.label : ''}`, v: formatEuro(s.terminalPrice()), cls: 'sep' });
+      }
+      rows.push({ k: 'À régler en caisse', v: formatEuro(s.cashDue()), ...(t ? {} : { cls: 'sep' as const }) });
     }
     return rows;
   }

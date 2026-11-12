@@ -151,6 +151,16 @@ button, input, select { font: inherit; color: inherit; }
 @media (min-width: 640px) { .grid2 { grid-template-columns: 1fr 1fr; } }
 .span2 { grid-column: 1 / -1; }
 
+/* Terminal : marque, modèle, couleur et quantité côte à côte à partir de la tablette. */
+.terminal-grid { display: grid; gap: 0 1rem; grid-template-columns: 1fr 1fr; }
+.terminal-grid > .field:nth-child(-n + 2) { grid-column: 1 / -1; }
+@media (min-width: 640px) {
+  .terminal-grid { grid-template-columns: 1fr 1.6fr 1fr 5.5rem; }
+  .terminal-grid > .field:nth-child(-n + 2) { grid-column: auto; }
+}
+.field select:disabled, .field input:disabled { background: var(--bg); color: var(--muted); cursor: not-allowed; }
+.terminal-price { font-size: 1.4rem; font-weight: 700; line-height: 48px; }
+
 .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 0.6rem; }
 .seg button {
   min-height: 48px; border-radius: 8px; border: 1px solid #bdbdbd; background: #fff; cursor: pointer; padding: 0.4rem;
@@ -194,6 +204,13 @@ button, input, select { font: inherit; color: inherit; }
 .badge.soft { background: var(--orange-soft); color: var(--orange-ink); }
 .badge.red { background: var(--red-soft); color: var(--red); }
 .badge.gray { background: var(--disabled); color: var(--muted); }
+/* Niveau de l'offre (tarif des terminaux). */
+.badge.level { background: #f1f1f1; color: var(--ink); margin-right: 0.35rem; }
+.badge.level[data-level='bronze'] { background: #f3e1d0; color: #6b3d12; }
+.badge.level[data-level='silver'] { background: #e6e8eb; color: #3d434a; }
+.badge.level[data-level='gold'] { background: #fbefc4; color: #6a5200; }
+.badge.level[data-level='platinum'] { background: #dfe9f3; color: #1f3d5c; }
+.check .incompatible { display: block; font-size: 0.85rem; color: var(--muted); }
 
 .notice { border-radius: 12px; padding: 0.9rem 1.1rem; margin-bottom: 1rem; }
 .notice.green { background: var(--green-soft); color: var(--green-ink); }

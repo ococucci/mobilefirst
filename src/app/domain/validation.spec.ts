@@ -46,8 +46,12 @@ describe('Open ML, terminal et SEPA', () => {
     expect(sponsorError(true, '0690654321', true)).toBeNull();
   });
   it('terminal', () => {
-    expect(terminalErrors({ withTerminal: false, terminalId: '', imei: '' })).toEqual({});
-    expect(Object.keys(terminalErrors({ withTerminal: true, terminalId: '', imei: '123' }))).toEqual(['terminalId', 'imei']);
+    const t = { withTerminal: true, terminalBrand: 'APPLE', terminalId: 'ip16-128', terminalColorId: 'ip16-128-bleu', imei: '490154203237518' };
+    expect(terminalErrors({ ...t, withTerminal: false, terminalBrand: '', imei: '' })).toEqual({});
+    expect(terminalErrors(t)).toEqual({});
+    expect(Object.keys(terminalErrors({ ...t, terminalBrand: '', imei: '123' }))).toEqual(['terminalBrand', 'imei']);
+    expect(Object.keys(terminalErrors({ ...t, terminalId: '' }))).toEqual(['terminalId']);
+    expect(Object.keys(terminalErrors({ ...t, terminalColorId: '' }))).toEqual(['terminalColorId']);
   });
   it('SEPA', () => {
     expect(sepaErrors('Marie Dupont', 'FR76 3000 6000 0112 3456 7890 189')).toEqual({});

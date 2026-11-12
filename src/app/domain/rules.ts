@@ -9,11 +9,14 @@ import {
   Identity,
   Line,
   Offer,
+  OFFER_LEVELS,
+  OfferLevel,
   OfferOption,
   Score,
   Screen,
   SIM_LOSS_FEE,
   SIM_REASONS,
+  Terminal,
 } from './models';
 
 export const digits = (value: string): string => value.replace(/\D/g, '');
@@ -102,6 +105,59 @@ export function openMlDiscount(offer: Offer): number {
 /** Options actives avec l'offre : les options incluses, plus celles choisies parmi celles proposées. */
 export function selectedOptions(offer: Offer, optionIds: string[]): OfferOption[] {
   return offer.options.filter((o) => o.included || optionIds.includes(o.id));
+}
+
+/** Les deux options s'excluent : l'incompatibilité déclarée sur l'une vaut pour l'autre. */
+export function areIncompatible(a: OfferOption, b: OfferOption): boolean {
+  return a.id !== b.id && (a.incompatibleOptions.includes(b.id) || b.incompatibleOptions.includes(a.id));
+}
+
+/**
+ * Options non actives qui ne peuvent pas être choisies, associées au libellé de l'option active qui les bloque.
+ * Une option incluse bloque toujours les options incompatibles avec elle.
+ */
+export function blockedOptions(offer: Offer | undefined, optionIds: string[]): Map<string, string> {
+  const blocked = new Map<string, string>();
+  if (!offer) return blocked;
+  const active = selectedOptions(offer, optionIds);
+  for (const o of offer.options) {
+    if (active.includes(o)) continue;
+    const blocker = active.find((a) => areIncompatible(a, o));
+    if (blocker) blocked.set(o.id, blocker.label);
+  }
+  return blocked;
+}
+
+/**
+ * Retire de la sélection les options que l'offre ne propose pas, les options incluses (toujours actives)
+ * et celles incompatibles avec une option incluse ou choisie avant elles.
+ */
+export function compatibleOptions(offer: Offer, optionIds: string[]): string[] {
+  const kept: OfferOption[] = offer.options.filter((o) => o.included);
+  for (const id of optionIds) {
+    const o = offer.options.find((x) => x.id === id && !x.included);
+    if (o && !kept.includes(o) && !kept.some((k) => areIncompatible(k, o))) kept.push(o);
+  }
+  return kept.filter((o) => !o.included).map((o) => o.id);
+}
+
+export function levelLabel(level: OfferLevel): string {
+  return OFFER_LEVELS.find((l) => l.id === level)?.label ?? level;
+}
+
+/** Stock total d'un modèle : somme des stocks de ses couleurs. */
+export function terminalStock(terminal: Terminal): number {
+  return terminal.colors.reduce((sum, c) => sum + c.stock, 0);
+}
+
+/** Prix du terminal au niveau de l'offre choisie (niveau de subvention). */
+export function terminalPrice(terminal: Terminal, offer: Offer): number {
+  return terminal.prices[offer.level];
+}
+
+/** Marques distinctes, triées par ordre alphabétique. */
+export function terminalBrands(terminals: Terminal[]): string[] {
+  return [...new Set(terminals.map((t) => t.brand))].sort((a, b) => a.localeCompare(b, 'fr'));
 }
 
 export interface MonthlyBreakdown {

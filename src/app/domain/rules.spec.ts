@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { Identity, Line, Offer } from './models';
+import { Identity, Line, Offer, OfferOption, Terminal } from './models';
 import {
   acquisitionCashDue,
   allowedFamilies,
+  blockedOptions,
+  compatibleOptions,
   identityChangeRequiresRescore,
   isOpenMlAvailable,
   isValidIban,
@@ -17,16 +19,19 @@ import {
   requiresContract,
   simChangeFee,
   stepsFor,
+  terminalBrands,
+  terminalPrice,
+  terminalStock,
 } from './rules';
 
+const opt = (id: string, price: number, over: Partial<OfferOption> = {}): OfferOption => ({
+  id, label: id.toUpperCase(), price, included: false, incompatibleOptions: [], ...over,
+});
+
 const offer = (over: Partial<Offer> = {}): Offer => ({
-  id: 'o', family: 'bloque', label: 'Offre', detail: '', price: 20,
+  id: 'o', family: 'bloque', level: 'silver', label: 'Offre', detail: '', price: 20,
   openMl: { eligible: true, monthlyDiscount: 10 },
-  options: [
-    { id: 'a', label: 'A', price: 5, included: false },
-    { id: 'b', label: 'B', price: 3, included: false },
-    { id: 'inc', label: 'Incluse', price: 0, included: true },
-  ],
+  options: [opt('a', 5), opt('b', 3), opt('inc', 0, { label: 'Incluse', included: true })],
   promo: null,
   ...over,
 });
@@ -83,6 +88,41 @@ describe('mensualité', () => {
   });
   it('ne descend jamais sous zéro', () => {
     expect(monthly(offer({ price: 5, openMl: { eligible: true, monthlyDiscount: 5 } }), [], true).total).toBe(0);
+  });
+});
+
+describe('options incompatibles', () => {
+  // c est incompatible avec a (déclaré sur c seulement) ; d est incompatible avec l'option incluse.
+  const withRules = offer({
+    options: [opt('a', 5), opt('b', 3), opt('c', 9, { incompatibleOptions: ['a'] }), opt('d', 2), opt('inc', 0, { included: true, incompatibleOptions: ['d'] })],
+  });
+
+  it('une option active bloque les options incompatibles, dans les deux sens', () => {
+    expect([...blockedOptions(withRules, ['a'])]).toEqual([['c', 'A'], ['d', 'INC']]);
+    expect([...blockedOptions(withRules, ['c'])]).toEqual([['a', 'C'], ['d', 'INC']]);
+  });
+  it('une option incluse bloque toujours ses incompatibles', () => {
+    expect([...blockedOptions(withRules, [])]).toEqual([['d', 'INC']]);
+  });
+  it('sans offre, rien n’est bloqué', () => expect(blockedOptions(undefined, ['a']).size).toBe(0));
+  it('changement d’offre : on retire les options incompatibles, incluses ou non proposées', () => {
+    expect(compatibleOptions(withRules, ['a', 'c', 'b'])).toEqual(['a', 'b']);
+    expect(compatibleOptions(withRules, ['d', 'inc', 'x'])).toEqual([]);
+  });
+});
+
+describe('terminaux', () => {
+  const t: Terminal = {
+    id: 'ip16', brand: 'APPLE', model: 'iPhone 16', prices: { bronze: 969, silver: 829, gold: 689, platinum: 549 },
+    colors: [{ id: 'ip16-bleu', label: 'bleu', stock: 13 }, { id: 'ip16-noir', label: 'noir', stock: 5 }, { id: 'ip16-rose', label: 'rose', stock: 0 }],
+  };
+  it('stock du modèle : somme des couleurs', () => expect(terminalStock(t)).toBe(18));
+  it('prix selon le niveau de l’offre', () => {
+    expect(terminalPrice(t, offer({ level: 'silver' }))).toBe(829);
+    expect(terminalPrice(t, offer({ level: 'gold' }))).toBe(689);
+  });
+  it('marques distinctes et triées', () => {
+    expect(terminalBrands([{ ...t, brand: 'SAMSUNG' }, t, { ...t, brand: 'ALCATEL' }])).toEqual(['ALCATEL', 'APPLE', 'SAMSUNG']);
   });
 });
 

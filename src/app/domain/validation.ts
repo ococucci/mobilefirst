@@ -69,14 +69,20 @@ export function sponsorError(enabled: boolean, sponsor: string, valid: boolean |
 
 export interface TerminalInput {
   withTerminal: boolean;
+  terminalBrand: string;
   terminalId: string;
+  terminalColorId: string;
   imei: string;
 }
 
-export function terminalErrors(t: TerminalInput): Errors<'terminalId' | 'imei'> {
-  const e: Errors<'terminalId' | 'imei'> = {};
+export type TerminalField = 'terminalBrand' | 'terminalId' | 'terminalColorId' | 'imei';
+
+export function terminalErrors(t: TerminalInput): Errors<TerminalField> {
+  const e: Errors<TerminalField> = {};
   if (!t.withTerminal) return e;
-  if (!t.terminalId) e.terminalId = 'Choisissez un terminal.';
+  if (!t.terminalBrand) e.terminalBrand = 'Choisissez une marque.';
+  else if (!t.terminalId) e.terminalId = 'Choisissez un modèle.';
+  else if (!t.terminalColorId) e.terminalColorId = 'Choisissez une couleur.';
   if (!t.imei.trim()) e.imei = "L'IMEI est obligatoire.";
   else if (!isValidImei(t.imei)) e.imei = 'IMEI invalide : 15 chiffres.';
   return e;
