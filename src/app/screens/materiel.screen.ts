@@ -71,10 +71,6 @@ import { CORRECT_FIELDS, FieldError, focusFirstError } from '../ui/field-error';
                 </select>
                 <app-field-error for="color" [message]="terr('terminalColorId')" />
               </div>
-              <div class="field">
-                <label for="qty">Quantité</label>
-                <input id="qty" type="number" value="1" disabled />
-              </div>
             </div>
             <div class="grid2">
               <div class="field">
