@@ -112,12 +112,14 @@ describe('options incompatibles', () => {
 
 describe('terminaux', () => {
   const t: Terminal = {
-    id: 'ip16', brand: 'APPLE', model: 'iPhone 16', prices: { bronze: 969, silver: 829, gold: 689, platinum: 549 },
+    id: 'ip16', brand: 'APPLE', model: 'iPhone 16', prices: { nonsub: 969, card: 969, silver: 829, gold: 689, elite: 619, platine: 549 },
     colors: [{ id: 'ip16-bleu', label: 'bleu' }, { id: 'ip16-noir', label: 'noir' }],
   };
   it('prix selon le niveau de l’offre', () => {
     expect(terminalPrice(t, offer({ level: 'silver' }))).toBe(829);
     expect(terminalPrice(t, offer({ level: 'gold' }))).toBe(689);
+    expect(terminalPrice(t, offer({ level: 'nonsub' }))).toBe(969);
+    expect(terminalPrice(t, offer({ level: 'platine' }))).toBe(549);
   });
   it('marques distinctes et triées', () => {
     expect(terminalBrands([{ ...t, brand: 'SAMSUNG' }, t, { ...t, brand: 'ALCATEL' }])).toEqual(['ALCATEL', 'APPLE', 'SAMSUNG']);

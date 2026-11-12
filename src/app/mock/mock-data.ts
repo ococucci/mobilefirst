@@ -133,23 +133,23 @@ const promo10 = { id: 'promo-10e-6m', label: '−10 € / 6 mois', monthlyDiscou
 
 /** Offres avec leurs options, leur remise (une seule, appliquée automatiquement) et l'éligibilité Open ML. */
 export const OFFERS: Offer[] = [
-  { id: 'bl-20', family: 'bloque', level: 'bronze', label: 'Forfait bloqué 20 Go', detail: 'Appels 2 h, SMS illimités', price: 15.99, openMl: openMl(5),
+  { id: 'bl-20', family: 'bloque', level: 'nonsub', label: 'Forfait bloqué 20 Go', detail: 'Appels 2 h, SMS illimités', price: 15.99, openMl: openMl(5),
     options: [option('europe', 5), option('multisim', 3), option('securite', 2)], promo: null },
   { id: 'bl-60', family: 'bloque', level: 'silver', label: 'Forfait bloqué 60 Go', detail: 'Appels et SMS illimités', price: 22.99, openMl: openMl(10),
     options: [option('europe', 5), option('europe-plus', 9), option('multisim', 3), option('montre', 5), option('securite', 2)], promo: promo10 },
   { id: 'bl-120', family: 'bloque', level: 'gold', label: 'Forfait bloqué 120 Go', detail: 'Appels et SMS illimités, 5G', price: 29.99, openMl: openMl(10),
     options: [included('europe'), option('europe-plus', 7), option('multisim', 3), option('montre', 5), option('international', 10)], promo: promo10 },
-  { id: 'nb-10', family: 'non-bloque', level: 'bronze', label: 'Forfait 10 Go', detail: 'Appels et SMS illimités', price: 9.99, openMl: openMl(5),
+  { id: 'nb-10', family: 'non-bloque', level: 'nonsub', label: 'Forfait 10 Go', detail: 'Appels et SMS illimités', price: 9.99, openMl: openMl(5),
     options: [option('europe', 5), option('securite', 2)], promo: null },
-  { id: 'nb-100', family: 'non-bloque', level: 'silver', label: 'Forfait 100 Go', detail: 'Appels et SMS illimités, 5G', price: 24.99, openMl: openMl(10),
+  { id: 'nb-100', family: 'non-bloque', level: 'elite', label: 'Forfait 100 Go', detail: 'Appels et SMS illimités, 5G', price: 24.99, openMl: openMl(10),
     options: [option('europe', 5), option('europe-plus', 9), option('multisim', 3), option('montre', 5), option('securite', 2), option('international', 10)], promo: promo10 },
-  { id: 'nb-200', family: 'non-bloque', level: 'platinum', label: 'Forfait 200 Go 5G', detail: 'Appels illimités, 35 Go en Europe', price: 34.99, openMl: openMl(10),
+  { id: 'nb-200', family: 'non-bloque', level: 'platine', label: 'Forfait 200 Go 5G', detail: 'Appels illimités, 35 Go en Europe', price: 34.99, openMl: openMl(10),
     options: [included('europe'), option('multisim', 3), option('securite', 2), option('international', 8)], promo: null },
-  { id: 'ie-4g', family: 'internet', level: 'bronze', label: 'Internet Everywhere 4G', detail: '100 Go, routeur nomade', price: 19.99, openMl: openMl(5),
+  { id: 'ie-4g', family: 'internet', level: 'nonsub', label: 'Internet Everywhere 4G', detail: '100 Go, routeur nomade', price: 19.99, openMl: openMl(5),
     options: [option('securite', 2)], promo: null },
   { id: 'home-5g', family: 'internet', level: 'silver', label: '4G/5G Home', detail: 'Internet illimité à domicile', price: 34.99, openMl: openMl(10),
     options: [], promo: { id: 'promo-5e-12m', label: '−5 € / 12 mois', monthlyDiscount: 5, durationMonths: 12 } },
-  { id: 'pp-classique', family: 'prepaye', level: 'bronze', label: 'Carte Prépayée', detail: 'Sans engagement, rechargeable', price: 0, openMl: { eligible: false },
+  { id: 'pp-classique', family: 'prepaye', level: 'card', label: 'Carte Prépayée', detail: 'Sans engagement, rechargeable', price: 0, openMl: { eligible: false },
     options: [], promo: null },
 ];
 
@@ -158,9 +158,9 @@ export const SPONSORS = ['0690654321', '0696112233'];
 
 export const AVAILABLE_NUMBERS = ['0690123480', '0690123481', '0690123482', '0690123499', '0691245566'];
 
-/** Modèle de terminal : prix par niveau d'offre [bronze, silver, gold, platinum] et couleurs proposées. */
+/** Modèle de terminal : prix par niveau d'offre [nonsub, card, silver, gold, elite, platine] et couleurs proposées. */
 const terminal = (id: string, brand: string, model: string, prices: number[], colors: string[]): Terminal => {
-  const levels: OfferLevel[] = ['bronze', 'silver', 'gold', 'platinum'];
+  const levels: OfferLevel[] = ['nonsub', 'card', 'silver', 'gold', 'elite', 'platine'];
   return {
     id,
     brand,
@@ -174,25 +174,25 @@ const APPLE_COLORS = ['blanc', 'bleu', 'noir', 'rose', 'vert'];
 
 /** Terminaux (enabler si-financier) : prix selon le niveau de l'offre et couleurs proposées. */
 export const TERMINALS: Terminal[] = [
-  terminal('again-a1', 'AGAIN', 'Again A1 4G', [49, 29, 9, 1], ['noir']),
-  terminal('alcatel-1b', 'ALCATEL', 'Alcatel 1B 32Go', [79, 59, 29, 9], ['bleu', 'noir']),
-  terminal('alcatel-3l', 'ALCATEL', 'Alcatel 3L 64Go', [129, 99, 59, 29], ['noir']),
-  terminal('ip15-128', 'APPLE', 'iPhone 15 128Go', [769, 649, 529, 399], APPLE_COLORS),
-  terminal('ip15-256', 'APPLE', 'iPhone 15 256Go', [899, 779, 659, 529], APPLE_COLORS),
-  terminal('ip15plus-256', 'APPLE', 'iPhone 15 PLUS 256Go', [999, 879, 759, 629], APPLE_COLORS),
-  terminal('ip15pro-128', 'APPLE', 'iPhone 15 PRO 128Go', [1129, 999, 869, 739], ['blanc', 'bleu', 'noir']),
-  terminal('ip15pro-256', 'APPLE', 'iPhone 15 PRO 256Go', [1259, 1129, 999, 869], ['blanc', 'bleu', 'noir']),
-  terminal('ip15promax-256', 'APPLE', 'iPhone 15 PRO MAX 256Go', [1379, 1249, 1119, 989], ['blanc', 'bleu', 'noir']),
-  terminal('ip15promax-512', 'APPLE', 'iPhone 15 PRO MAX 512Go', [1629, 1499, 1369, 1239], ['blanc', 'bleu', 'noir']),
-  terminal('ip16-128', 'APPLE', 'iPhone 16 5G 128Go', [969, 829, 689, 549], APPLE_COLORS),
-  terminal('ip16-256', 'APPLE', 'iPhone 16 5G 256Go', [1099, 959, 819, 679], APPLE_COLORS),
-  terminal('ip16plus-128', 'APPLE', 'iPhone 16 PLUS 5G 128Go', [1119, 979, 839, 699], APPLE_COLORS),
-  terminal('ip16plus-256', 'APPLE', 'iPhone 16 PLUS 5G 256Go', [1249, 1109, 969, 829], APPLE_COLORS),
-  terminal('bb-key2', 'BLACK BERRY', 'BlackBerry KEY2 64Go', [349, 299, 249, 199], ['noir']),
-  terminal('cadaoz-c3', 'CADAOZ', 'Cadaoz C3 4G', [59, 39, 19, 1], ['blanc', 'noir']),
-  terminal('sam-a15', 'SAMSUNG', 'Galaxy A15 128Go', [149, 99, 49, 1], ['blanc', 'bleu', 'noir']),
-  terminal('sam-s24', 'SAMSUNG', 'Galaxy S24 5G 256Go', [899, 749, 599, 449], ['bleu', 'noir', 'vert']),
-  terminal('xiaomi-rn13', 'XIAOMI', 'Redmi Note 13 128Go', [199, 149, 99, 49], ['bleu', 'noir', 'vert']),
+  terminal('again-a1', 'AGAIN', 'Again A1 4G', [49, 49, 29, 9, 5, 1], ['noir']),
+  terminal('alcatel-1b', 'ALCATEL', 'Alcatel 1B 32Go', [79, 79, 59, 29, 19, 9], ['bleu', 'noir']),
+  terminal('alcatel-3l', 'ALCATEL', 'Alcatel 3L 64Go', [129, 129, 99, 59, 44, 29], ['noir']),
+  terminal('ip15-128', 'APPLE', 'iPhone 15 128Go', [769, 769, 649, 529, 464, 399], APPLE_COLORS),
+  terminal('ip15-256', 'APPLE', 'iPhone 15 256Go', [899, 899, 779, 659, 594, 529], APPLE_COLORS),
+  terminal('ip15plus-256', 'APPLE', 'iPhone 15 PLUS 256Go', [999, 999, 879, 759, 694, 629], APPLE_COLORS),
+  terminal('ip15pro-128', 'APPLE', 'iPhone 15 PRO 128Go', [1129, 1129, 999, 869, 804, 739], ['blanc', 'bleu', 'noir']),
+  terminal('ip15pro-256', 'APPLE', 'iPhone 15 PRO 256Go', [1259, 1259, 1129, 999, 934, 869], ['blanc', 'bleu', 'noir']),
+  terminal('ip15promax-256', 'APPLE', 'iPhone 15 PRO MAX 256Go', [1379, 1379, 1249, 1119, 1054, 989], ['blanc', 'bleu', 'noir']),
+  terminal('ip15promax-512', 'APPLE', 'iPhone 15 PRO MAX 512Go', [1629, 1629, 1499, 1369, 1304, 1239], ['blanc', 'bleu', 'noir']),
+  terminal('ip16-128', 'APPLE', 'iPhone 16 5G 128Go', [969, 969, 829, 689, 619, 549], APPLE_COLORS),
+  terminal('ip16-256', 'APPLE', 'iPhone 16 5G 256Go', [1099, 1099, 959, 819, 749, 679], APPLE_COLORS),
+  terminal('ip16plus-128', 'APPLE', 'iPhone 16 PLUS 5G 128Go', [1119, 1119, 979, 839, 769, 699], APPLE_COLORS),
+  terminal('ip16plus-256', 'APPLE', 'iPhone 16 PLUS 5G 256Go', [1249, 1249, 1109, 969, 899, 829], APPLE_COLORS),
+  terminal('bb-key2', 'BLACK BERRY', 'BlackBerry KEY2 64Go', [349, 349, 299, 249, 224, 199], ['noir']),
+  terminal('cadaoz-c3', 'CADAOZ', 'Cadaoz C3 4G', [59, 59, 39, 19, 10, 1], ['blanc', 'noir']),
+  terminal('sam-a15', 'SAMSUNG', 'Galaxy A15 128Go', [149, 149, 99, 49, 25, 1], ['blanc', 'bleu', 'noir']),
+  terminal('sam-s24', 'SAMSUNG', 'Galaxy S24 5G 256Go', [899, 899, 749, 599, 524, 449], ['bleu', 'noir', 'vert']),
+  terminal('xiaomi-rn13', 'XIAOMI', 'Redmi Note 13 128Go', [199, 199, 149, 99, 74, 49], ['bleu', 'noir', 'vert']),
 ];
 
 /** ICCID en stock boutique (enabler si-financier). */

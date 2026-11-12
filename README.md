@@ -58,7 +58,7 @@ s'arrête et le conseiller peut réessayer.
 
 ### Offre, options et terminal
 
-- **Niveau d'offre** (`level` : `bronze`, `silver`, `gold`, `platinum`) : chaque offre a un niveau, affiché en badge.
+- **Niveau d'offre** (`level` : `nonsub`, `card`, `silver`, `gold`, `elite`, `platine`) : chaque offre a un niveau, affiché en badge.
   Il fixe le tarif (niveau de subvention) du terminal : une offre Silver donne le prix Silver du terminal.
 - **Options incompatibles** (`incompatibleOptions`, liste d'identifiants d'options) : tant qu'une option est active
   (choisie ou incluse), les options incompatibles sont grisées avec la mention « Incompatible avec … ».
@@ -99,7 +99,7 @@ Formats attendus de l'API pour le catalogue et les terminaux :
 
 // GET /hardware/terminals : un modèle, son prix pour chaque niveau d'offre et ses couleurs
 { "id": "ip16-128", "brand": "APPLE", "model": "iPhone 16 5G 128Go",
-  "prices": { "bronze": 969, "silver": 829, "gold": 689, "platinum": 549 },
+  "prices": { "nonsub": 969, "card": 969, "silver": 829, "gold": 689, "elite": 619, "platine": 549 },
   "colors": [ { "id": "ip16-128-bleu", "label": "bleu" }, … ] }
 
 // POST /contracts et /orders : terminal choisi (le serveur applique le prix du niveau de l'offre)

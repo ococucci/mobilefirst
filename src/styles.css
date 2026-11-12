@@ -202,10 +202,12 @@ button, input, select { font: inherit; color: inherit; }
 .badge.gray { background: var(--disabled); color: var(--muted); }
 /* Niveau de l'offre (tarif des terminaux). */
 .badge.level { background: #f1f1f1; color: var(--ink); margin-right: 0.35rem; }
-.badge.level[data-level='bronze'] { background: #f3e1d0; color: #6b3d12; }
+.badge.level[data-level='nonsub'] { background: #f1f1f1; color: #595959; }
+.badge.level[data-level='card'] { background: #f1f1f1; color: #595959; }
 .badge.level[data-level='silver'] { background: #e6e8eb; color: #3d434a; }
 .badge.level[data-level='gold'] { background: #fbefc4; color: #6a5200; }
-.badge.level[data-level='platinum'] { background: #dfe9f3; color: #1f3d5c; }
+.badge.level[data-level='elite'] { background: #e9e0f5; color: #4a2a78; }
+.badge.level[data-level='platine'] { background: #dfe9f3; color: #1f3d5c; }
 .check .incompatible { display: block; font-size: 0.85rem; color: var(--muted); }
 
 .notice { border-radius: 12px; padding: 0.9rem 1.1rem; margin-bottom: 1rem; }

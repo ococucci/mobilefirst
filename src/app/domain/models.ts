@@ -76,7 +76,7 @@ export interface Family {
 }
 
 /** Niveau de l'offre : détermine le tarif (niveau de subvention) des terminaux. */
-export type OfferLevel = 'bronze' | 'silver' | 'gold' | 'platinum';
+export type OfferLevel = 'nonsub' | 'card' | 'silver' | 'gold' | 'elite' | 'platine';
 
 export interface Offer {
   id: string;
@@ -153,10 +153,12 @@ export const FAMILIES: Family[] = [
 ];
 
 export const OFFER_LEVELS: { id: OfferLevel; label: string }[] = [
-  { id: 'bronze', label: 'Bronze' },
+  { id: 'nonsub', label: 'Non subventionné' },
+  { id: 'card', label: 'Card' },
   { id: 'silver', label: 'Silver' },
   { id: 'gold', label: 'Gold' },
-  { id: 'platinum', label: 'Platinum' },
+  { id: 'elite', label: 'Elite' },
+  { id: 'platine', label: 'Platine' },
 ];
 
 export const SIM_REASONS: SimReason[] = [
