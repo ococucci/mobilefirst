@@ -145,11 +145,6 @@ export function levelLabel(level: OfferLevel): string {
   return OFFER_LEVELS.find((l) => l.id === level)?.label ?? level;
 }
 
-/** Stock total d'un modèle : somme des stocks de ses couleurs. */
-export function terminalStock(terminal: Terminal): number {
-  return terminal.colors.reduce((sum, c) => sum + c.stock, 0);
-}
-
 /** Prix du terminal au niveau de l'offre choisie (niveau de subvention). */
 export function terminalPrice(terminal: Terminal, offer: Offer): number {
   return terminal.prices[offer.level];

@@ -115,14 +115,13 @@ export interface Promo {
   durationMonths: number;
 }
 
-/** Couleur d'un modèle de terminal, avec son stock boutique. */
+/** Couleur proposée pour un modèle de terminal. */
 export interface TerminalColor {
   id: string;
   label: string;
-  stock: number;
 }
 
-/** Modèle de terminal : prix selon le niveau de l'offre, stock par couleur. */
+/** Modèle de terminal : prix selon le niveau de l'offre et couleurs proposées. */
 export interface Terminal {
   id: string;
   brand: string;

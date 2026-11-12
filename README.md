@@ -64,9 +64,8 @@ s'arrête et le conseiller peut réessayer.
   (choisie ou incluse), les options incompatibles sont grisées avec la mention « Incompatible avec … ».
   L'incompatibilité vaut dans les deux sens, même si elle n'est déclarée que sur l'une des deux options. En cas
   de changement d'offre, les options devenues incompatibles avec une option incluse sont retirées.
-- **Terminal** : trois listes déroulantes, Marque › Modèle › Couleur. Le modèle affiche son stock total (somme des
-  couleurs) et la couleur son propre stock ; un modèle ou une couleur sans stock est grisé. S'il ne reste qu'une
-  couleur en stock, elle est présélectionnée. Le prix affiché est celui du niveau de l'offre choisie.
+- **Terminal** : trois listes déroulantes, Marque › Modèle › Couleur. Si le modèle ne propose qu'une couleur, elle
+  est présélectionnée. Le prix affiché est celui du niveau de l'offre choisie.
 
 Mise en page : barre latérale d'étapes et récapitulatif en colonne sur bureau ; barre de progression et
 récapitulatif repliable en bas d'écran sur mobile.
@@ -87,7 +86,7 @@ src/app/
 | --- | --- | --- |
 | `api/customer.api.ts` | `/customers` (recherche, existence, création, mise à jour, lignes en cours, re-scoring) | Party, api-scoring, api-order |
 | `api/catalog.api.ts` | `/catalog/*`, `/numbers/available`, `/open-ml/sponsor-checks` | Castor, promo advice, ressource, RHOC |
-| `api/hardware.api.ts` | `/hardware/*` (terminaux avec prix par niveau et stock par couleur, ICCID, lecture de SIM) | si-financier |
+| `api/hardware.api.ts` | `/hardware/*` (terminaux avec prix par niveau et couleurs, ICCID, lecture de SIM) | si-financier |
 | `api/address.api.ts` | `/addresses` | Api-ORAS |
 | `api/order.api.ts` | `/sepa-mandates`, `/contracts`, `/orders`, `/orders/{n}/cash-payments` | IML, EPC, Api-document, api-order, PubSub, managePayment |
 
@@ -98,10 +97,10 @@ Formats attendus de l'API pour le catalogue et les terminaux :
 { "id": "bl-60", "level": "silver", "options": [
     { "id": "europe-plus", "label": "Option Europe 25 Go", "price": 9, "included": false, "incompatibleOptions": ["europe"] } ], … }
 
-// GET /hardware/terminals : un modèle, son prix pour chaque niveau d'offre et son stock par couleur
+// GET /hardware/terminals : un modèle, son prix pour chaque niveau d'offre et ses couleurs
 { "id": "ip16-128", "brand": "APPLE", "model": "iPhone 16 5G 128Go",
   "prices": { "bronze": 969, "silver": 829, "gold": 689, "platinum": 549 },
-  "colors": [ { "id": "ip16-128-bleu", "label": "bleu", "stock": 13 }, … ] }
+  "colors": [ { "id": "ip16-128-bleu", "label": "bleu" }, … ] }
 
 // POST /contracts et /orders : terminal choisi (le serveur applique le prix du niveau de l'offre)
 "terminal": { "id": "ip16-128", "colorId": "ip16-128-bleu", "imei": "490154203237518" }
@@ -131,7 +130,7 @@ validée consomme réellement la SIM, réserve le numéro et met la ligne en « 
 | ICCID en stock | `8933 0100 0000 0000 001`, `…019`, `…027`, `…035`, `…043`, ou bouton de scan |
 | IBAN | `FR76 3000 6000 0112 3456 7890 189` |
 | IMEI | `490154203237518` |
-| Terminal en stock | APPLE › iPhone 16 5G 128Go (18) › bleu (13) ou noir (5) ; SAMSUNG, XIAOMI, ALCATEL, CADAOZ, AGAIN |
+| Terminal | APPLE › iPhone 16 5G 128Go › bleu ; aussi SAMSUNG, XIAOMI, ALCATEL, CADAOZ, AGAIN, BLACK BERRY |
 | Options incompatibles | Forfaits bloqué 60 Go, 120 Go et 100 Go : Europe 10 Go / Europe 25 Go, Multi-SIM / eSIM montre connectée |
 | Adresse | Saisir par exemple « Flamboyants » ou « Pointe-à-Pitre » |
 

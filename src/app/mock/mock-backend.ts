@@ -71,8 +71,7 @@ export class MockBackend {
   private readonly pending = new Set(PENDING_ORDER_LINES);
   private readonly reserved = new Set<string>();
   private readonly stock = new Set(ICCID_STOCK);
-  /** Terminaux avec leur stock par couleur, décrémenté à chaque commande. */
-  private readonly terminals: Terminal[] = structuredClone(TERMINALS);
+  private readonly terminals: Terminal[] = TERMINALS;
   private readonly mandates = new Set<string>();
   private readonly contracts = new Map<string, Blob>();
   private readonly cashDue = new Map<string, number>();
@@ -260,7 +259,6 @@ export class MockBackend {
     const terminal = r.terminal ? this.terminals.find((t) => t.id === r.terminal?.id) : undefined;
     const color = terminal?.colors.find((c) => c.id === r.terminal?.colorId);
     if (r.terminal && (!terminal || !color)) throw invalid({ terminal: 'Terminal inconnu.' });
-    if (color && color.stock < 1) throw refused(`${terminal?.model} ${color.label} : plus de stock en boutique.`);
     const price = terminal && offer ? terminalPrice(terminal, offer) : 0;
     const cashDue = r.flow === 'acquisition' ? acquisitionCashDue(offer, price) : r.flow === 'sim' ? simChangeFee(r.simReason ?? null) : 0;
     const orderNumber = `CMD-${new Date().getFullYear()}-${String(this.orderSequence++).padStart(7, '0')}`;
@@ -269,7 +267,6 @@ export class MockBackend {
     this.pending.add(msisdn);
     if (r.number?.mode === 'nouveau') this.reserved.add(digits(r.number.msisdn));
     if (r.sim) this.stock.delete(compact(r.sim.iccid));
-    if (color) color.stock--;
     this.cashDue.set(orderNumber, round(cashDue));
     console.info('[PubSub bouchonné] orange-order-first.mobile.order-validated', { orderNumber, createdAt, msisdn, cashDue, order: r });
     return created({ orderNumber, createdAt, cashDue: round(cashDue) });

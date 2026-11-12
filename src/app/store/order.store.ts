@@ -73,7 +73,7 @@ export interface Draft {
     terminalBrand: string;
     /** Modèle choisi. */
     terminalId: string;
-    /** Couleur choisie (référence de stock). */
+    /** Couleur choisie. */
     terminalColorId: string;
     imei: string;
   };
@@ -130,7 +130,7 @@ export class OrderStore {
   readonly flowChoice = signal<Flow | null>(null);
 
   readonly offers = signal<Offer[]>([]);
-  /** Terminaux et stock boutique, chargés à l'écran Matériel et paiement. */
+  /** Terminaux, chargés à l'écran Matériel et paiement. */
   readonly terminals = signal<Terminal[]>([]);
 
   draft: Draft = emptyDraft();

@@ -21,7 +21,6 @@ import {
   stepsFor,
   terminalBrands,
   terminalPrice,
-  terminalStock,
 } from './rules';
 
 const opt = (id: string, price: number, over: Partial<OfferOption> = {}): OfferOption => ({
@@ -114,9 +113,8 @@ describe('options incompatibles', () => {
 describe('terminaux', () => {
   const t: Terminal = {
     id: 'ip16', brand: 'APPLE', model: 'iPhone 16', prices: { bronze: 969, silver: 829, gold: 689, platinum: 549 },
-    colors: [{ id: 'ip16-bleu', label: 'bleu', stock: 13 }, { id: 'ip16-noir', label: 'noir', stock: 5 }, { id: 'ip16-rose', label: 'rose', stock: 0 }],
+    colors: [{ id: 'ip16-bleu', label: 'bleu' }, { id: 'ip16-noir', label: 'noir' }],
   };
-  it('stock du modèle : somme des couleurs', () => expect(terminalStock(t)).toBe(18));
   it('prix selon le niveau de l’offre', () => {
     expect(terminalPrice(t, offer({ level: 'silver' }))).toBe(829);
     expect(terminalPrice(t, offer({ level: 'gold' }))).toBe(689);

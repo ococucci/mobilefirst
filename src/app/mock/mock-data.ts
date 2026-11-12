@@ -158,41 +158,41 @@ export const SPONSORS = ['0690654321', '0696112233'];
 
 export const AVAILABLE_NUMBERS = ['0690123480', '0690123481', '0690123482', '0690123499', '0691245566'];
 
-const COLORS = ['blanc', 'bleu', 'noir', 'rose', 'vert'];
-
-/** Modèle de terminal : prix par niveau d'offre [bronze, silver, gold, platinum] et stock par couleur (dans l'ordre de COLORS). */
-const terminal = (id: string, brand: string, model: string, prices: number[], stock: number[]): Terminal => {
+/** Modèle de terminal : prix par niveau d'offre [bronze, silver, gold, platinum] et couleurs proposées. */
+const terminal = (id: string, brand: string, model: string, prices: number[], colors: string[]): Terminal => {
   const levels: OfferLevel[] = ['bronze', 'silver', 'gold', 'platinum'];
   return {
     id,
     brand,
     model,
     prices: Object.fromEntries(levels.map((l, i) => [l, prices[i]])) as Record<OfferLevel, number>,
-    colors: stock.map((qty, i) => ({ id: `${id}-${COLORS[i]}`, label: COLORS[i], stock: qty })),
+    colors: colors.map((label) => ({ id: `${id}-${label}`, label })),
   };
 };
 
-/** Terminaux (enabler si-financier) : prix selon le niveau de l'offre, stock boutique par couleur. */
+const APPLE_COLORS = ['blanc', 'bleu', 'noir', 'rose', 'vert'];
+
+/** Terminaux (enabler si-financier) : prix selon le niveau de l'offre et couleurs proposées. */
 export const TERMINALS: Terminal[] = [
-  terminal('again-a1', 'AGAIN', 'Again A1 4G', [49, 29, 9, 1], [0, 0, 4, 0, 0]),
-  terminal('alcatel-1b', 'ALCATEL', 'Alcatel 1B 32Go', [79, 59, 29, 9], [0, 3, 6, 0, 0]),
-  terminal('alcatel-3l', 'ALCATEL', 'Alcatel 3L 64Go', [129, 99, 59, 29], [0, 0, 0, 0, 0]),
-  terminal('ip15-128', 'APPLE', 'iPhone 15 128Go', [769, 649, 529, 399], [0, 0, 0, 0, 0]),
-  terminal('ip15-256', 'APPLE', 'iPhone 15 256Go', [899, 779, 659, 529], [0, 0, 0, 0, 0]),
-  terminal('ip15plus-256', 'APPLE', 'iPhone 15 PLUS 256Go', [999, 879, 759, 629], [0, 0, 0, 0, 0]),
-  terminal('ip15pro-128', 'APPLE', 'iPhone 15 PRO 128Go', [1129, 999, 869, 739], [0, 0, 0, 0, 0]),
-  terminal('ip15pro-256', 'APPLE', 'iPhone 15 PRO 256Go', [1259, 1129, 999, 869], [0, 0, 0, 0, 0]),
-  terminal('ip15promax-256', 'APPLE', 'iPhone 15 PRO MAX 256Go', [1379, 1249, 1119, 989], [0, 0, 0, 0, 0]),
-  terminal('ip15promax-512', 'APPLE', 'iPhone 15 PRO MAX 512Go', [1629, 1499, 1369, 1239], [0, 0, 0, 0, 0]),
-  terminal('ip16-128', 'APPLE', 'iPhone 16 5G 128Go', [969, 829, 689, 549], [0, 13, 5, 0, 0]),
-  terminal('ip16-256', 'APPLE', 'iPhone 16 5G 256Go', [1099, 959, 819, 679], [0, 0, 0, 0, 0]),
-  terminal('ip16plus-128', 'APPLE', 'iPhone 16 PLUS 5G 128Go', [1119, 979, 839, 699], [0, 0, 0, 0, 0]),
-  terminal('ip16plus-256', 'APPLE', 'iPhone 16 PLUS 5G 256Go', [1249, 1109, 969, 829], [0, 0, 0, 0, 0]),
-  terminal('bb-key2', 'BLACK BERRY', 'BlackBerry KEY2 64Go', [349, 299, 249, 199], [0, 0, 0, 0, 0]),
-  terminal('cadaoz-c3', 'CADAOZ', 'Cadaoz C3 4G', [59, 39, 19, 1], [2, 0, 7, 0, 0]),
-  terminal('sam-a15', 'SAMSUNG', 'Galaxy A15 128Go', [149, 99, 49, 1], [3, 8, 11, 0, 0]),
-  terminal('sam-s24', 'SAMSUNG', 'Galaxy S24 5G 256Go', [899, 749, 599, 449], [0, 2, 4, 0, 1]),
-  terminal('xiaomi-rn13', 'XIAOMI', 'Redmi Note 13 128Go', [199, 149, 99, 49], [0, 5, 9, 0, 2]),
+  terminal('again-a1', 'AGAIN', 'Again A1 4G', [49, 29, 9, 1], ['noir']),
+  terminal('alcatel-1b', 'ALCATEL', 'Alcatel 1B 32Go', [79, 59, 29, 9], ['bleu', 'noir']),
+  terminal('alcatel-3l', 'ALCATEL', 'Alcatel 3L 64Go', [129, 99, 59, 29], ['noir']),
+  terminal('ip15-128', 'APPLE', 'iPhone 15 128Go', [769, 649, 529, 399], APPLE_COLORS),
+  terminal('ip15-256', 'APPLE', 'iPhone 15 256Go', [899, 779, 659, 529], APPLE_COLORS),
+  terminal('ip15plus-256', 'APPLE', 'iPhone 15 PLUS 256Go', [999, 879, 759, 629], APPLE_COLORS),
+  terminal('ip15pro-128', 'APPLE', 'iPhone 15 PRO 128Go', [1129, 999, 869, 739], ['blanc', 'bleu', 'noir']),
+  terminal('ip15pro-256', 'APPLE', 'iPhone 15 PRO 256Go', [1259, 1129, 999, 869], ['blanc', 'bleu', 'noir']),
+  terminal('ip15promax-256', 'APPLE', 'iPhone 15 PRO MAX 256Go', [1379, 1249, 1119, 989], ['blanc', 'bleu', 'noir']),
+  terminal('ip15promax-512', 'APPLE', 'iPhone 15 PRO MAX 512Go', [1629, 1499, 1369, 1239], ['blanc', 'bleu', 'noir']),
+  terminal('ip16-128', 'APPLE', 'iPhone 16 5G 128Go', [969, 829, 689, 549], APPLE_COLORS),
+  terminal('ip16-256', 'APPLE', 'iPhone 16 5G 256Go', [1099, 959, 819, 679], APPLE_COLORS),
+  terminal('ip16plus-128', 'APPLE', 'iPhone 16 PLUS 5G 128Go', [1119, 979, 839, 699], APPLE_COLORS),
+  terminal('ip16plus-256', 'APPLE', 'iPhone 16 PLUS 5G 256Go', [1249, 1109, 969, 829], APPLE_COLORS),
+  terminal('bb-key2', 'BLACK BERRY', 'BlackBerry KEY2 64Go', [349, 299, 249, 199], ['noir']),
+  terminal('cadaoz-c3', 'CADAOZ', 'Cadaoz C3 4G', [59, 39, 19, 1], ['blanc', 'noir']),
+  terminal('sam-a15', 'SAMSUNG', 'Galaxy A15 128Go', [149, 99, 49, 1], ['blanc', 'bleu', 'noir']),
+  terminal('sam-s24', 'SAMSUNG', 'Galaxy S24 5G 256Go', [899, 749, 599, 449], ['bleu', 'noir', 'vert']),
+  terminal('xiaomi-rn13', 'XIAOMI', 'Redmi Note 13 128Go', [199, 149, 99, 49], ['bleu', 'noir', 'vert']),
 ];
 
 /** ICCID en stock boutique (enabler si-financier). */

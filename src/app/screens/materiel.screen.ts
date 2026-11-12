@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { OrderApi } from '../api/order.api';
 import { formatEuro } from '../domain/format';
 import { CARD_SIM_PRICE, Terminal } from '../domain/models';
-import { levelLabel, terminalBrands, terminalStock } from '../domain/rules';
+import { levelLabel, terminalBrands } from '../domain/rules';
 import { sepaErrors, TerminalField, terminalErrors } from '../domain/validation';
 import { OrderStore } from '../store/order.store';
 import { Page } from '../ui/page';
@@ -53,10 +53,7 @@ import { CORRECT_FIELDS, FieldError, focusFirstError } from '../ui/field-error';
                 <select id="model" [ngModel]="h.terminalId" (ngModelChange)="selectModel($event)" [disabled]="!h.terminalBrand"
                   [class.ko]="terr('terminalId')" [attr.aria-invalid]="!!terr('terminalId')" aria-describedby="model-error">
                   <option value="">Modèle…</option>
-                  @for (t of models(); track t.id) {
-                    @let qty = stock(t);
-                    <option [value]="t.id" [disabled]="!qty">{{ t.model }} ({{ qty }})</option>
-                  }
+                  @for (t of models(); track t.id) { <option [value]="t.id">{{ t.model }}</option> }
                 </select>
                 <app-field-error for="model" [message]="terr('terminalId')" />
               </div>
@@ -65,9 +62,7 @@ import { CORRECT_FIELDS, FieldError, focusFirstError } from '../ui/field-error';
                 <select id="color" [ngModel]="h.terminalColorId" (ngModelChange)="h.terminalColorId = $event" [disabled]="!selected()"
                   [class.ko]="terr('terminalColorId')" [attr.aria-invalid]="!!terr('terminalColorId')" aria-describedby="color-error">
                   <option value="">Couleur…</option>
-                  @for (c of selected()?.terminal?.colors ?? []; track c.id) {
-                    <option [value]="c.id" [disabled]="!c.stock">{{ c.label }} ({{ c.stock }})</option>
-                  }
+                  @for (c of selected()?.terminal?.colors ?? []; track c.id) { <option [value]="c.id">{{ c.label }}</option> }
                 </select>
                 <app-field-error for="color" [message]="terr('terminalColorId')" />
               </div>
@@ -126,7 +121,6 @@ export class MaterielScreen {
       .filter((t) => t.brand === this.brand())
       .sort((a, b) => a.model.localeCompare(b.model, 'fr', { numeric: true })),
   );
-  protected readonly stock = terminalStock;
   protected readonly busy = signal(false);
   protected readonly submitted = signal(false);
   protected readonly cardSimPrice = CARD_SIM_PRICE;
@@ -164,12 +158,12 @@ export class MaterielScreen {
     h.terminalColorId = '';
   }
 
-  /** Changer de modèle efface la couleur, sauf s'il n'en reste qu'une en stock : elle est alors présélectionnée. */
+  /** Changer de modèle efface la couleur, sauf si le modèle n'en propose qu'une : elle est alors présélectionnée. */
   protected selectModel(id: string): void {
     const h = this.store.draft.hardware;
     h.terminalId = id;
-    const available = this.store.terminals().find((t) => t.id === id)?.colors.filter((c) => c.stock > 0) ?? [];
-    h.terminalColorId = available.length === 1 ? available[0].id : '';
+    const colors = this.store.terminals().find((t) => t.id === id)?.colors ?? [];
+    h.terminalColorId = colors.length === 1 ? colors[0].id : '';
   }
 
   protected terr(field: TerminalField): string | null {
