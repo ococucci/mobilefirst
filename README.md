@@ -18,7 +18,7 @@ npm install
 
 | Commande | Usage |
 | --- | --- |
-| `npm start` | Développement avec l'API, `/api` redirigé vers `http://localhost:8080` (http://localhost:4200) |
+| `npm start` | Développement avec l'API, `/api` et `/actuator` redirigés vers `http://localhost:8080` (http://localhost:4200) |
 | `API_TARGET=https://recette.exemple.fr npm start` | Développement avec une API sur un autre endpoint |
 | `npm run start:mock` | Développement sans backend, bouchons intégrés |
 | `npm run build` | Build de production (appels vers l'API) dans `dist/` |
@@ -37,11 +37,19 @@ l'endpoint ou le mode sans reconstruire. Exemple (voir aussi `config.example.jso
 ```
 
 - `apiUrl` : URL de base de l'API, relative (même domaine ou passerelle, `/api/v1` par défaut) ou absolue. Avec une
-  URL absolue sur un autre domaine, ajouter l'origine du front à `orderfirst.cors.allowed-origins` côté API.
+  URL absolue sur un autre domaine, ajouter l'origine du front à `orderfirst.cors.allowed-origins` et à
+  `management.endpoints.web.cors.allowed-origins` côté API.
+- `healthUrl` : endpoint health d'Actuator appelé au démarrage pour vérifier que l'API répond. Par défaut, déduit de
+  `apiUrl` en remplaçant `/api/v1` par `/actuator/health` (même serveur, à la racine).
 - `backend` : `api` (par défaut) ou `mock` pour une démonstration sans backend.
 
 Les valeurs du build (`src/environments/`) s'appliquent pour tout ce que `config.json` ne précise pas. Les
 bouchons ne sont chargés qu'en mode `mock` (fichier séparé), ils n'alourdissent pas l'application en mode `api`.
+
+Au démarrage, le front vérifie seulement que l'API répond (`GET /actuator/health`, statut `UP`) ; le catalogue des
+offres n'est chargé qu'en arrivant sur l'écran Forfait (ou Options pour une modification d'options), une seule fois
+par session. Pendant le chargement d'une liste (forfaits, numéros, terminaux), elle n'est pas sélectionnable et un
+indicateur le signale.
 
 Si l'API ne répond pas ou renvoie une erreur, un bandeau rouge l'indique en haut de l'écran ; l'action en cours
 s'arrête et le conseiller peut réessayer.

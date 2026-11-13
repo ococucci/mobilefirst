@@ -110,11 +110,18 @@ import { run } from '../ui/run';
 
       <h2 class="section-title">Forfaits</h2>
       <div class="card">
-        <button type="button" class="tree-head" (click)="expanded.set(!expanded())" [attr.aria-expanded]="expanded()">
-          <span><strong>{{ familyLabel() }}</strong><br /><span class="small muted">{{ familyOffers().length }} forfait(s) disponible(s)</span></span>
+        <button type="button" class="tree-head" (click)="expanded.set(!expanded())" [attr.aria-expanded]="expanded()" [disabled]="loadingOffers()">
+          <span>
+            <strong>{{ familyLabel() }}</strong><br />
+            @if (loadingOffers()) {
+              <span class="msg loading" role="status"><span class="spinner"></span> Chargement des forfaits (catalogue)…</span>
+            } @else {
+              <span class="small muted">{{ familyOffers().length }} forfait(s) disponible(s)</span>
+            }
+          </span>
           <span aria-hidden="true">{{ expanded() ? '▾' : '▸' }}</span>
         </button>
-        @if (expanded()) {
+        @if (expanded() && !loadingOffers()) {
           <div class="tree choices" role="radiogroup" aria-label="Forfaits" [class.ko]="offerError()" aria-describedby="offer-error">
             @for (o of familyOffers(); track o.id) {
               @let current = isChange && o.id === store.selectedLine()?.offerId;
@@ -205,6 +212,8 @@ export class ForfaitScreen {
   protected readonly operators = DONOR_OPERATORS;
   protected readonly today = new Date().toISOString().slice(0, 10);
   protected readonly numbers = signal<string[]>([]);
+  /** Catalogue des offres en cours de chargement (au premier passage sur l'écran). */
+  protected readonly loadingOffers = signal(false);
   /** Liste des numéros en cours de chargement : le choix n'est possible qu'une fois l'appel terminé. */
   protected readonly loadingNumbers = signal(false);
   protected readonly expanded = signal(true);
@@ -224,6 +233,17 @@ export class ForfaitScreen {
   constructor() {
     if (!this.allowed().includes(this.store.draft.family)) this.selectFamily(this.allowed()[0] ?? 'prepaye');
     if (!this.isChange) void run(this.loadingNumbers, async () => this.numbers.set(await this.catalog.availableNumbers()));
+    void run(this.loadingOffers, async () => {
+      if (await this.store.loadCatalog()) this.openOnCurrentFamily();
+    });
+  }
+
+  /** Changement de forfait : une fois le catalogue chargé, on ouvre sur la famille de l'offre actuelle de la ligne. */
+  private openOnCurrentFamily(): void {
+    if (!this.isChange || this.store.draft.offerId) return;
+    const family = this.store.offer(this.store.selectedLine()?.offerId)?.family;
+    // Une ligne Card change d'offre pour un forfait : on ouvre sur une famille avec mensualité.
+    if (family && family !== 'prepaye' && this.allowed().includes(family)) this.selectFamily(family);
   }
 
   protected openMlAvailable(): boolean {

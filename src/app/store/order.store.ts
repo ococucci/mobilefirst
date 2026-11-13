@@ -137,8 +137,11 @@ export class OrderStore {
 
   readonly steps = computed(() => stepsFor(this.flow()));
 
-  async loadCatalog(): Promise<void> {
+  /** Charge le catalogue des offres s'il ne l'est pas encore ; renvoie true s'il vient d'être chargé. */
+  async loadCatalog(): Promise<boolean> {
+    if (this.offers().length) return false;
     this.offers.set(await this.catalogApi.offers());
+    return true;
   }
 
   async loadTerminals(): Promise<void> {

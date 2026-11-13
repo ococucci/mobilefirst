@@ -133,6 +133,7 @@ export class LigneScreen {
         }
         d.options = [...line.options];
         d.offerId = null;
+        // Famille de l'offre actuelle si le catalogue est déjà chargé ; sinon l'écran Forfait la choisit au chargement.
         // Une ligne Card change d'offre pour un forfait : on ouvre sur une famille avec mensualité.
         const family = this.store.offer(line.offerId)?.family ?? 'bloque';
         d.family = family === 'prepaye' ? 'bloque' : family;

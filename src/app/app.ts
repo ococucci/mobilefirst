@@ -10,6 +10,7 @@ import { OptionsScreen } from './screens/options.screen';
 import { SimScreen } from './screens/sim.screen';
 import { SuccesScreen } from './screens/succes.screen';
 import { ApiErrors } from './api/api-base';
+import { HealthApi } from './api/health.api';
 import { APP_CONFIG } from './config';
 import { run } from './ui/run';
 import { OrderStore } from './store/order.store';
@@ -71,8 +72,10 @@ export class App implements OnInit {
   protected readonly store = inject(OrderStore);
   protected readonly apiErrors = inject(ApiErrors);
   protected readonly config = inject(APP_CONFIG);
+  private readonly health = inject(HealthApi);
 
+  /** Au démarrage, on vérifie seulement que le backend répond (Actuator) ; le catalogue est chargé à l'écran Forfait. */
   ngOnInit(): void {
-    void run(null, () => this.store.loadCatalog());
+    if (this.config.backend === 'api') void run(null, async () => void (await this.health.check()));
   }
 }

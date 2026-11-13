@@ -3,6 +3,7 @@ import { formatEuro, formatMsisdn } from '../domain/format';
 import { OrderStore } from '../store/order.store';
 import { CustomerBanner } from '../ui/customer-banner';
 import { Page } from '../ui/page';
+import { run } from '../ui/run';
 
 /** Écran 3d : ajout ou retrait d'options sur une ligne existante. */
 @Component({
@@ -23,6 +24,9 @@ import { Page } from '../ui/page';
           option cochée est grisée : décochez d'abord l'option qui la bloque.
         </p>
         @let blocked = store.blockedOptions();
+        @if (loadingOffers()) {
+          <p class="msg loading" role="status"><span class="spinner"></span> Chargement des options de l'offre (catalogue)…</p>
+        } @else {
         @for (o of store.optionsOffer()?.options ?? []; track o.id) {
           @let active = o.included || line?.options?.includes(o.id);
           @let checked = o.included || d.options.includes(o.id);
@@ -42,6 +46,7 @@ import { Page } from '../ui/page';
         } @empty {
           <p class="muted">Aucune option n'est proposée avec l'offre actuelle de cette ligne.</p>
         }
+        }
         @if (error()) { <span class="msg ko group-error" role="alert">{{ error() }}</span> }
       </div>
     </app-page>
@@ -49,6 +54,12 @@ import { Page } from '../ui/page';
 })
 export class OptionsScreen {
   protected readonly store = inject(OrderStore);
+  /** Catalogue des offres en cours de chargement : les options dépendent de l'offre actuelle de la ligne. */
+  protected readonly loadingOffers = signal(false);
+
+  constructor() {
+    void run(this.loadingOffers, async () => void (await this.store.loadCatalog()));
+  }
   protected readonly error = signal<string | null>(null);
   protected readonly fmt = formatMsisdn;
   protected readonly euro = formatEuro;

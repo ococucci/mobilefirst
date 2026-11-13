@@ -7,9 +7,19 @@ export interface AppConfig {
   backend: BackendMode;
   /** URL de base de l'API, relative (même domaine ou proxy) ou absolue (ex. https://api.exemple.fr/api/v1). */
   apiUrl: string;
+  /**
+   * Endpoint health d'Actuator, pour vérifier au démarrage que le backend répond. Par défaut, déduit de apiUrl :
+   * « /api/v1 » remplacé par « /actuator/health » (ex. https://api.exemple.fr/actuator/health).
+   */
+  healthUrl?: string;
 }
 
 export const DEFAULT_CONFIG: AppConfig = { backend: 'api', apiUrl: '/api/v1' };
+
+/** URL du health Actuator déduite de l'URL de l'API : même serveur, à la racine. */
+export function defaultHealthUrl(apiUrl: string): string {
+  return apiUrl.replace(/\/api(\/v\d+)?$/, '') + '/actuator/health';
+}
 
 export const APP_CONFIG = new InjectionToken<AppConfig>('APP_CONFIG', {
   providedIn: 'root',
@@ -34,5 +44,6 @@ export async function loadConfig(defaults: AppConfig, fetchFn: typeof fetch = fe
 export function normalize(config: AppConfig): AppConfig {
   const backend: BackendMode = config.backend === 'mock' ? 'mock' : 'api';
   const apiUrl = (config.apiUrl || DEFAULT_CONFIG.apiUrl).replace(/\/+$/, '');
-  return { backend, apiUrl };
+  const healthUrl = config.healthUrl || defaultHealthUrl(apiUrl);
+  return { backend, apiUrl, healthUrl };
 }
