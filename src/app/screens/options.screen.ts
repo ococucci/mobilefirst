@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { formatEuro, formatMsisdn } from '../domain/format';
+import { withOption } from '../domain/rules';
 import { OrderStore } from '../store/order.store';
 import { CustomerBanner } from '../ui/customer-banner';
 import { Page } from '../ui/page';
@@ -19,8 +20,8 @@ import { Page } from '../ui/page';
       <div class="card">
         <h2>Options mobile</h2>
         <p class="muted small">
-          Cochez pour ajouter, décochez pour retirer. Les options actives sont cochées. Une option incompatible avec une
-          option cochée est grisée : décochez d'abord l'option qui la bloque.
+          Cochez pour ajouter, décochez pour retirer. Les options actives sont cochées. Les options incompatibles avec
+          une option cochée sont grisées : décochez-la pour les rendre à nouveau disponibles.
         </p>
         @let blocked = store.blockedOptions();
         @for (o of store.optionsOffer()?.options ?? []; track o.id) {
@@ -55,7 +56,8 @@ export class OptionsScreen {
 
   protected setOption(id: string, checked: boolean): void {
     const d = this.store.draft;
-    d.options = checked ? [...new Set([...d.options, id])] : d.options.filter((o) => o !== id);
+    // Cocher une option décoche les options de sa liste d'incompatibilités.
+    d.options = checked ? withOption(this.store.optionsOffer(), d.options, id) : d.options.filter((o) => o !== id);
     this.error.set(null);
   }
 

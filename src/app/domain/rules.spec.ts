@@ -5,6 +5,7 @@ import {
   allowedFamilies,
   blockedOptions,
   compatibleOptions,
+  withOption,
   identityChangeRequiresRescore,
   isOpenMlAvailable,
   isValidIban,
@@ -96,16 +97,34 @@ describe('options incompatibles', () => {
     options: [opt('a', 5), opt('b', 3), opt('c', 9, { incompatibleOptions: ['a'] }), opt('d', 2), opt('inc', 0, { included: true, incompatibleOptions: ['d'] })],
   });
 
-  it('une option active bloque les options incompatibles, dans les deux sens', () => {
-    expect([...blockedOptions(withRules, ['a'])]).toEqual([['c', 'A'], ['d', 'INC']]);
+  it('une option active grise uniquement les options de sa propre liste', () => {
     expect([...blockedOptions(withRules, ['c'])]).toEqual([['a', 'C'], ['d', 'INC']]);
+    // a ne liste rien : la liste de c (non cochée) n'a aucun effet.
+    expect([...blockedOptions(withRules, ['a'])]).toEqual([['d', 'INC']]);
+  });
+  it('une option qui exclut une option incluse est grisée', () => {
+    const o = offer({ options: [opt('x', 1, { incompatibleOptions: ['inc'] }), opt('inc', 0, { label: 'Incluse', included: true })] });
+    expect([...blockedOptions(o, [])]).toEqual([['x', 'Incluse']]);
+  });
+  it('cocher une option décoche les options de sa liste', () => {
+    expect(withOption(withRules, ['a', 'b'], 'c')).toEqual(['b', 'c']);
+    expect(withOption(withRules, ['c'], 'a')).toEqual(['c', 'a']);
+    expect(withOption(withRules, ['a'], 'a')).toEqual(['a']);
+  });
+  it('catalogue réel : les listes en escalier ne grisent que les options listées', () => {
+    const ids = ['prev', 'sva', 'blocage', 'cine', 'tv'];
+    const real = offer({ options: ids.map((id, i) => opt(id, 0, { incompatibleOptions: ids.slice(0, i) })) });
+    expect([...blockedOptions(real, ['prev']).keys()]).toEqual([]);
+    expect([...blockedOptions(real, ['cine']).keys()]).toEqual(['prev', 'sva', 'blocage']);
+    expect([...blockedOptions(real, ['tv']).keys()]).toEqual(['prev', 'sva', 'blocage', 'cine']);
   });
   it('une option incluse bloque toujours ses incompatibles', () => {
     expect([...blockedOptions(withRules, [])]).toEqual([['d', 'INC']]);
   });
   it('sans offre, rien n’est bloqué', () => expect(blockedOptions(undefined, ['a']).size).toBe(0));
   it('changement d’offre : on retire les options incompatibles, incluses ou non proposées', () => {
-    expect(compatibleOptions(withRules, ['a', 'c', 'b'])).toEqual(['a', 'b']);
+    expect(compatibleOptions(withRules, ['a', 'c', 'b'])).toEqual(['c', 'b']);
+    expect(compatibleOptions(withRules, ['c', 'a'])).toEqual(['c']);
     expect(compatibleOptions(withRules, ['d', 'inc', 'x'])).toEqual([]);
   });
 });

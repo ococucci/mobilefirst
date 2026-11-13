@@ -60,10 +60,11 @@ s'arrête et le conseiller peut réessayer.
 
 - **Niveau d'offre** (`level` : `nonsub`, `card`, `silver`, `gold`, `elite`, `platine`) : chaque offre a un niveau, affiché en badge.
   Il fixe le tarif (niveau de subvention) du terminal : une offre Silver donne le prix Silver du terminal.
-- **Options incompatibles** (`incompatibleOptions`, liste d'identifiants d'options) : tant qu'une option est active
-  (choisie ou incluse), les options incompatibles sont grisées avec la mention « Incompatible avec … ».
-  L'incompatibilité vaut dans les deux sens, même si elle n'est déclarée que sur l'une des deux options. En cas
-  de changement d'offre, les options devenues incompatibles avec une option incluse sont retirées.
+- **Options incompatibles** (`incompatibleOptions`, liste d'identifiants d'options) : quand une option est active
+  (choisie ou incluse), seules les options dont l'identifiant figure dans **sa** liste sont grisées, avec la mention
+  « Incompatible avec … » ; elles sont décochées si elles l'étaient. L'incompatibilité est à sens unique : la liste
+  d'une option non cochée n'a aucun effet. Une option qui exclut une option incluse est grisée (une option incluse
+  ne peut pas être retirée). En cas de changement d'offre, les options devenues incompatibles sont retirées.
 - **Terminal** : trois listes déroulantes, Marque › Modèle › Couleur. Si le modèle ne propose qu'une couleur, elle
   est présélectionnée. Le prix affiché est celui du niveau de l'offre choisie.
 
