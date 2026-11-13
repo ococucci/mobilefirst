@@ -107,56 +107,38 @@ export function selectedOptions(offer: Offer, optionIds: string[]): OfferOption[
   return offer.options.filter((o) => o.included || optionIds.includes(o.id));
 }
 
-/**
- * L'option a exclut l'option b si l'identifiant de b figure dans sa liste incompatibleOptions.
- * L'incompatibilité est à sens unique : seule la liste de l'option choisie compte.
- */
-export function excludes(a: OfferOption, b: OfferOption): boolean {
-  return a.id !== b.id && a.incompatibleOptions.includes(b.id);
+/** Les deux options s'excluent : l'incompatibilité déclarée sur l'une vaut pour l'autre. */
+export function areIncompatible(a: OfferOption, b: OfferOption): boolean {
+  return a.id !== b.id && (a.incompatibleOptions.includes(b.id) || b.incompatibleOptions.includes(a.id));
 }
 
 /**
- * Options non actives qui ne peuvent pas être choisies, associées au libellé de l'option qui les bloque :
- * celles listées par une option active (choisie ou incluse), et celles qui excluent une option incluse
- * (une option incluse ne peut pas être retirée).
+ * Options non actives qui ne peuvent pas être choisies, associées au libellé de l'option active qui les bloque.
+ * Une option incluse bloque toujours les options incompatibles avec elle.
  */
 export function blockedOptions(offer: Offer | undefined, optionIds: string[]): Map<string, string> {
   const blocked = new Map<string, string>();
   if (!offer) return blocked;
   const active = selectedOptions(offer, optionIds);
-  const included = offer.options.filter((o) => o.included);
   for (const o of offer.options) {
     if (active.includes(o)) continue;
-    const blocker = active.find((a) => excludes(a, o)) ?? included.find((i) => excludes(o, i));
+    const blocker = active.find((a) => areIncompatible(a, o));
     if (blocker) blocked.set(o.id, blocker.label);
   }
   return blocked;
 }
 
-/** Coche une option : les options de sa liste d'incompatibilités sont décochées. */
-export function withOption(offer: Offer | undefined, optionIds: string[], id: string): string[] {
-  const option = offer?.options.find((o) => o.id === id);
-  const excluded = option?.incompatibleOptions ?? [];
-  return [...new Set([...optionIds.filter((o) => !excluded.includes(o)), id])];
-}
-
 /**
- * Sélection conservée au changement d'offre : on retire les options que l'offre ne propose pas, les options
- * incluses (toujours actives), celles listées par une option incluse et celles qui excluent une option incluse.
- * Les options choisies sont rejouées dans l'ordre, comme si elles étaient cochées une à une.
+ * Retire de la sélection les options que l'offre ne propose pas, les options incluses (toujours actives)
+ * et celles incompatibles avec une option incluse ou choisie avant elles.
  */
 export function compatibleOptions(offer: Offer, optionIds: string[]): string[] {
-  const included = offer.options.filter((o) => o.included);
-  let kept: OfferOption[] = [];
+  const kept: OfferOption[] = offer.options.filter((o) => o.included);
   for (const id of optionIds) {
     const o = offer.options.find((x) => x.id === id && !x.included);
-    if (!o || kept.includes(o)) continue;
-    // Grisée par une option incluse ou déjà retenue, ou excluant une option incluse : écartée.
-    if (included.some((i) => excludes(i, o) || excludes(o, i)) || kept.some((k) => excludes(k, o))) continue;
-    // Sinon retenue, et les options de sa liste sont décochées.
-    kept = [...kept.filter((k) => !excludes(o, k)), o];
+    if (o && !kept.includes(o) && !kept.some((k) => areIncompatible(k, o))) kept.push(o);
   }
-  return kept.map((o) => o.id);
+  return kept.filter((o) => !o.included).map((o) => o.id);
 }
 
 export function levelLabel(level: OfferLevel): string {

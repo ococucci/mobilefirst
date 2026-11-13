@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { CatalogApi } from '../api/catalog.api';
 import { formatEuro, formatMsisdn } from '../domain/format';
 import { DONOR_OPERATORS, FAMILIES, FamilyId, Offer } from '../domain/models';
-import { allowedFamilies, compatibleOptions, isOpenMlAvailable, levelLabel, openMlDiscount, withOption } from '../domain/rules';
+import { allowedFamilies, compatibleOptions, isOpenMlAvailable, levelLabel, openMlDiscount } from '../domain/rules';
 import { NumberChoice, numberErrors, sponsorError } from '../domain/validation';
 import { OrderStore } from '../store/order.store';
 import { CustomerBanner } from '../ui/customer-banner';
@@ -263,8 +263,7 @@ export class ForfaitScreen {
 
   protected setOption(id: string, checked: boolean): void {
     const d = this.store.draft;
-    // Cocher une option décoche les options de sa liste d'incompatibilités.
-    d.options = checked ? withOption(this.store.optionsOffer(), d.options, id) : d.options.filter((o) => o !== id);
+    d.options = checked ? [...new Set([...d.options, id])] : d.options.filter((o) => o !== id);
   }
 
   protected async checkSponsor(): Promise<void> {

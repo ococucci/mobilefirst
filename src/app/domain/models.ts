@@ -102,8 +102,8 @@ export interface OfferOption {
   /** Option incluse dans l'offre : gratuite et toujours active. */
   included: boolean;
   /**
-   * Options (identifiants) incompatibles avec celle-ci : tant qu'elle est active, elles sont grisées et ne peuvent
-   * pas être choisies. L'incompatibilité est à sens unique : seule la liste de l'option choisie compte.
+   * Options (identifiants) incompatibles avec celle-ci : tant qu'elle est active, elles ne peuvent pas être choisies.
+   * L'incompatibilité vaut dans les deux sens, même si elle n'est déclarée que sur l'une des deux options.
    */
   incompatibleOptions: string[];
 }

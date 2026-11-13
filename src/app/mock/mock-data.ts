@@ -118,7 +118,10 @@ const LABELS: Record<string, string> = {
   securite: 'Sécurité mobile',
   international: 'Appels internationaux',
 };
-/** Options incompatibles : choisir l'option en clé grise les options listées (à sens unique). */
+/**
+ * Options incompatibles. Chaque incompatibilité n'est déclarée que d'un côté, comme le catalogue peut le faire :
+ * elle s'applique quand même dans les deux sens.
+ */
 const INCOMPATIBLE: Record<string, string[]> = {
   'europe-plus': ['europe'],
   montre: ['multisim'],
