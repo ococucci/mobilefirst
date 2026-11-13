@@ -71,12 +71,17 @@ import { run } from '../ui/run';
               @if (n.mode === 'nouveau') {
                 <div class="field" style="margin: 1rem 0 0">
                   <label for="newmsisdn">Nouveau numéro MSISDN</label>
-                  <select id="newmsisdn" [(ngModel)]="n.msisdn" [class.ko]="nerr('msisdn')" [attr.aria-invalid]="!!nerr('msisdn')" aria-describedby="newmsisdn-error">
-                    <option value="" disabled>Choisir un numéro disponible</option>
+                  <select id="newmsisdn" [(ngModel)]="n.msisdn" [disabled]="loadingNumbers()" [attr.aria-busy]="loadingNumbers()"
+                    [class.ko]="nerr('msisdn')" [attr.aria-invalid]="!!nerr('msisdn')" aria-describedby="newmsisdn-error">
+                    <option value="" disabled>{{ loadingNumbers() ? 'Chargement…' : 'Choisir un numéro disponible' }}</option>
                     @for (num of numbers(); track num) { <option [value]="num">{{ fmt(num) }}</option> }
                   </select>
-                  @if (nerr('msisdn')) {
+                  @if (loadingNumbers()) {
+                    <span class="msg loading" role="status"><span class="spinner"></span> Chargement des numéros disponibles (api ressource)…</span>
+                  } @else if (nerr('msisdn')) {
                     <app-field-error for="newmsisdn" [message]="nerr('msisdn')" />
+                  } @else if (!numbers().length) {
+                    <span class="msg ko">Aucun numéro disponible pour le moment.</span>
                   } @else {
                     <span class="msg">Numéros disponibles fournis par api ressource.</span>
                   }
@@ -200,6 +205,8 @@ export class ForfaitScreen {
   protected readonly operators = DONOR_OPERATORS;
   protected readonly today = new Date().toISOString().slice(0, 10);
   protected readonly numbers = signal<string[]>([]);
+  /** Liste des numéros en cours de chargement : le choix n'est possible qu'une fois l'appel terminé. */
+  protected readonly loadingNumbers = signal(false);
   protected readonly expanded = signal(true);
   protected readonly submitted = signal(false);
   protected readonly busy = signal(false);
@@ -216,7 +223,7 @@ export class ForfaitScreen {
 
   constructor() {
     if (!this.allowed().includes(this.store.draft.family)) this.selectFamily(this.allowed()[0] ?? 'prepaye');
-    if (!this.isChange) void run(null, async () => this.numbers.set(await this.catalog.availableNumbers()));
+    if (!this.isChange) void run(this.loadingNumbers, async () => this.numbers.set(await this.catalog.availableNumbers()));
   }
 
   protected openMlAvailable(): boolean {

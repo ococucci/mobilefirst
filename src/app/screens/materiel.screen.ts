@@ -38,19 +38,22 @@ import { CORRECT_FIELDS, FieldError, focusFirstError } from '../ui/field-error';
             </button>
           </div>
           @if (h.withTerminal) {
-            <div class="terminal-grid" style="margin-top: 1rem">
+            @if (loadingTerminals()) {
+              <p class="msg loading" role="status" style="margin: 1rem 0 0"><span class="spinner"></span> Chargement du catalogue des terminaux (si-financier)…</p>
+            }
+            <div class="terminal-grid" style="margin-top: 1rem" [attr.aria-busy]="loadingTerminals()">
               <div class="field">
                 <label for="brand">Marque</label>
-                <select id="brand" [ngModel]="h.terminalBrand" (ngModelChange)="selectBrand($event)"
+                <select id="brand" [ngModel]="h.terminalBrand" (ngModelChange)="selectBrand($event)" [disabled]="loadingTerminals()"
                   [class.ko]="terr('terminalBrand')" [attr.aria-invalid]="!!terr('terminalBrand')" aria-describedby="brand-error">
-                  <option value="">Marque…</option>
+                  <option value="">{{ loadingTerminals() ? 'Chargement…' : 'Marque…' }}</option>
                   @for (b of brands(); track b) { <option [value]="b">{{ b }}</option> }
                 </select>
                 <app-field-error for="brand" [message]="terr('terminalBrand')" />
               </div>
               <div class="field">
                 <label for="model">Modèle</label>
-                <select id="model" [ngModel]="h.terminalId" (ngModelChange)="selectModel($event)" [disabled]="!h.terminalBrand"
+                <select id="model" [ngModel]="h.terminalId" (ngModelChange)="selectModel($event)" [disabled]="loadingTerminals() || !h.terminalBrand"
                   [class.ko]="terr('terminalId')" [attr.aria-invalid]="!!terr('terminalId')" aria-describedby="model-error">
                   <option value="">Modèle…</option>
                   @for (t of models(); track t.id) { <option [value]="t.id">{{ t.model }}</option> }
@@ -59,7 +62,7 @@ import { CORRECT_FIELDS, FieldError, focusFirstError } from '../ui/field-error';
               </div>
               <div class="field">
                 <label for="color">Couleur</label>
-                <select id="color" [ngModel]="h.terminalColorId" (ngModelChange)="h.terminalColorId = $event" [disabled]="!selected()"
+                <select id="color" [ngModel]="h.terminalColorId" (ngModelChange)="h.terminalColorId = $event" [disabled]="loadingTerminals() || !selected()"
                   [class.ko]="terr('terminalColorId')" [attr.aria-invalid]="!!terr('terminalColorId')" aria-describedby="color-error">
                   <option value="">Couleur…</option>
                   @for (c of selected()?.terminal?.colors ?? []; track c.id) { <option [value]="c.id">{{ c.label }}</option> }
@@ -113,6 +116,8 @@ export class MaterielScreen {
   private readonly orders = inject(OrderApi);
   private readonly simBlock = viewChild.required(SimBlock);
 
+  /** Catalogue des terminaux en cours de chargement : marque, modèle et couleur ne sont pas encore sélectionnables. */
+  protected readonly loadingTerminals = signal(false);
   protected readonly brands = computed(() => terminalBrands(this.store.terminals()));
   /** Marque choisie, pour recalculer la liste des modèles. */
   private readonly brand = signal(this.store.draft.hardware.terminalBrand);
@@ -132,7 +137,7 @@ export class MaterielScreen {
       const i = this.store.draft.identity;
       sepa.holder = `${i.prenom} ${i.nom}`.trim();
     }
-    void run(null, () => this.store.loadTerminals());
+    void run(this.loadingTerminals, () => this.store.loadTerminals());
   }
 
   protected isCard(): boolean {
