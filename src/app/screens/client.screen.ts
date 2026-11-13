@@ -1,6 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { AddressApi, AddressSuggestion } from '../api/address.api';
+import { Subject } from 'rxjs';
+import { ADDRESS_MIN_LENGTH, AddressApi, AddressSuggestion, debouncedAddressSearch } from '../api/address.api';
 import { CustomerApi } from '../api/customer.api';
 import { OrderStore } from '../store/order.store';
 import { IdentityForm, identityComplete } from '../ui/identity-form';
@@ -43,6 +45,8 @@ import { run } from '../ui/run';
                 <li><button type="button" role="option" (click)="pick(s)">{{ s.ligne }}, {{ s.codePostal }} {{ s.commune }}</button></li>
               }
             </ul>
+          } @else if (searching()) {
+            <span class="msg loading" role="status"><span class="spinner"></span> Recherche d'adresses (Api-ORAS)…</span>
           } @else if (query.length > 2 && !a.codePostal && searched()) {
             <span class="msg">Aucune adresse trouvée par Api-ORAS.</span>
           }
@@ -71,6 +75,10 @@ export class ClientScreen {
 
   protected readonly suggestions = signal<AddressSuggestion[]>([]);
   protected readonly searched = signal(false);
+  /** Saisie en attente de résultat (pause de frappe puis appel à Api-ORAS). */
+  protected readonly searching = signal(false);
+  /** Saisies successives, interrogées après une pause dans la frappe (debounce). */
+  private readonly input$ = new Subject<string>();
   protected readonly busy = signal(false);
   protected readonly submitted = signal(false);
   protected readonly rescored = signal(false);
@@ -78,21 +86,34 @@ export class ClientScreen {
     ? `${this.store.draft.address.ligne}, ${this.store.draft.address.codePostal} ${this.store.draft.address.commune}`
     : '';
 
-  protected async search(query: string): Promise<void> {
+  constructor() {
+    debouncedAddressSearch(this.input$, (q) => this.addresses.search(q))
+      .pipe(takeUntilDestroyed())
+      .subscribe(({ query, suggestions }) => {
+        // Réponse à une saisie dépassée (l'adresse a été choisie entre-temps) : ignorée.
+        if (query !== this.query.trim()) return;
+        this.suggestions.set(suggestions);
+        this.searched.set(query.length >= ADDRESS_MIN_LENGTH);
+        this.searching.set(false);
+      });
+  }
+
+  /** Chaque frappe efface l'adresse choisie ; la recherche part après une pause dans la saisie. */
+  protected search(query: string): void {
     this.query = query;
     Object.assign(this.store.draft.address, { ligne: '', codePostal: '', commune: '' });
-    await run(null, async () => {
-      const results = await this.addresses.search(query);
-      if (query !== this.query) return;
-      this.suggestions.set(results);
-      this.searched.set(true);
-    });
+    this.searched.set(false);
+    const long = query.trim().length >= ADDRESS_MIN_LENGTH;
+    this.searching.set(long);
+    if (!long) this.suggestions.set([]);
+    this.input$.next(query);
   }
 
   protected pick(s: AddressSuggestion): void {
     Object.assign(this.store.draft.address, s);
     this.query = `${s.ligne}, ${s.codePostal} ${s.commune}`;
     this.suggestions.set([]);
+    this.searching.set(false);
   }
 
   private invalid(): boolean {
