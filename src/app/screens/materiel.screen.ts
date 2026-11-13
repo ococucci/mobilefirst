@@ -137,7 +137,8 @@ export class MaterielScreen {
       const i = this.store.draft.identity;
       sepa.holder = `${i.prenom} ${i.nom}`.trim();
     }
-    void run(this.loadingTerminals, () => this.store.loadTerminals());
+    // Terminaux appelés une seule fois par commande.
+    void run(this.loadingTerminals, async () => void (await this.store.loadTerminals()));
   }
 
   protected isCard(): boolean {

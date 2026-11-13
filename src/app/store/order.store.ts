@@ -129,23 +129,62 @@ export class OrderStore {
   /** Demande sélectionnée à l'écran Demande, avant validation du choix. */
   readonly flowChoice = signal<Flow | null>(null);
 
+  /** Catalogue des offres, chargé à l'écran Forfait (ou Options). */
   readonly offers = signal<Offer[]>([]);
   /** Terminaux, chargés à l'écran Matériel et paiement. */
   readonly terminals = signal<Terminal[]>([]);
+  /** Numéros disponibles (api ressource), chargés à l'écran Forfait d'une nouvelle ligne. */
+  readonly availableNumbers = signal<string[]>([]);
+
+  /**
+   * Appels déjà lancés pour la commande en cours (catalogue, terminaux, numéros) : ils ne sont pas refaits au retour
+   * sur un écran. reset() les oublie pour la commande suivante ; un appel en échec pourra être relancé.
+   */
+  private readonly loads = new Map<string, Promise<void>>();
+  /** Incrémenté à chaque nouvelle commande : la réponse d'un appel lancé avant reset() est ignorée. */
+  private generation = 0;
 
   draft: Draft = emptyDraft();
 
   readonly steps = computed(() => stepsFor(this.flow()));
 
-  /** Charge le catalogue des offres s'il ne l'est pas encore ; renvoie true s'il vient d'être chargé. */
-  async loadCatalog(): Promise<boolean> {
-    if (this.offers().length) return false;
-    this.offers.set(await this.catalogApi.offers());
-    return true;
+  /** Catalogue des offres, appelé une seule fois par commande ; renvoie true s'il vient d'être chargé. */
+  loadCatalog(): Promise<boolean> {
+    return this.once('offers', () => this.catalogApi.offers(), (v) => this.offers.set(v));
   }
 
-  async loadTerminals(): Promise<void> {
-    this.terminals.set(await this.hardwareApi.terminals());
+  /** Terminaux, appelés une seule fois par commande. */
+  loadTerminals(): Promise<boolean> {
+    return this.once('terminals', () => this.hardwareApi.terminals(), (v) => this.terminals.set(v));
+  }
+
+  /** Numéros disponibles, appelés une seule fois par commande. */
+  loadNumbers(): Promise<boolean> {
+    return this.once('numbers', () => this.catalogApi.availableNumbers(), (v) => this.availableNumbers.set(v));
+  }
+
+  /**
+   * Lance l'appel s'il n'a pas déjà été fait pour la commande en cours (ou s'il est en cours : on attend le même).
+   * Renvoie true si cet appel vient de charger les données, false si elles l'étaient déjà.
+   */
+  private async once<T>(key: string, fetch: () => Promise<T>, apply: (value: T) => void): Promise<boolean> {
+    const pending = this.loads.get(key);
+    if (pending) {
+      await pending;
+      return false;
+    }
+    const generation = this.generation;
+    const load = fetch().then((value) => {
+      if (generation === this.generation) apply(value);
+    });
+    this.loads.set(key, load);
+    try {
+      await load;
+      return true;
+    } catch (e) {
+      if (this.loads.get(key) === load) this.loads.delete(key);
+      throw e;
+    }
   }
 
   go(screen: Screen): void {
@@ -185,6 +224,12 @@ export class OrderStore {
 
   reset(): void {
     this.draft = emptyDraft();
+    // Nouvelle commande : catalogue, terminaux et numéros seront rappelés (numéros réservés, catalogue à jour).
+    this.generation++;
+    this.loads.clear();
+    this.offers.set([]);
+    this.terminals.set([]);
+    this.availableNumbers.set([]);
     this.customer.set(null);
     this.customerStatus.set(null);
     this.score.set(null);

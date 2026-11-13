@@ -74,13 +74,13 @@ import { run } from '../ui/run';
                   <select id="newmsisdn" [(ngModel)]="n.msisdn" [disabled]="loadingNumbers()" [attr.aria-busy]="loadingNumbers()"
                     [class.ko]="nerr('msisdn')" [attr.aria-invalid]="!!nerr('msisdn')" aria-describedby="newmsisdn-error">
                     <option value="" disabled>{{ loadingNumbers() ? 'Chargement…' : 'Choisir un numéro disponible' }}</option>
-                    @for (num of numbers(); track num) { <option [value]="num">{{ fmt(num) }}</option> }
+                    @for (num of store.availableNumbers(); track num) { <option [value]="num">{{ fmt(num) }}</option> }
                   </select>
                   @if (loadingNumbers()) {
                     <span class="msg loading" role="status"><span class="spinner"></span> Chargement des numéros disponibles (api ressource)…</span>
                   } @else if (nerr('msisdn')) {
                     <app-field-error for="newmsisdn" [message]="nerr('msisdn')" />
-                  } @else if (!numbers().length) {
+                  } @else if (!store.availableNumbers().length) {
                     <span class="msg ko">Aucun numéro disponible pour le moment.</span>
                   } @else {
                     <span class="msg">Numéros disponibles fournis par api ressource.</span>
@@ -211,7 +211,6 @@ export class ForfaitScreen {
   protected readonly families = FAMILIES;
   protected readonly operators = DONOR_OPERATORS;
   protected readonly today = new Date().toISOString().slice(0, 10);
-  protected readonly numbers = signal<string[]>([]);
   /** Catalogue des offres en cours de chargement (au premier passage sur l'écran). */
   protected readonly loadingOffers = signal(false);
   /** Liste des numéros en cours de chargement : le choix n'est possible qu'une fois l'appel terminé. */
@@ -232,7 +231,8 @@ export class ForfaitScreen {
 
   constructor() {
     if (!this.allowed().includes(this.store.draft.family)) this.selectFamily(this.allowed()[0] ?? 'prepaye');
-    if (!this.isChange) void run(this.loadingNumbers, async () => this.numbers.set(await this.catalog.availableNumbers()));
+    // Numéros et catalogue ne sont appelés qu'une fois par commande : au retour sur l'écran, ils sont déjà là.
+    if (!this.isChange) void run(this.loadingNumbers, async () => void (await this.store.loadNumbers()));
     void run(this.loadingOffers, async () => {
       if (await this.store.loadCatalog()) this.openOnCurrentFamily();
     });
