@@ -45,7 +45,7 @@ export const emptyIdentity = (): Identity => ({
   email: '',
 });
 
-export const emptyAddress = (): Address => ({ ligne: '', codePostal: '', commune: '', complement: '' });
+export const emptyAddress = (): Address => ({ numeroVoie: '', nomVoie: '', codePostal: '', commune: '', complement: '' });
 
 /** Saisies du conseiller, liées aux formulaires (ngModel). */
 export interface Draft {

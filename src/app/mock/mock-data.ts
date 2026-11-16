@@ -21,7 +21,7 @@ export const CUSTOMERS: Customer[] = [
       email: 'marie.dupont@exemple.fr',
     },
     address: {
-      ligne: '12 rue des Flamboyants',
+      numeroVoie: '12', nomVoie: 'rue des Flamboyants',
       codePostal: '97100',
       commune: 'Basse-Terre',
       complement: 'Résidence Les Palmiers, bât. B',
@@ -49,7 +49,7 @@ export const CUSTOMERS: Customer[] = [
       mobileContact: '0696778899',
       email: 'jean.martin@exemple.fr',
     },
-    address: { ligne: '4 avenue des Caraïbes', codePostal: '97200', commune: 'Fort-de-France', complement: '' },
+    address: { numeroVoie: '4', nomVoie: 'avenue des Caraïbes', codePostal: '97200', commune: 'Fort-de-France', complement: '' },
     score: 'orange',
     lines: [
       { msisdn: '0696778899', offerId: 'pp-classique', offerLabel: 'Card prépayée', monthlyPrice: null, isCard: true, simType: 'physique', options: [] },
@@ -70,7 +70,7 @@ export const CUSTOMERS: Customer[] = [
       mobileContact: '0694999000',
       email: 'luc.bernard@exemple.fr',
     },
-    address: { ligne: '8 rue Lallouette', codePostal: '97300', commune: 'Cayenne', complement: '' },
+    address: { numeroVoie: '8', nomVoie: 'rue Lallouette', codePostal: '97300', commune: 'Cayenne', complement: '' },
     score: 'rouge',
     lines: [
       { msisdn: '0694999000', offerId: 'nb-10', offerLabel: 'Forfait 10 Go', monthlyPrice: 9.99, isCard: false, simType: 'physique', options: [] },
@@ -92,7 +92,7 @@ export const CUSTOMERS: Customer[] = [
       email: 'contact@boulangerie-des-iles.fr',
     },
     company: { raisonSociale: 'Boulangerie des Îles', siren: '812345678', siret: '81234567800015' },
-    address: { ligne: '25 boulevard Légitimus', codePostal: '97110', commune: 'Pointe-à-Pitre', complement: '' },
+    address: { numeroVoie: '25', nomVoie: 'boulevard Légitimus', codePostal: '97110', commune: 'Pointe-à-Pitre', complement: '' },
     score: 'vert',
     lines: [
       { msisdn: '0690400500', offerId: 'nb-200', offerLabel: 'Forfait 200 Go 5G', monthlyPrice: 34.99, isCard: false, simType: 'physique', options: ['international'] },
@@ -205,12 +205,12 @@ export const ICCID_STOCK = [
 ];
 
 export const ADDRESSES = [
-  { ligne: '12 rue des Flamboyants', codePostal: '97100', commune: 'Basse-Terre' },
-  { ligne: '25 boulevard Légitimus', codePostal: '97110', commune: 'Pointe-à-Pitre' },
-  { ligne: '3 rue Frébault', codePostal: '97110', commune: 'Pointe-à-Pitre' },
-  { ligne: '14 rue Schoelcher', codePostal: '97100', commune: 'Basse-Terre' },
-  { ligne: '4 avenue des Caraïbes', codePostal: '97200', commune: 'Fort-de-France' },
-  { ligne: '8 rue Lallouette', codePostal: '97300', commune: 'Cayenne' },
-  { ligne: '1 place de la Victoire', codePostal: '97110', commune: 'Pointe-à-Pitre' },
-  { ligne: '17 route de Gosier', codePostal: '97190', commune: 'Le Gosier' },
+  { numeroVoie: '12', nomVoie: 'rue des Flamboyants', codePostal: '97100', commune: 'Basse-Terre' },
+  { numeroVoie: '25', nomVoie: 'boulevard Légitimus', codePostal: '97110', commune: 'Pointe-à-Pitre' },
+  { numeroVoie: '3', nomVoie: 'rue Frébault', codePostal: '97110', commune: 'Pointe-à-Pitre' },
+  { numeroVoie: '14', nomVoie: 'rue Schoelcher', codePostal: '97100', commune: 'Basse-Terre' },
+  { numeroVoie: '4', nomVoie: 'avenue des Caraïbes', codePostal: '97200', commune: 'Fort-de-France' },
+  { numeroVoie: '8', nomVoie: 'rue Lallouette', codePostal: '97300', commune: 'Cayenne' },
+  { numeroVoie: '1', nomVoie: 'place de la Victoire', codePostal: '97110', commune: 'Pointe-à-Pitre' },
+  { numeroVoie: '17', nomVoie: 'route de Gosier', codePostal: '97190', commune: 'Le Gosier' },
 ];

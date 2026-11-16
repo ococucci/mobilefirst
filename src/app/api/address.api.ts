@@ -13,8 +13,10 @@ import {
 } from 'rxjs';
 import { APP_CONFIG } from '../config';
 
+/** Adresse proposée par Api-ORAS. */
 export interface AddressSuggestion {
-  ligne: string;
+  numeroVoie: string;
+  nomVoie: string;
   codePostal: string;
   commune: string;
 }

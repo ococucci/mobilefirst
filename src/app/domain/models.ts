@@ -36,8 +36,15 @@ export interface Identity {
   email: string;
 }
 
+/**
+ * Adresse fiabilisée par Api-ORAS : numéro et nom de la voie, code postal et commune viennent de l'adresse choisie
+ * dans la recherche ; le complément est saisi librement.
+ */
 export interface Address {
-  ligne: string;
+  /** Numéro dans la voie (ex. « 12 », « 3 bis ») ; vide pour une voie ou un lieu-dit sans numéro. */
+  numeroVoie: string;
+  /** Type et nom de la voie (ex. « rue des Flamboyants »). */
+  nomVoie: string;
   codePostal: string;
   commune: string;
   complement: string;

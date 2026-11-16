@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { OrderApi, OrderRequest } from '../api/order.api';
-import { formatDate, formatEuro, formatMsisdn, maskIban } from '../domain/format';
+import { formatDate, formatEuro, formatMsisdn, formatVoie, maskIban } from '../domain/format';
 import { FLOW_LABELS, Screen, SIM_REASONS } from '../domain/models';
 import { levelLabel, requiresContract } from '../domain/rules';
 import { OrderStore } from '../store/order.store';
@@ -104,7 +104,12 @@ export class ConfirmationScreen {
 
     if (this.flow === 'acquisition') {
       cards.push({ k: 'Titulaire', v: s.holderName(), s: `Né(e) le ${formatDate(i.dateNaissance)} · ${i.pieceType} ${i.pieceNumero}`, edit: 'client' });
-      cards.push({ k: 'Adresse de facturation', v: d.address.ligne, s: `${d.address.codePostal} ${d.address.commune}`, edit: 'client' });
+      cards.push({
+        k: 'Adresse de facturation',
+        v: formatVoie(d.address),
+        s: [`${d.address.codePostal} ${d.address.commune}`, d.address.complement].filter((x) => x.trim()).join(' · '),
+        edit: 'client',
+      });
       const n = d.number;
       cards.push({
         k: "Numéro d'appel",

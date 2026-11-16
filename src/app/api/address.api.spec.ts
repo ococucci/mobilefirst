@@ -3,7 +3,7 @@ import { TestScheduler } from 'rxjs/testing';
 import { describe, expect, it } from 'vitest';
 import { AddressSuggestion, debouncedAddressSearch } from './address.api';
 
-const suggestion = (ligne: string): AddressSuggestion => ({ ligne, codePostal: '97100', commune: 'Basse-Terre' });
+const suggestion = (nomVoie: string): AddressSuggestion => ({ numeroVoie: '12', nomVoie, codePostal: '97100', commune: 'Basse-Terre' });
 
 describe('recherche d’adresse au fil de la saisie', () => {
   const scheduler = () => new TestScheduler((actual, expected) => expect(actual).toEqual(expected));

@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CustomerApi } from '../api/customer.api';
-import { formatDate, formatMsisdn } from '../domain/format';
+import { formatAddress, formatDate, formatMsisdn } from '../domain/format';
 import { Customer, Identity, Score } from '../domain/models';
 import { digits, isValidMsisdn } from '../domain/rules';
 import { MSISDN_MESSAGE } from '../domain/validation';
@@ -116,7 +116,7 @@ type Mode = 'search' | 'unknown' | 'new';
                 @if (r.customer.company; as co) { <div class="small muted">SIREN {{ co.siren }} · SIRET {{ co.siret }}</div> }
               </div>
               <div><div class="k">Naissance et pièce</div><div class="v">{{ date(r.customer.identity.dateNaissance) }} · {{ r.customer.identity.pieceType }} {{ r.customer.identity.pieceNumero }}</div></div>
-              <div><div class="k">{{ r.customer.company ? 'Adresse du siège' : 'Adresse' }}</div><div class="v">{{ r.customer.address.ligne || '—' }}@if (r.customer.address.commune) {, {{ r.customer.address.codePostal }} {{ r.customer.address.commune }}}</div></div>
+              <div><div class="k">{{ r.customer.company ? 'Adresse du siège' : 'Adresse' }}</div><div class="v">{{ addr(r.customer.address) || '—' }}</div></div>
             </div>
           </div>
           @if (r.status === 'connu') {
@@ -150,6 +150,7 @@ export class IdentificationScreen {
   protected identity: Identity = emptyIdentity();
 
   protected readonly fmt = formatMsisdn;
+  protected readonly addr = formatAddress;
   protected readonly date = formatDate;
 
   protected readonly title = computed(() => {

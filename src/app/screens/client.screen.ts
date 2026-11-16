@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { ADDRESS_MIN_LENGTH, AddressApi, AddressSuggestion, debouncedAddressSearch } from '../api/address.api';
+import { formatAddress } from '../domain/format';
 import { CustomerApi } from '../api/customer.api';
 import { OrderStore } from '../store/order.store';
 import { IdentityForm, identityComplete } from '../ui/identity-form';
@@ -11,6 +12,10 @@ import { Page } from '../ui/page';
 import { run } from '../ui/run';
 
 /** Écran 2 : titulaire et adresse de facturation (acquisition). */
+/** Adresse choisie dans la recherche (le numéro de voie peut manquer : voie ou lieu-dit sans numéro). */
+const hasAddress = (a: { nomVoie: string; codePostal: string; commune: string }): boolean =>
+  !!(a.nomVoie && a.codePostal && a.commune);
+
 @Component({
   selector: 'app-client',
   imports: [FormsModule, Page, IdentityForm, FieldError],
@@ -34,34 +39,49 @@ import { run } from '../ui/run';
 
       <div class="card">
         <h2>Adresse de facturation</h2>
+        <!-- Champ de recherche seul : il remplit les champs ci-dessous et n'est pas enregistré dans la commande. -->
         <div class="field">
-          <label for="addr">Rechercher l'adresse</label>
-          <input id="addr" autocomplete="off" placeholder="N° et voie, code postal ou commune"
+          <label for="addr">Rechercher une adresse</label>
+          <input id="addr" type="search" autocomplete="off" placeholder="N° et voie, code postal ou commune"
             [ngModel]="query" (ngModelChange)="search($event)" [class.ko]="addressError()" [attr.aria-invalid]="!!addressError()"
-            aria-describedby="addr-error" />
+            aria-describedby="addr-error" aria-controls="addr-suggestions" />
           @if (suggestions().length) {
-            <ul class="suggest" role="listbox">
-              @for (s of suggestions(); track s.ligne + s.codePostal) {
-                <li><button type="button" role="option" (click)="pick(s)">{{ s.ligne }}, {{ s.codePostal }} {{ s.commune }}</button></li>
+            <ul class="suggest" id="addr-suggestions" role="listbox" aria-label="Adresses proposées">
+              @for (s of suggestions(); track $index) {
+                <li><button type="button" role="option" (click)="pick(s)">{{ addr(s) }}</button></li>
               }
             </ul>
           } @else if (searching()) {
             <span class="msg loading" role="status"><span class="spinner"></span> Recherche d'adresses (Api-ORAS)…</span>
-          } @else if (query.length > 2 && !a.codePostal && searched()) {
+          } @else if (searched() && query.trim().length >= minLength) {
             <span class="msg">Aucune adresse trouvée par Api-ORAS.</span>
           }
           @if (addressError()) {
             <app-field-error for="addr" [message]="addressError()" />
           } @else {
-            <span class="msg">Adresse complétée et fiabilisée par Api-ORAS.</span>
+            <span class="msg">Choisissez une adresse proposée par Api-ORAS : elle remplit les champs ci-dessous.</span>
           }
         </div>
-        <div class="grid2">
-          <div class="field"><label for="cp">Code postal</label><input id="cp" [value]="a.codePostal" readonly /></div>
-          <div class="field"><label for="commune">Commune</label><input id="commune" [value]="a.commune" readonly /></div>
+        <div class="address-grid">
+          <div class="field">
+            <label for="numvoie">N° de voie</label>
+            <input id="numvoie" [value]="a.numeroVoie" readonly tabindex="-1" />
+          </div>
+          <div class="field">
+            <label for="nomvoie">Nom de la voie</label>
+            <input id="nomvoie" [value]="a.nomVoie" readonly tabindex="-1" />
+          </div>
+          <div class="field">
+            <label for="cp">Code postal</label>
+            <input id="cp" [value]="a.codePostal" readonly tabindex="-1" />
+          </div>
+          <div class="field">
+            <label for="commune">Commune</label>
+            <input id="commune" [value]="a.commune" readonly tabindex="-1" />
+          </div>
           <div class="field span2">
             <label for="cplt">Complément (facultatif)</label>
-            <input id="cplt" [(ngModel)]="a.complement" />
+            <input id="cplt" placeholder="Bâtiment, étage, résidence…" [(ngModel)]="a.complement" />
           </div>
         </div>
       </div>
@@ -82,9 +102,10 @@ export class ClientScreen {
   protected readonly busy = signal(false);
   protected readonly submitted = signal(false);
   protected readonly rescored = signal(false);
-  protected query = this.store.draft.address.ligne
-    ? `${this.store.draft.address.ligne}, ${this.store.draft.address.codePostal} ${this.store.draft.address.commune}`
-    : '';
+  /** Texte de recherche : état de l'écran uniquement, jamais envoyé dans la commande. */
+  protected query = '';
+  protected readonly minLength = ADDRESS_MIN_LENGTH;
+  protected readonly addr = formatAddress;
 
   constructor() {
     debouncedAddressSearch(this.input$, (q) => this.addresses.search(q))
@@ -98,10 +119,12 @@ export class ClientScreen {
       });
   }
 
-  /** Chaque frappe efface l'adresse choisie ; la recherche part après une pause dans la saisie. */
+  /**
+   * La recherche part après une pause dans la saisie. Elle ne modifie pas l'adresse déjà choisie : seul le choix
+   * d'une suggestion la remplace.
+   */
   protected search(query: string): void {
     this.query = query;
-    Object.assign(this.store.draft.address, { ligne: '', codePostal: '', commune: '' });
     this.searched.set(false);
     const long = query.trim().length >= ADDRESS_MIN_LENGTH;
     this.searching.set(long);
@@ -109,16 +132,19 @@ export class ClientScreen {
     this.input$.next(query);
   }
 
+  /** Remplit numéro, voie, code postal et commune ; le complément saisi est conservé. La recherche est vidée. */
   protected pick(s: AddressSuggestion): void {
-    Object.assign(this.store.draft.address, s);
-    this.query = `${s.ligne}, ${s.codePostal} ${s.commune}`;
+    const { numeroVoie, nomVoie, codePostal, commune } = s;
+    Object.assign(this.store.draft.address, { numeroVoie: numeroVoie ?? '', nomVoie, codePostal, commune });
+    this.query = '';
     this.suggestions.set([]);
+    this.searched.set(false);
     this.searching.set(false);
   }
 
   private invalid(): boolean {
     const d = this.store.draft;
-    return !identityComplete(d.identity, true) || !d.address.codePostal;
+    return !identityComplete(d.identity, true) || !hasAddress(d.address);
   }
 
   /** Rappel près du bouton, tant qu'il reste des champs en erreur. */
@@ -127,8 +153,10 @@ export class ClientScreen {
   }
 
   protected addressError(): string | null {
-    if (!this.submitted() || this.store.draft.address.codePostal) return null;
-    return this.query.trim() ? 'Sélectionnez une adresse dans la liste proposée.' : "L'adresse de facturation est obligatoire.";
+    if (!this.submitted() || hasAddress(this.store.draft.address)) return null;
+    return this.query.trim()
+      ? 'Sélectionnez une adresse dans la liste proposée.'
+      : "Recherchez puis sélectionnez l'adresse de facturation.";
   }
 
   async next(): Promise<void> {

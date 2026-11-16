@@ -20,6 +20,17 @@ export function formatDate(iso: string): string {
   return y && m && d ? `${d}/${m}/${y}` : iso;
 }
 
+/** Numéro et nom de la voie (ex. « 12 rue des Flamboyants »). */
+export function formatVoie(a: { numeroVoie: string; nomVoie: string }): string {
+  return `${a.numeroVoie ?? ''} ${a.nomVoie ?? ''}`.trim();
+}
+
+/** Adresse sur une ligne : « 12 rue des Flamboyants, 97100 Basse-Terre ». */
+export function formatAddress(a: { numeroVoie: string; nomVoie: string; codePostal: string; commune: string }): string {
+  const city = `${a.codePostal ?? ''} ${a.commune ?? ''}`.trim();
+  return [formatVoie(a), city].filter(Boolean).join(', ');
+}
+
 export function maskIban(iban: string): string {
   const c = iban.replace(/\s/g, '').toUpperCase();
   return c.length > 7 ? `${c.slice(0, 4)} •••• ${c.slice(-3)}` : c;

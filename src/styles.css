@@ -150,6 +150,8 @@ button, input, select { font: inherit; color: inherit; }
 .grid2 { display: grid; gap: 0 1rem; }
 @media (min-width: 640px) { .grid2 { grid-template-columns: 1fr 1fr; } }
 .span2 { grid-column: 1 / -1; }
+/* Adresse détaillée : numéro / voie et code postal / commune côte à côte, complément sur toute la largeur. */
+.address-grid { display: grid; gap: 0 1rem; grid-template-columns: 6.5rem minmax(0, 1fr); }
 
 /* Terminal : marque, modèle et couleur l'un sous l'autre sur mobile, côte à côte à partir de la tablette. */
 .terminal-grid { display: grid; gap: 0 1rem; }

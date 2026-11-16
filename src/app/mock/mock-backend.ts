@@ -157,7 +157,7 @@ export class MockBackend {
       id: `CL-${String(900000 + this.customers.length).padStart(6, '0')}`,
       type: 'GP',
       identity: structuredClone(identity),
-      address: { ligne: '', codePostal: '', commune: '', complement: '' },
+      address: { numeroVoie: '', nomVoie: '', codePostal: '', commune: '', complement: '' },
       score,
       lines: [],
     };
@@ -191,7 +191,7 @@ export class MockBackend {
   private addresses(query: string): MockResponse {
     const words = query.toLowerCase().split(/[\s,]+/).filter((w) => w.length > 1);
     if (!words.length) return ok([]);
-    const matches = ADDRESSES.filter((a) => words.every((w) => `${a.ligne} ${a.codePostal} ${a.commune}`.toLowerCase().includes(w)));
+    const matches = ADDRESSES.filter((a) => words.every((w) => `${a.numeroVoie} ${a.nomVoie} ${a.codePostal} ${a.commune}`.toLowerCase().includes(w)));
     return ok(matches.slice(0, 5));
   }
 
