@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.orangecaraibe.client</groupId>
+    <artifactId>identificationdocumenttyperead-client</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <name>CIL 7 IdentificationDocumentTypeRead SOAP client (Apache CXF 3.4)</name>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <cxf.version>3.4.10</cxf.version>
+
+        <!--
+            WSDL used by the "generate" profile (mvn -Pgenerate generate-sources).
+            Local copy (portType, binding, service and inline XSD). Override to regenerate from the live service:
+              -Dwsdl.url="https://tst.eb.ms.fcm/wsi/services/IdentificationDocumentTypeReadService?wsdl"
+        -->
+        <wsdl.url>${project.basedir}/wsdl/ws_CIL_7_IdentificationDocumentTypeReadService.wsdl</wsdl.url>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-frontend-jaxws</artifactId>
+            <version>${cxf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-transports-http</artifactId>
+            <version>${cxf.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.cxf</groupId>
+            <artifactId>cxf-rt-features-logging</artifactId>
+            <version>${cxf.version}</version>
+        </dependency>
+
+        <!-- Required when running on Java 11+ (removed from the JDK) -->
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+            <version>1.3.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.36</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <resources>
+            <resource>
+                <directory>${project.basedir}/wsdl</directory>
+                <targetPath>wsdl</targetPath>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>com.orangecaraibe.client.identificationdocumenttyperead.IdentificationDocumentTypeReadClientMain</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- Regenerates the JAX-WS/JAXB classes into src/main/java: mvn -Pgenerate generate-sources -->
+    <profiles>
+        <profile>
+            <id>generate</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.cxf</groupId>
+                        <artifactId>cxf-codegen-plugin</artifactId>
+                        <version>${cxf.version}</version>
+                        <executions>
+                            <execution>
+                                <id>generate-sources</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>wsdl2java</goal>
+                                </goals>
+                                <configuration>
+                                    <sourceRoot>${project.basedir}/src/main/java</sourceRoot>
+                                    <wsdlOptions>
+                                        <wsdlOption>
+                                            <wsdl>${wsdl.url}</wsdl>
+                                            <extraargs>
+                                                <!-- Default packages derived from the Ericsson namespaces
+                                                     (com.ericsson.services.ws_cil_7.*, com.lhsgroup.lhsws.*):
+                                                     the sessionchange / money / svlany types are common to all
+                                                     CIL 7 services. -->
+                                                <extraarg>-wsdlLocation</extraarg>
+                                                <extraarg>classpath:wsdl/ws_CIL_7_IdentificationDocumentTypeReadService.wsdl</extraarg>
+                                                <extraarg>-autoNameResolution</extraarg>
+                                                <extraarg>-xjc-npa</extraarg>
+                                            </extraargs>
+                                        </wsdlOption>
+                                    </wsdlOptions>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>

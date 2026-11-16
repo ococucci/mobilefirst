@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions xmlns:sch0="http://lhsgroup.com/lhsws/money" xmlns:sch1="http://lhsgroup.com/lhsws/svlany" xmlns:sch2="http://ericsson.com/services/ws_CIL_7/sessionchange" xmlns:sch3="http://ericsson.com/services/ws_CIL_7/identificationdocumenttyperead" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://ericsson.com/services/ws_CIL_7" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" targetNamespace="http://ericsson.com/services/ws_CIL_7">
+  <wsdl:types>
+    <xs:schema xmlns:lhsws="http://lhsgroup.com/lhsws/money" xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://lhsgroup.com/lhsws/money"><xs:complexType name="money"><xs:sequence><xs:element name="amount" type="xs:double"/><xs:element name="currency" type="xs:string"/></xs:sequence></xs:complexType></xs:schema>
+    <xs:schema xmlns:lhsws="http://lhsgroup.com/lhsws/svlany" xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://lhsgroup.com/lhsws/svlany"><xs:complexType name="svlany"><xs:sequence><xs:element name="content" type="xs:string"/></xs:sequence></xs:complexType></xs:schema>
+    <xs:schema xmlns:ericsson="http://ericsson.com/schemas" xmlns:wsi="http://ericsson.com/services/ws_CIL_7/sessionchange" xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://ericsson.com/services/ws_CIL_7/sessionchange"><xs:complexType name="sessionChangeResponse"/><xs:complexType name="valuesListpartRequest"><xs:all><xs:element name="key" type="xs:string"><xs:annotation><xs:documentation>
+													&lt;p&gt; Name of the value that shall be changed. See release dependent documentation for supported keys&lt;/p&gt;
+												</xs:documentation></xs:annotation></xs:element><xs:element name="value" type="xs:string"><xs:annotation><xs:documentation>
+													&lt;p&gt;New value for a named value.&lt;/p&gt;
+												</xs:documentation></xs:annotation></xs:element></xs:all></xs:complexType><xs:complexType name="valuesRequest"><xs:annotation><xs:documentation>
+								&lt;p&gt;A list of all named values that shall be changed with this command.&lt;/p&gt;
+							</xs:documentation></xs:annotation><xs:sequence><xs:element maxOccurs="unbounded" name="item" type="wsi:valuesListpartRequest"/></xs:sequence></xs:complexType><xs:complexType name="sessionChangeRequest"><xs:annotation><xs:documentation>
+					&lt;p&gt;
+					
+					&lt;/p&gt;
+				</xs:documentation></xs:annotation><xs:all><xs:element minOccurs="0" name="values" type="wsi:valuesRequest"/></xs:all></xs:complexType></xs:schema>
+    <xs:schema xmlns:ericsson="http://ericsson.com/schemas" xmlns:sessionchange="http://ericsson.com/services/ws_CIL_7/sessionchange" xmlns:wsi="http://ericsson.com/services/ws_CIL_7/identificationdocumenttyperead" xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://ericsson.com/services/ws_CIL_7/identificationdocumenttyperead"><xs:import namespace="http://ericsson.com/services/ws_CIL_7/sessionchange"/><xs:element name="identificationDocumentTypeReadRequest" type="wsi:identificationDocumentTypeReadRequest"/><xs:element name="identificationDocumentTypeReadResponse" type="wsi:identificationDocumentTypeReadResponse"/><xs:complexType name="listOfIdentificationDocumentTypeListpartResponse"><xs:all><xs:element minOccurs="0" name="idtypeCode" type="xs:long"><xs:annotation><xs:documentation>
+													&lt;p&gt; Identification document type code &lt;/p&gt;
+												</xs:documentation></xs:annotation></xs:element><xs:element minOccurs="0" name="idtypeName" type="xs:string"><xs:annotation><xs:documentation>
+													&lt;p&gt; Description of identification document type &lt;/p&gt;
+												</xs:documentation></xs:annotation></xs:element></xs:all></xs:complexType><xs:complexType name="listOfIdentificationDocumentTypeResponse"><xs:annotation><xs:documentation>
+								&lt;p&gt; A list of identification document type codes and descriptions.
+								&lt;/p&gt;
+							</xs:documentation></xs:annotation><xs:sequence><xs:element maxOccurs="unbounded" minOccurs="0" name="item" type="wsi:listOfIdentificationDocumentTypeListpartResponse"/></xs:sequence></xs:complexType><xs:complexType name="identificationDocumentTypeReadResponse"><xs:annotation><xs:documentation>
+					&lt;p&gt;&lt;/p&gt;
+				</xs:documentation></xs:annotation><xs:all><xs:element minOccurs="0" name="listOfIdentificationDocumentType" type="wsi:listOfIdentificationDocumentTypeResponse"/><xs:element minOccurs="0" name="idtypeDef" type="xs:long"><xs:annotation><xs:documentation>
+							&lt;p&gt; The code of the default identification document type.
+							This value will only be returned if a default is specified. &lt;/p&gt;
+						</xs:documentation></xs:annotation></xs:element></xs:all></xs:complexType><xs:complexType name="identificationDocumentTypeReadRequest"><xs:all><xs:element minOccurs="0" name="sessionChangeRequest" type="sessionchange:sessionChangeRequest"/></xs:all></xs:complexType></xs:schema>
+  </wsdl:types>
+  <wsdl:message name="identificationDocumentTypeReadResponse">
+    <wsdl:part element="sch3:identificationDocumentTypeReadResponse" name="identificationDocumentTypeReadResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="identificationDocumentTypeReadRequest">
+    <wsdl:part element="sch3:identificationDocumentTypeReadRequest" name="identificationDocumentTypeReadRequest">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:portType name="IdentificationDocumentTypeReadService">
+    <wsdl:operation name="identificationDocumentTypeRead">
+<wsdl:documentation>&lt;![CDATA[&lt;p&gt; Retrieve a list of identification document types (codes and descriptions) defined in DB.
+	If a default is specified, the code of the default will be also returned.
+&lt;/p&gt;]]&gt;</wsdl:documentation>
+      <wsdl:input message="tns:identificationDocumentTypeReadRequest" name="identificationDocumentTypeReadRequest">
+    </wsdl:input>
+      <wsdl:output message="tns:identificationDocumentTypeReadResponse" name="identificationDocumentTypeReadResponse">
+    </wsdl:output>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="IdentificationDocumentTypeReadServiceSoap11" type="tns:IdentificationDocumentTypeReadService">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="identificationDocumentTypeRead">
+      <soap:operation soapAction=""/>
+      <wsdl:input name="identificationDocumentTypeReadRequest">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="identificationDocumentTypeReadResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="IdentificationDocumentTypeReadService">
+    <wsdl:port binding="tns:IdentificationDocumentTypeReadServiceSoap11" name="IdentificationDocumentTypeReadServiceSoap11">
+      <soap:address location="https://tst.eb.ms.fcm:443/wsi/services"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
