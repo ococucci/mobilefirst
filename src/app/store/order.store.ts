@@ -1,6 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { ApiErrors } from '../api/api-base';
 import { CatalogApi } from '../api/catalog.api';
+import { CustomerApi } from '../api/customer.api';
 import { HardwareApi } from '../api/hardware.api';
 import {
   Address,
@@ -115,10 +116,18 @@ const emptyDraft = (): Draft => ({
 export class OrderStore {
   private readonly catalogApi = inject(CatalogApi);
   private readonly hardwareApi = inject(HardwareApi);
+  private readonly customerApi = inject(CustomerApi);
   private readonly apiErrors = inject(ApiErrors);
 
   readonly screen = signal<Screen>('identification');
   readonly customer = signal<Customer | null>(null);
+  /**
+   * Lignes du client, demandées seulement quand le conseiller choisit une demande sur une ligne existante
+   * (changement de forfait, d'options ou de SIM) ; null tant qu'elles n'ont pas été demandées.
+   */
+  readonly lines = signal<Line[] | null>(null);
+  /** Appel des lignes du client courant (fait une seule fois par client). */
+  private linesLoad: { customerId: string; promise: Promise<Line[]> } | null = null;
   readonly customerStatus = signal<CustomerStatus | null>(null);
   readonly score = signal<Score | null>(null);
   readonly flow = signal<Flow | null>(null);
@@ -187,6 +196,35 @@ export class OrderStore {
     }
   }
 
+  /**
+   * Lignes du client et lignes avec une commande en cours, appelées une seule fois tant que l'on reste sur le même
+   * client (deux demandes simultanées partagent le même appel ; un appel en échec pourra être relancé).
+   */
+  loadLines(): Promise<Line[]> {
+    const id = this.customer()?.id;
+    if (!id) return Promise.resolve([]);
+    if (this.linesLoad?.customerId === id) return this.linesLoad.promise;
+    const promise = Promise.all([this.customerApi.lines(id), this.customerApi.pendingLines(id)]).then(([lines, pending]) => {
+      // Réponse pour un client qui n'est plus le client courant : ignorée.
+      if (this.customer()?.id === id) {
+        this.lines.set(lines);
+        this.pendingLines.set(pending);
+      }
+      return lines;
+    });
+    this.linesLoad = { customerId: id, promise };
+    promise.catch(() => {
+      if (this.linesLoad?.promise === promise) this.linesLoad = null;
+    });
+    return promise;
+  }
+
+  private forgetLines(): void {
+    this.linesLoad = null;
+    this.lines.set(null);
+    this.pendingLines.set([]);
+  }
+
   go(screen: Screen): void {
     // Toute modification après la vérification invalide le contrat déjà édité et sa signature.
     if (this.screen() === 'confirmation' && screen !== 'succes') {
@@ -199,6 +237,8 @@ export class OrderStore {
   }
 
   identify(customer: Customer, status: CustomerStatus, score: Score): void {
+    // Autre client : ses lignes seront demandées à nouveau.
+    if (customer.id !== this.customer()?.id) this.forgetLines();
     this.customer.set(customer);
     this.customerStatus.set(status);
     this.score.set(score);
@@ -224,6 +264,7 @@ export class OrderStore {
 
   reset(): void {
     this.draft = emptyDraft();
+    this.forgetLines();
     // Nouvelle commande : catalogue, terminaux et numéros seront rappelés (numéros réservés, catalogue à jour).
     this.generation++;
     this.loads.clear();
@@ -266,7 +307,7 @@ export class OrderStore {
   }
 
   selectedLine(): Line | undefined {
-    return this.customer()?.lines.find((l) => l.msisdn === this.draft.lineMsisdn);
+    return this.lines()?.find((l) => l.msisdn === this.draft.lineMsisdn);
   }
 
   /** Terminal ajouté à la commande (modèle et couleur), s'il y en a un. */

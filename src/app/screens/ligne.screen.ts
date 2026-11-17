@@ -75,7 +75,7 @@ export class LigneScreen {
   protected readonly busy = signal(false);
   protected readonly blocked = signal<string | null>(null);
   protected readonly submitted = signal(false);
-  protected readonly lines = computed(() => this.store.customer()?.lines ?? []);
+  protected readonly lines = computed(() => this.store.lines() ?? []);
   protected readonly flowLabel = computed(() => FLOW_LABELS[this.store.flow() ?? 'forfait']);
 
   protected readonly fmt = formatMsisdn;

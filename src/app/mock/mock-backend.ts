@@ -20,6 +20,7 @@ import {
   ADDRESSES,
   AVAILABLE_NUMBERS,
   CUSTOMERS,
+  MockCustomer,
   ICCID_STOCK,
   OFFERS,
   PENDING_ORDER_LINES,
@@ -51,6 +52,8 @@ class Problem extends Error {
 }
 
 const ok = (body: unknown): MockResponse => ({ status: 200, body });
+/** Le client tel que l'API le renvoie : sans ses lignes, demandées à part (GET /customers/{id}/lines). */
+const publicCustomer = ({ lines: _lines, ...customer }: MockCustomer): Customer => structuredClone(customer);
 const created = (body: unknown): MockResponse => ({ status: 201, body });
 /** Recherche sans résultat : 204, corps vide (comme l'API). */
 const noContent = (): MockResponse => ({ status: 204, body: null });
@@ -67,7 +70,7 @@ const notFound = (detail: string) => new Problem(404, 'Introuvable', detail);
  */
 @Injectable({ providedIn: 'root' })
 export class MockBackend {
-  private readonly customers: Customer[] = structuredClone(CUSTOMERS);
+  private readonly customers: MockCustomer[] = structuredClone(CUSTOMERS);
   private readonly pending = new Set(PENDING_ORDER_LINES);
   private readonly reserved = new Set<string>();
   private readonly stock = new Set(ICCID_STOCK);
@@ -84,6 +87,7 @@ export class MockBackend {
     ['POST', /^\/customers$/, (_, req) => this.createCustomer(this.body<{ identity: Identity }>(req).identity)],
     ['GET', /^\/customers\/([^/]+)$/, (m) => this.customerById(m[1])],
     ['PUT', /^\/customers\/([^/]+)$/, (m, req) => this.updateCustomer(m[1], this.body(req))],
+    ['GET', /^\/customers\/([^/]+)\/lines$/, (m) => ok(this.customer(m[1]).lines)],
     ['GET', /^\/customers\/([^/]+)\/pending-lines$/, (m) => ok(this.customer(m[1]).lines.map((l) => l.msisdn).filter((n) => this.pending.has(n)))],
     ['POST', /^\/customers\/([^/]+)\/lines\/([^/]+)\/rescoring$/, (m) => this.rescore(m[1], m[2])],
     ['GET', /^\/catalog\/offers$/, () => ok(OFFERS)],
@@ -115,7 +119,7 @@ export class MockBackend {
 
   // ----- Client
 
-  private customer(id: string): Customer {
+  private customer(id: string): MockCustomer {
     const customer = this.customers.find((c) => c.id === id);
     if (!customer) throw notFound(`Client ${id} introuvable.`);
     return customer;
@@ -124,12 +128,12 @@ export class MockBackend {
   private byMsisdn(msisdn: string): MockResponse {
     const n = digits(msisdn);
     const customer = this.customers.find((c) => c.lines.some((l) => l.msisdn === n));
-    return customer ? ok(customer) : noContent();
+    return customer ? ok(publicCustomer(customer)) : noContent();
   }
 
   private customerById(id: string): MockResponse {
     const customer = this.customers.find((c) => c.id === id);
-    return customer ? ok(customer) : noContent();
+    return customer ? ok(publicCustomer(customer)) : noContent();
   }
 
   private existence(identity: Identity): MockResponse {
@@ -141,7 +145,7 @@ export class MockBackend {
         c.identity.dateNaissance === identity.dateNaissance &&
         compact(c.identity.pieceNumero) === compact(identity.pieceNumero),
     );
-    return found ? ok(found) : noContent();
+    return found ? ok(publicCustomer(found)) : noContent();
   }
 
   /** Préventel bouchonné : un nom contenant « rouge » ou « orange » renvoie ce score, sinon vert. */
@@ -153,7 +157,7 @@ export class MockBackend {
   private createCustomer(identity: Identity): MockResponse {
     const score = this.preventel(identity);
     if (score === 'rouge') return created({ score, customer: null });
-    const customer: Customer = {
+    const customer: MockCustomer = {
       id: `CL-${String(900000 + this.customers.length).padStart(6, '0')}`,
       type: 'GP',
       identity: structuredClone(identity),
@@ -162,7 +166,7 @@ export class MockBackend {
       lines: [],
     };
     this.customers.push(customer);
-    return created({ score, customer });
+    return created({ score, customer: publicCustomer(customer) });
   }
 
   private updateCustomer(id: string, body: { identity: Identity; address: Address }): MockResponse {
@@ -170,7 +174,7 @@ export class MockBackend {
     const rescored = identityChangeRequiresRescore(customer.identity, body.identity);
     const score = rescored ? this.preventel(body.identity) : customer.score;
     if (score !== 'rouge') Object.assign(customer, { identity: structuredClone(body.identity), address: structuredClone(body.address), score });
-    return ok({ score, rescored, customer });
+    return ok({ score, rescored, customer: publicCustomer(customer) });
   }
 
   private rescore(id: string, msisdn: string): MockResponse {

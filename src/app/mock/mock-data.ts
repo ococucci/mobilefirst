@@ -2,9 +2,12 @@
  * Jeu de données de démonstration. Les montants et libellés d'offres sont des valeurs
  * d'exemple, comme dans la cinématique.
  */
-import { Customer, Offer, OfferLevel, OfferOption, Terminal } from '../domain/models';
+import { Customer, Line, Offer, OfferLevel, OfferOption, Terminal } from '../domain/models';
 
-export const CUSTOMERS: Customer[] = [
+/** Client du jeu de démonstration, avec ses lignes (renvoyées à part par GET /customers/{id}/lines). */
+export type MockCustomer = Customer & { lines: Line[] };
+
+export const CUSTOMERS: MockCustomer[] = [
   {
     id: 'CL-000101',
     type: 'GP',

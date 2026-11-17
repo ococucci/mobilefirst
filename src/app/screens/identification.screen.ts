@@ -262,7 +262,6 @@ export class IdentificationScreen {
         identity: structuredClone(this.identity),
         address: emptyAddress(),
         score,
-        lines: [],
       };
       this.duplicate.set(null);
       this.setResult(shown, status, score);

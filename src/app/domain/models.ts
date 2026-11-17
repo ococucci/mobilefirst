@@ -74,7 +74,6 @@ export interface Customer {
   company?: Company;
   address: Address;
   score: Score;
-  lines: Line[];
 }
 
 export interface Family {

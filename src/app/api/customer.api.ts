@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { Address, Customer, Identity, Score } from '../domain/models';
+import { Address, Customer, Identity, Line, Score } from '../domain/models';
 import { digits } from '../domain/rules';
 import { APP_CONFIG } from '../config';
 
@@ -30,6 +30,11 @@ export class CustomerApi {
     return firstValueFrom(
       this.http.put<{ score: Score; rescored: boolean; customer: Customer }>(`${this.api}/customers/${id}`, { identity, address }),
     );
+  }
+
+  /** Lignes mobiles du client : demandées seulement pour un changement de forfait, d'options ou de SIM. */
+  lines(id: string): Promise<Line[]> {
+    return firstValueFrom(this.http.get<Line[]>(`${this.api}/customers/${id}/lines`));
   }
 
   /** Lignes du client ayant une commande en cours (api-order). */

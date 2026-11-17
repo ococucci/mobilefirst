@@ -79,4 +79,58 @@ describe('OrderStore : appels faits une seule fois par commande', () => {
     expect(await retry).toBe(true);
     http.verify();
   });
+
+  describe('lignes du client', () => {
+    const customer = (id: string) => ({ id, type: 'GP', identity: {}, address: {}, score: 'vert' }) as never;
+    const flushLines = (id: string, lines: unknown[], pending: string[] = []) => {
+      http.expectOne(`/api/v1/customers/${id}/lines`).flush(lines);
+      http.expectOne(`/api/v1/customers/${id}/pending-lines`).flush(pending);
+    };
+
+    it('demandées une seule fois tant que l’on reste sur le même client', async () => {
+      store.identify(customer('CL-1'), 'connu', 'vert');
+      expect(store.lines()).toBeNull();
+      const first = store.loadLines();
+      flushLines('CL-1', [{ msisdn: '0690123456' }], ['0690123456']);
+      expect((await first).length).toBe(1);
+      expect(store.pendingLines()).toEqual(['0690123456']);
+
+      await store.loadLines();
+      // Même client, à nouveau identifié (retour à l'identification) : pas de nouvel appel.
+      store.identify(customer('CL-1'), 'connu', 'vert');
+      await store.loadLines();
+      http.expectNone('/api/v1/customers/CL-1/lines');
+      expect(store.lines()?.length).toBe(1);
+      http.verify();
+    });
+
+    it('autre client ou nouvelle commande : les lignes sont oubliées et redemandées', async () => {
+      store.identify(customer('CL-1'), 'connu', 'vert');
+      const first = store.loadLines();
+      flushLines('CL-1', [{ msisdn: '0690123456' }]);
+      await first;
+
+      store.identify(customer('CL-2'), 'connu', 'vert');
+      expect(store.lines()).toBeNull();
+      const second = store.loadLines();
+      flushLines('CL-2', []);
+      expect(await second).toEqual([]);
+
+      store.reset();
+      store.identify(customer('CL-2'), 'connu', 'vert');
+      const third = store.loadLines();
+      flushLines('CL-2', []);
+      await third;
+      http.verify();
+    });
+
+    it('une réponse pour un client qui n’est plus le client courant est ignorée', async () => {
+      store.identify(customer('CL-1'), 'connu', 'vert');
+      const stale = store.loadLines();
+      store.identify(customer('CL-2'), 'connu', 'vert');
+      flushLines('CL-1', [{ msisdn: '0690123456' }]);
+      await stale;
+      expect(store.lines()).toBeNull();
+    });
+  });
 });

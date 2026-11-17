@@ -50,7 +50,12 @@ Au démarrage, le front vérifie seulement que l'API répond (`GET /actuator/hea
 offres n'est chargé qu'en arrivant sur l'écran Forfait (ou Options pour une modification d'options). Le catalogue,
 les numéros disponibles et les terminaux ne sont appelés qu'**une fois par commande** : au retour sur un écran, ils
 ne sont pas rappelés. Une nouvelle commande (« Nouvelle commande », « Changer de client ») les rappelle ; un appel en
-échec est relancé au prochain passage sur l'écran. Pendant le chargement d'une liste (forfaits, numéros, terminaux), elle n'est pas sélectionnable et un
+échec est relancé au prochain passage sur l'écran.
+
+Les lignes du client ne sont pas renvoyées avec le client : elles sont demandées (`GET /customers/{id}/lines`, avec
+les lignes en commande en cours) quand le conseiller choisit un changement de forfait, d'options ou de SIM. On
+n'entre dans le parcours que si le client a au moins une ligne ; sinon la demande est grisée (« Le client n'a pas
+de ligne mobile »). L'appel n'est pas refait tant que l'on reste sur le même client. Pendant le chargement d'une liste (forfaits, numéros, terminaux), elle n'est pas sélectionnable et un
 indicateur le signale.
 
 Si l'API ne répond pas ou renvoie une erreur, un bandeau rouge l'indique en haut de l'écran ; l'action en cours
