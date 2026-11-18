@@ -163,7 +163,7 @@ export class MockBackend {
       id: `CL-${String(900000 + this.customers.length).padStart(6, '0')}`,
       type: 'GP',
       identity: structuredClone(identity),
-      address: { numeroVoie: '', nomVoie: '', codePostal: '', commune: '', complement: '' },
+      address: { numeroVoie: '', nomVoie: '', codePostal: '', commune: '', territoire: '', complement: '' },
       score,
       lines: [],
     };

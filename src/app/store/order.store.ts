@@ -29,6 +29,7 @@ import {
   OptionsDiff,
   simChangeFee,
   stepsFor,
+  territoireFromCodePostal,
   terminalPrice,
 } from '../domain/rules';
 
@@ -47,7 +48,7 @@ export const emptyIdentity = (): Identity => ({
   email: '',
 });
 
-export const emptyAddress = (): Address => ({ numeroVoie: '', nomVoie: '', codePostal: '', commune: '', complement: '' });
+export const emptyAddress = (): Address => ({ numeroVoie: '', nomVoie: '', codePostal: '', commune: '', territoire: '', complement: '' });
 
 /** Saisies du conseiller, liées aux formulaires (ngModel). */
 export interface Draft {
@@ -246,6 +247,10 @@ export class OrderStore {
     this.draft.identity = structuredClone(customer.identity);
     this.draft.identitySnapshot = structuredClone(customer.identity);
     this.draft.address = structuredClone(customer.address);
+    // Adresse connue sans territoire : il est déduit du code postal (et transmis à la mise à jour du client).
+    if (!this.draft.address.territoire && this.draft.address.codePostal) {
+      this.draft.address.territoire = territoireFromCodePostal(this.draft.address.codePostal);
+    }
   }
 
   /** Retour sur une étape déjà franchie, sans perdre les saisies. */

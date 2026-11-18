@@ -47,6 +47,8 @@ export interface Address {
   nomVoie: string;
   codePostal: string;
   commune: string;
+  /** Territoire déduit du code postal (GUADELOUPE, MARTINIQUE, GUYANE FRANCAISE, ST-MARTIN, ST-BARTHELEMY, FRANCE). */
+  territoire: string;
   complement: string;
 }
 

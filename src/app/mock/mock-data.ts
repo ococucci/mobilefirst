@@ -27,6 +27,7 @@ export const CUSTOMERS: MockCustomer[] = [
       numeroVoie: '12', nomVoie: 'rue des Flamboyants',
       codePostal: '97100',
       commune: 'Basse-Terre',
+      territoire: 'GUADELOUPE',
       complement: 'Résidence Les Palmiers, bât. B',
     },
     score: 'vert',
@@ -52,7 +53,7 @@ export const CUSTOMERS: MockCustomer[] = [
       mobileContact: '0696778899',
       email: 'jean.martin@exemple.fr',
     },
-    address: { numeroVoie: '4', nomVoie: 'avenue des Caraïbes', codePostal: '97200', commune: 'Fort-de-France', complement: '' },
+    address: { numeroVoie: '4', nomVoie: 'avenue des Caraïbes', codePostal: '97200', commune: 'Fort-de-France', territoire: 'MARTINIQUE', complement: '' },
     score: 'orange',
     lines: [
       { msisdn: '0696778899', offerId: 'pp-classique', offerLabel: 'Card prépayée', monthlyPrice: null, isCard: true, simType: 'physique', options: [] },
@@ -73,7 +74,7 @@ export const CUSTOMERS: MockCustomer[] = [
       mobileContact: '0694999000',
       email: 'luc.bernard@exemple.fr',
     },
-    address: { numeroVoie: '8', nomVoie: 'rue Lallouette', codePostal: '97300', commune: 'Cayenne', complement: '' },
+    address: { numeroVoie: '8', nomVoie: 'rue Lallouette', codePostal: '97300', commune: 'Cayenne', territoire: 'GUYANE FRANCAISE', complement: '' },
     score: 'rouge',
     lines: [
       { msisdn: '0694999000', offerId: 'nb-10', offerLabel: 'Forfait 10 Go', monthlyPrice: 9.99, isCard: false, simType: 'physique', options: [] },
@@ -95,7 +96,7 @@ export const CUSTOMERS: MockCustomer[] = [
       email: 'contact@boulangerie-des-iles.fr',
     },
     company: { raisonSociale: 'Boulangerie des Îles', siren: '812345678', siret: '81234567800015' },
-    address: { numeroVoie: '25', nomVoie: 'boulevard Légitimus', codePostal: '97110', commune: 'Pointe-à-Pitre', complement: '' },
+    address: { numeroVoie: '25', nomVoie: 'boulevard Légitimus', codePostal: '97110', commune: 'Pointe-à-Pitre', territoire: 'GUADELOUPE', complement: '' },
     score: 'vert',
     lines: [
       { msisdn: '0690400500', offerId: 'nb-200', offerLabel: 'Forfait 200 Go 5G', monthlyPrice: 34.99, isCard: false, simType: 'physique', options: ['international'] },

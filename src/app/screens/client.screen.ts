@@ -82,7 +82,7 @@ const hasAddress = (a: { nomVoie: string; codePostal: string; commune: string })
           </div>
           <div class="field territoire">
             <label for="territoire">Territoire</label>
-            <input id="territoire" [value]="territoire(a.codePostal)" readonly tabindex="-1" />
+            <input id="territoire" [value]="a.territoire" readonly tabindex="-1" />
           </div>
           <div class="field span2">
             <label for="cplt">Complément (facultatif)</label>
@@ -111,8 +111,6 @@ export class ClientScreen {
   protected query = '';
   protected readonly minLength = ADDRESS_MIN_LENGTH;
   protected readonly addr = formatAddress;
-  /** Territoire déduit du code postal (affichage). */
-  protected readonly territoire = territoireFromCodePostal;
 
   constructor() {
     debouncedAddressSearch(this.input$, (q) => this.addresses.search(q))
@@ -139,10 +137,16 @@ export class ClientScreen {
     this.input$.next(query);
   }
 
-  /** Remplit numéro, voie, code postal et commune ; le complément saisi est conservé. La recherche est vidée. */
+  /** Remplit numéro, voie, code postal, commune et territoire ; le complément saisi est conservé. La recherche est vidée. */
   protected pick(s: AddressSuggestion): void {
     const { numeroVoie, nomVoie, codePostal, commune } = s;
-    Object.assign(this.store.draft.address, { numeroVoie: numeroVoie ?? '', nomVoie, codePostal, commune });
+    Object.assign(this.store.draft.address, {
+      numeroVoie: numeroVoie ?? '',
+      nomVoie,
+      codePostal,
+      commune,
+      territoire: territoireFromCodePostal(codePostal),
+    });
     this.query = '';
     this.suggestions.set([]);
     this.searched.set(false);

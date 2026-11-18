@@ -61,7 +61,7 @@ describe('relance de Préventel', () => {
 });
 
 describe('étape Client : mise à jour seulement en cas de modification', () => {
-  const address = { numeroVoie: '12', nomVoie: 'rue des Flamboyants', codePostal: '97100', commune: 'Basse-Terre', complement: '' };
+  const address = { numeroVoie: '12', nomVoie: 'rue des Flamboyants', codePostal: '97100', commune: 'Basse-Terre', territoire: 'GUADELOUPE', complement: '' };
   const customer = { identity, address };
 
   it('rien de modifié : pas de mise à jour', () => {
