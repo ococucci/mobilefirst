@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { OrderApi } from '../api/order.api';
 import { run } from '../ui/run';
 import { formatEuro, formatMsisdn } from '../domain/format';
-import { CARD_SIM_PRICE, SIM_REASONS } from '../domain/models';
+import { SIM_REASONS } from '../domain/models';
 import { OrderStore } from '../store/order.store';
 
 /** Écrans 6, 6b, 5c, 5d et 5e : commande validée. */
@@ -112,7 +112,7 @@ export class SuccesScreen {
       case 'acquisition': {
         const card = s.selectedOffer()?.family === 'prepaye';
         if (due) {
-          const parts = [card ? `puce SIM ${formatEuro(CARD_SIM_PRICE)} pour une Card prépayée` : '', d.hardware.withTerminal ? 'terminal' : ''].filter(Boolean);
+          const parts = [card ? `Carte Prépayée ${formatEuro(s.selectedOffer()?.price ?? 0)}` : '', d.hardware.withTerminal ? 'terminal' : ''].filter(Boolean);
           items.push(`Encaisser en caisse le montant dû (${parts.join(', ')}).`);
         }
         items.push(`Remettre ${d.hardware.simType === 'esim' ? "le QR code de l'eSIM" : 'la SIM'} et un exemplaire du contrat signé au client.`);

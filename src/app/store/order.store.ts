@@ -23,6 +23,7 @@ import {
   acquisitionCashDue,
   blockedOptions,
   monthly,
+  oneOffPrice,
   MonthlyBreakdown,
   optionsDiff,
   OptionsDiff,
@@ -339,6 +340,9 @@ export class OrderStore {
     switch (this.flow()) {
       case 'acquisition':
         return acquisitionCashDue(this.selectedOffer(), this.terminalPrice());
+      case 'forfait':
+        // Passage à une Carte Prépayée : son tarif unique est à régler en caisse.
+        return oneOffPrice(this.selectedOffer());
       case 'sim':
         return simChangeFee(this.draft.simReason);
       default:

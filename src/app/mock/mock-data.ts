@@ -152,7 +152,7 @@ export const OFFERS: Offer[] = [
     options: [option('securite', 2)], promo: null },
   { id: 'home-5g', family: 'internet', level: 'silver', label: '4G/5G Home', detail: 'Internet illimité à domicile', price: 34.99, openMl: openMl(10),
     options: [], promo: { id: 'promo-5e-12m', label: '−5 € / 12 mois', monthlyDiscount: 5, durationMonths: 12 } },
-  { id: 'pp-classique', family: 'prepaye', level: 'card', label: 'Carte Prépayée', detail: 'Sans engagement, rechargeable', price: 0, openMl: { eligible: false },
+  { id: 'pp-classique', family: 'prepaye', level: 'card', label: 'Carte Prépayée', detail: 'Sans engagement, rechargeable', price: 10, openMl: { eligible: false },
     options: [], promo: null },
 ];
 

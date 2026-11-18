@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { OrderApi, OrderRequest } from '../api/order.api';
 import { formatDate, formatEuro, formatMsisdn, formatVoie, maskIban } from '../domain/format';
 import { FLOW_LABELS, Screen, SIM_REASONS } from '../domain/models';
-import { levelLabel, requiresContract } from '../domain/rules';
+import { hasOneOffPrice, levelLabel, requiresContract } from '../domain/rules';
 import { OrderStore } from '../store/order.store';
 import { Page } from '../ui/page';
 import { run } from '../ui/run';
@@ -94,12 +94,16 @@ export class ConfirmationScreen {
       const offer = s.selectedOffer();
       const b = s.breakdown();
       const opts = d.options.length ? ` + ${d.options.length} option${d.options.length > 1 ? 's' : ''}` : '';
-      const extras = [
-        offer?.promo ? `Remise ${offer.promo.label}` : '',
-        b?.openMl ? `Remise Open ML −${formatEuro(b.openMl)}` : '',
-        b ? `${formatEuro(b.total)}/mois` : '',
-      ].filter(Boolean);
-      return { k: this.flow === 'forfait' ? 'Nouvelle offre' : 'Forfait', v: (offer?.label ?? '') + opts, s: extras.join(' · '), edit: 'forfait' };
+      // Carte Prépayée : un tarif unique réglé en caisse, pas de mensualité.
+      const extras = hasOneOffPrice(offer)
+        ? [`Tarif unique ${formatEuro(offer?.price ?? 0)}, à régler en caisse`, b?.total ? `options ${formatEuro(b.total)}/mois` : '']
+        : [
+            offer?.promo ? `Remise ${offer.promo.label}` : '',
+            b?.openMl ? `Remise Open ML −${formatEuro(b.openMl)}` : '',
+            b ? `${formatEuro(b.total)}/mois` : '',
+          ];
+      const details = extras.filter(Boolean);
+      return { k: this.flow === 'forfait' ? 'Nouvelle offre' : 'Forfait', v: (offer?.label ?? '') + opts, s: details.join(' · '), edit: 'forfait' };
     };
 
     if (this.flow === 'acquisition') {

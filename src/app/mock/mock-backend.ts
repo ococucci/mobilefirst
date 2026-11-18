@@ -6,6 +6,8 @@ import { APP_CONFIG } from '../config';
 import { Address, Customer, FLOW_LABELS, Identity, Score, Terminal } from '../domain/models';
 import {
   acquisitionCashDue,
+  hasOneOffPrice,
+  oneOffPrice,
   compact,
   digits,
   identityChangeRequiresRescore,
@@ -222,7 +224,7 @@ export class MockBackend {
       `Objet : ${FLOW_LABELS[request.flow]}`,
       `Client : ${customer.id} - ${customer.identity.civilite} ${customer.identity.prenom} ${customer.identity.nom}`,
       `Ligne : ${this.msisdn(request)}`,
-      ...(offer ? [`Offre : ${offer.label} - ${offer.price.toFixed(2)} EUR/mois`] : []),
+      ...(offer ? [`Offre : ${offer.label} - ${offer.price.toFixed(2)} EUR${hasOneOffPrice(offer) ? ' (tarif unique, à régler en caisse)' : '/mois'}`] : []),
       ...(offer?.promo ? [`Remise : ${offer.promo.label}`] : []),
       ...(terminal && offer
         ? [`Terminal : ${terminal.brand} ${terminal.model} ${color?.label ?? ''} - ${terminalPrice(terminal, offer).toFixed(2)} EUR (tarif ${offer.level}) - IMEI ${request.terminal?.imei}`]
@@ -264,7 +266,11 @@ export class MockBackend {
     const color = terminal?.colors.find((c) => c.id === r.terminal?.colorId);
     if (r.terminal && (!terminal || !color)) throw invalid({ terminal: 'Terminal inconnu.' });
     const price = terminal && offer ? terminalPrice(terminal, offer) : 0;
-    const cashDue = r.flow === 'acquisition' ? acquisitionCashDue(offer, price) : r.flow === 'sim' ? simChangeFee(r.simReason ?? null) : 0;
+    const cashDue =
+      r.flow === 'acquisition' ? acquisitionCashDue(offer, price)
+      : r.flow === 'forfait' ? oneOffPrice(offer)
+      : r.flow === 'sim' ? simChangeFee(r.simReason ?? null)
+      : 0;
     const orderNumber = `CMD-${new Date().getFullYear()}-${String(this.orderSequence++).padStart(7, '0')}`;
     const createdAt = new Date().toISOString();
 

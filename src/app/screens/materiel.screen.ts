@@ -2,8 +2,8 @@ import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { OrderApi } from '../api/order.api';
 import { formatEuro } from '../domain/format';
-import { CARD_SIM_PRICE, Terminal } from '../domain/models';
-import { levelLabel, terminalBrands } from '../domain/rules';
+import { Terminal } from '../domain/models';
+import { levelLabel, oneOffPrice, terminalBrands } from '../domain/rules';
 import { sepaErrors, TerminalField, terminalErrors } from '../domain/validation';
 import { OrderStore } from '../store/order.store';
 import { Page } from '../ui/page';
@@ -23,7 +23,7 @@ import { CORRECT_FIELDS, FieldError, focusFirstError } from '../ui/field-error';
 
       @if (isCard()) {
         <div class="notice orange">
-          <strong>Carte Prépayée :</strong> la puce SIM à {{ euro(cardSimPrice) }} est à régler en caisse.
+          <strong>Carte Prépayée :</strong> son tarif de {{ euro(cardPrice()) }} est à régler en caisse.
           Aucun mode de paiement n'est saisi dans l'outil.
         </div>
       } @else {
@@ -128,7 +128,6 @@ export class MaterielScreen {
   );
   protected readonly busy = signal(false);
   protected readonly submitted = signal(false);
-  protected readonly cardSimPrice = CARD_SIM_PRICE;
   protected readonly euro = formatEuro;
 
   constructor() {
@@ -139,6 +138,11 @@ export class MaterielScreen {
     }
     // Terminaux appelés une seule fois par commande.
     void run(this.loadingTerminals, async () => void (await this.store.loadTerminals()));
+  }
+
+  /** Tarif unique de la Carte Prépayée choisie. */
+  protected cardPrice(): number {
+    return oneOffPrice(this.store.selectedOffer());
   }
 
   protected isCard(): boolean {

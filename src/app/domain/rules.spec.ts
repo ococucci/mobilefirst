@@ -13,6 +13,7 @@ import {
   isValidMsisdn,
   isValidRio,
   monthly,
+  oneOffPrice,
   openMlDiscount,
   optionsDiff,
   selectedOptions,
@@ -132,8 +133,14 @@ describe('montants en caisse', () => {
     expect(simChangeFee('mobile')).toBe(0);
     expect(simChangeFee(null)).toBe(0);
   });
-  it('acquisition : puce Carte Prépayée à 10 € et terminal', () => {
-    expect(acquisitionCashDue(offer({ family: 'prepaye' }), 0)).toBe(10);
+  it('Carte Prépayée : tarif unique réglé en caisse, hors mensualité', () => {
+    const card = offer({ family: 'prepaye', price: 15, options: [] });
+    expect(acquisitionCashDue(card, 0)).toBe(15);
+    expect(oneOffPrice(card)).toBe(15);
+    expect(monthly(card, [], false).total).toBe(0);
+    expect(oneOffPrice(offer())).toBe(0);
+  });
+  it('acquisition : terminal', () => {
     expect(acquisitionCashDue(offer(), 149)).toBe(149);
   });
 });

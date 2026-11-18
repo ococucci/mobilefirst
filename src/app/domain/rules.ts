@@ -3,7 +3,6 @@
  * pour être testées indépendamment des écrans.
  */
 import {
-  CARD_SIM_PRICE,
   FamilyId,
   Flow,
   Identity,
@@ -155,6 +154,16 @@ export function terminalBrands(terminals: Terminal[]): string[] {
   return [...new Set(terminals.map((t) => t.brand))].sort((a, b) => a.localeCompare(b, 'fr'));
 }
 
+/** Carte Prépayée : son prix est un tarif unique, réglé en caisse, et non une mensualité. */
+export function hasOneOffPrice(offer: Offer | undefined): boolean {
+  return offer?.family === 'prepaye';
+}
+
+/** Tarif unique de l'offre à régler en caisse (Carte Prépayée), 0 pour une offre à mensualité. */
+export function oneOffPrice(offer: Offer | undefined): number {
+  return offer && hasOneOffPrice(offer) ? round(offer.price) : 0;
+}
+
 export interface MonthlyBreakdown {
   base: number;
   options: number;
@@ -166,7 +175,8 @@ export interface MonthlyBreakdown {
 }
 
 export function monthly(offer: Offer, optionIds: string[], openMlApplied: boolean): MonthlyBreakdown {
-  const base = offer.price;
+  // Le prix d'une Carte Prépayée est un tarif unique : il n'entre pas dans la mensualité.
+  const base = hasOneOffPrice(offer) ? 0 : offer.price;
   const paid = selectedOptions(offer, optionIds).filter((o) => !o.included);
   const opts = round(paid.reduce((sum, o) => sum + o.price, 0));
   const openMl = openMlApplied ? openMlDiscount(offer) : 0;
@@ -183,9 +193,9 @@ export function simChangeFee(reasonId: string | null): number {
   return SIM_REASONS.find((r) => r.id === reasonId)?.fee ? SIM_LOSS_FEE : 0;
 }
 
-/** Montant à régler en caisse pour une acquisition : puce Carte Prépayée et terminal éventuel. */
+/** Montant à régler en caisse pour une acquisition : tarif de la Carte Prépayée et terminal éventuel. */
 export function acquisitionCashDue(offer: Offer | undefined, terminalPrice: number): number {
-  return round((offer?.family === 'prepaye' ? CARD_SIM_PRICE : 0) + terminalPrice);
+  return round(oneOffPrice(offer) + terminalPrice);
 }
 
 /** Pas de contrat pour une modification d'options. */

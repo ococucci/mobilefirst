@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { FLOW_LABELS, SIM_REASONS } from '../domain/models';
 import { formatEuro, formatMsisdn } from '../domain/format';
-import { levelLabel, selectedOptions } from '../domain/rules';
+import { hasOneOffPrice, levelLabel, selectedOptions } from '../domain/rules';
 import { OrderStore } from '../store/order.store';
 
 interface Row {
@@ -41,6 +41,10 @@ export class Recap {
     const flow = this.store.flow();
     const b = this.store.breakdown();
     if (flow === 'options') return this.signed(this.store.optionsChange().delta) + '/mois';
+    // Carte Prépayée : pas de mensualité, un tarif unique réglé en caisse.
+    if (hasOneOffPrice(this.store.selectedOffer()) && (flow === 'acquisition' || flow === 'forfait')) {
+      return formatEuro(this.store.cashDue()) + ' en caisse';
+    }
     if (b && (flow === 'acquisition' || flow === 'forfait')) return formatEuro(b.total) + '/mois';
     if (flow === 'sim' && this.store.cashDue()) return formatEuro(this.store.cashDue()) + ' en caisse';
     return null;
@@ -84,7 +88,17 @@ export class Recap {
     if (flow === 'acquisition' || flow === 'forfait') {
       const offer = s.selectedOffer();
       const b = s.breakdown();
-      if (offer && b) {
+      const oneOff = hasOneOffPrice(offer);
+      if (offer && b && oneOff) {
+        // Carte Prépayée : tarif unique, sans mensualité ni remise mensuelle.
+        const tarif = `${formatEuro(offer.price)} (tarif unique)`;
+        rows.push({ k: flow === 'forfait' ? 'Nouvelle offre' : offer.label, v: flow === 'forfait' ? offer.label : tarif, cls: 'sep' });
+        if (flow === 'forfait') rows.push({ k: 'Prix', v: tarif });
+        for (const o of selectedOptions(offer, d.options)) {
+          rows.push({ k: o.label, v: o.included ? 'Incluse' : '+' + formatEuro(o.price) + '/mois' });
+        }
+        if (b.total) rows.push({ k: 'Mensualité (options)', v: formatEuro(b.total) + '/mois' });
+      } else if (offer && b) {
         rows.push({ k: flow === 'forfait' ? 'Nouvelle offre' : offer.label, v: flow === 'forfait' ? offer.label : formatEuro(b.base), cls: 'sep' });
         rows.push({ k: 'Niveau', v: levelLabel(offer.level) });
         if (flow === 'forfait') rows.push({ k: 'Prix', v: formatEuro(b.base) });
@@ -110,6 +124,10 @@ export class Recap {
       const reason = SIM_REASONS.find((r) => r.id === d.simReason);
       if (reason) rows.push({ k: 'Raison', v: reason.label });
       rows.push({ k: 'Frais en caisse', v: reason ? formatEuro(s.cashDue()) : '10 € si perte ou vol' });
+    }
+
+    if (flow === 'forfait' && s.cashDue()) {
+      rows.push({ k: 'À régler en caisse', v: formatEuro(s.cashDue()), cls: 'sep total' });
     }
 
     if (flow === 'acquisition' && s.selectedOffer()) {

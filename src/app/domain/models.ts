@@ -91,7 +91,7 @@ export interface Offer {
   level: OfferLevel;
   label: string;
   detail: string;
-  /** Prix mensuel en euros (0 pour la Carte Prépayée). */
+  /** Prix en euros : mensualité, ou tarif unique réglé en caisse pour la Carte Prépayée. */
   price: number;
   /** Remise Open ML : −5 €/mois pour une offre d'entrée de gamme, −10 € sinon ; non éligible pour la Carte Prépayée. */
   openMl: { eligible: boolean; monthlyDiscount?: number | null };
@@ -191,7 +191,6 @@ export const DEPARTEMENTS = [
   '99 · Né à l’étranger',
 ];
 
-export const CARD_SIM_PRICE = 10;
 export const SIM_LOSS_FEE = 10;
 
 export const FLOW_LABELS: Record<Flow, string> = {

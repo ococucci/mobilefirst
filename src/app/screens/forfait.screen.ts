@@ -135,7 +135,11 @@ import { run } from '../ui/run';
                   @if (current) { <span class="badge gray">Offre actuelle</span> }
                   @else if (o.promo) { <span class="badge orange">{{ o.promo.label }}</span> }
                 </span>
-                <span class="end">{{ o.price ? euro(o.price) + '/mois' : 'Sans mensualité' }}</span>
+                @if (o.family === 'prepaye') {
+                  <span class="end">{{ euro(o.price) }}<br /><span class="small muted" style="font-weight: normal">tarif unique</span></span>
+                } @else {
+                  <span class="end">{{ euro(o.price) }}/mois</span>
+                }
               </button>
             }
           </div>
