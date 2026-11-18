@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { ADDRESS_MIN_LENGTH, AddressApi, AddressSuggestion, debouncedAddressSearch } from '../api/address.api';
 import { formatAddress } from '../domain/format';
-import { customerDataChanged } from '../domain/rules';
+import { customerDataChanged, territoireFromCodePostal } from '../domain/rules';
 import { CustomerApi } from '../api/customer.api';
 import { OrderStore } from '../store/order.store';
 import { IdentityForm, identityComplete } from '../ui/identity-form';
@@ -80,6 +80,10 @@ const hasAddress = (a: { nomVoie: string; codePostal: string; commune: string })
             <label for="commune">Commune</label>
             <input id="commune" [value]="a.commune" readonly tabindex="-1" />
           </div>
+          <div class="field territoire">
+            <label for="territoire">Territoire</label>
+            <input id="territoire" [value]="territoire(a.codePostal)" readonly tabindex="-1" />
+          </div>
           <div class="field span2">
             <label for="cplt">Complément (facultatif)</label>
             <input id="cplt" placeholder="Bâtiment, étage, résidence…" [(ngModel)]="a.complement" />
@@ -107,6 +111,8 @@ export class ClientScreen {
   protected query = '';
   protected readonly minLength = ADDRESS_MIN_LENGTH;
   protected readonly addr = formatAddress;
+  /** Territoire déduit du code postal (affichage). */
+  protected readonly territoire = territoireFromCodePostal;
 
   constructor() {
     debouncedAddressSearch(this.input$, (q) => this.addresses.search(q))

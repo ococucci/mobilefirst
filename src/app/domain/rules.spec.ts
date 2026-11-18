@@ -6,6 +6,7 @@ import {
   blockedOptions,
   compatibleOptions,
   customerDataChanged,
+  territoireFromCodePostal,
   identityChangeRequiresRescore,
   isOpenMlAvailable,
   isValidIban,
@@ -74,6 +75,24 @@ describe('étape Client : mise à jour seulement en cas de modification', () => 
     expect(customerDataChanged(customer, identity, { ...address, complement: 'Bât. B' })).toBe(true);
     expect(customerDataChanged(customer, identity, { ...address, numeroVoie: '3', nomVoie: 'rue Frébault' })).toBe(true);
     expect(customerDataChanged(customer, { ...identity, nom: 'DUPONT' }, address)).toBe(true);
+  });
+});
+
+describe('territoire déduit du code postal', () => {
+  it('Saint-Martin et Saint-Barthélemy avant le reste de la Guadeloupe', () => {
+    expect(territoireFromCodePostal('97150')).toBe('ST-MARTIN');
+    expect(territoireFromCodePostal('97133')).toBe('ST-BARTHELEMY');
+    expect(territoireFromCodePostal('97100')).toBe('GUADELOUPE');
+  });
+  it('Martinique, Guyane, puis France par défaut', () => {
+    expect(territoireFromCodePostal('97200')).toBe('MARTINIQUE');
+    expect(territoireFromCodePostal('97300')).toBe('GUYANE FRANCAISE');
+    expect(territoireFromCodePostal('75001')).toBe('FRANCE');
+    expect(territoireFromCodePostal('97400')).toBe('FRANCE');
+  });
+  it('sans code postal : vide', () => {
+    expect(territoireFromCodePostal('')).toBe('');
+    expect(territoireFromCodePostal(undefined)).toBe('');
   });
 });
 

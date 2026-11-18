@@ -112,6 +112,27 @@ function differs(before: object, after: object): boolean {
   return [...new Set([...Object.keys(a), ...Object.keys(b)])].some((k) => norm(a[k]) !== norm(b[k]));
 }
 
+/**
+ * Territoire déduit du code postal : Saint-Martin (97150) et Saint-Barthélemy (97133) avant le reste de la
+ * Guadeloupe (971), puis Martinique (972) et Guyane (973) ; sinon France. Vide sans code postal.
+ */
+export function territoireFromCodePostal(codePostal: string | null | undefined): string {
+  const cp = (codePostal ?? '').trim();
+  if (!cp) return '';
+  if (cp === '97150') return 'ST-MARTIN';
+  if (cp === '97133') return 'ST-BARTHELEMY';
+  switch (cp.substring(0, 3)) {
+    case '971':
+      return 'GUADELOUPE';
+    case '972':
+      return 'MARTINIQUE';
+    case '973':
+      return 'GUYANE FRANCAISE';
+    default:
+      return 'FRANCE';
+  }
+}
+
 /** Open ML : selon l'éligibilité de l'offre (pas la Carte Prépayée) et jamais pour une ligne Card. */
 export function isOpenMlAvailable(offer: Offer | undefined, line?: Line | null): boolean {
   return !!offer && offer.openMl.eligible && !line?.isCard;

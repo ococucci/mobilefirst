@@ -152,6 +152,14 @@ button, input, select { font: inherit; color: inherit; }
 .span2 { grid-column: 1 / -1; }
 /* Adresse détaillée : numéro / voie et code postal / commune côte à côte, complément sur toute la largeur. */
 .address-grid { display: grid; gap: 0 1rem; grid-template-columns: 6.5rem minmax(0, 1fr); }
+/* Mobile : le territoire passe sous le code postal et la commune, sur toute la largeur. */
+.address-grid .territoire { grid-column: 1 / -1; }
+/* Tablette et bureau : code postal, commune et territoire sur une même ligne. */
+@media (min-width: 640px) {
+  .address-grid { grid-template-columns: 6.5rem minmax(0, 1fr) minmax(0, 12rem); }
+  .address-grid > .field:nth-child(2) { grid-column: 2 / -1; }
+  .address-grid .territoire { grid-column: auto; }
+}
 
 /* Terminal : marque, modèle et couleur l'un sous l'autre sur mobile, côte à côte à partir de la tablette. */
 .terminal-grid { display: grid; gap: 0 1rem; }
