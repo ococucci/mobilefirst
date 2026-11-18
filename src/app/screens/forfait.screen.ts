@@ -134,6 +134,7 @@ import { run } from '../ui/run';
                   <span class="badge level" [attr.data-level]="o.level">{{ levelLabel(o.level) }}</span>
                   @if (current) { <span class="badge gray">Offre actuelle</span> }
                   @else if (o.promo) { <span class="badge orange">{{ o.promo.label }}</span> }
+                  @if (!current && openMlBadge(o); as label) { <span class="badge openml" title="Remise Open ML (avec un N° sponsor)">{{ label }}</span> }
                 </span>
                 @if (o.family === 'prepaye') {
                   <span class="end">{{ euro(o.price) }}<br /><span class="small muted" style="font-weight: normal">tarif unique</span></span>
@@ -248,6 +249,11 @@ export class ForfaitScreen {
     const family = this.store.offer(this.store.selectedLine()?.offerId)?.family;
     // Une ligne Card change d'offre pour un forfait : on ouvre sur une famille avec mensualité.
     if (family && family !== 'prepaye' && this.allowed().includes(family)) this.selectFamily(family);
+  }
+
+  /** Libellé de la remise Open ML à afficher sur la vignette de l'offre, si elle est possible pour cette commande. */
+  protected openMlBadge(offer: Offer): string | null {
+    return isOpenMlAvailable(offer, this.isChange ? this.store.selectedLine() : null) ? (offer.openMl.label ?? null) : null;
   }
 
   protected openMlAvailable(): boolean {

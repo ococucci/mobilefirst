@@ -131,7 +131,13 @@ const INCOMPATIBLE: Record<string, string[]> = {
 };
 const option = (id: string, price: number): OfferOption => ({ id, label: LABELS[id], price, included: false, incompatibleOptions: INCOMPATIBLE[id] ?? [] });
 const included = (id: string): OfferOption => ({ ...option(id, 0), included: true });
-const openMl = (monthlyDiscount: number) => ({ eligible: true, monthlyDiscount });
+/** Remise Open ML décrite comme une promo : code et libellé. */
+const openMl = (monthlyDiscount: number) => ({
+  eligible: true,
+  id: `OPENML_${monthlyDiscount}E`,
+  label: `Open ML −${monthlyDiscount} €/mois`,
+  monthlyDiscount,
+});
 const promo10 = { id: 'promo-10e-6m', label: '−10 € / 6 mois', monthlyDiscount: 10, durationMonths: 6 };
 
 /** Offres avec leurs options, leur remise (une seule, appliquée automatiquement) et l'éligibilité Open ML. */

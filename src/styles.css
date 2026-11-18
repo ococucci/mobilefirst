@@ -204,8 +204,12 @@ button, input, select { font: inherit; color: inherit; }
 .badge.soft { background: var(--orange-soft); color: var(--orange-ink); }
 .badge.red { background: var(--red-soft); color: var(--red); }
 .badge.gray { background: var(--disabled); color: var(--muted); }
+/* Remise Open ML : même forme qu'une promo, autre couleur. */
+.badge.openml { background: #dde9f8; color: #12406f; }
 /* Niveau de l'offre (tarif des terminaux). */
-.badge.level { background: #f1f1f1; color: var(--ink); margin-right: 0.35rem; }
+.badge.level { background: #f1f1f1; color: var(--ink); }
+/* Badges d'une vignette (niveau, promo, Open ML…) : espacés régulièrement. */
+.choice .body .badge:not(:last-child) { margin-right: 0.35rem; }
 .badge.level[data-level='nonsub'] { background: #f1f1f1; color: #595959; }
 .badge.level[data-level='card'] { background: #f1f1f1; color: #595959; }
 .badge.level[data-level='silver'] { background: #e6e8eb; color: #3d434a; }

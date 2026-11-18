@@ -94,7 +94,7 @@ export interface Offer {
   /** Prix en euros : mensualité, ou tarif unique réglé en caisse pour la Carte Prépayée. */
   price: number;
   /** Remise Open ML : −5 €/mois pour une offre d'entrée de gamme, −10 € sinon ; non éligible pour la Carte Prépayée. */
-  openMl: { eligible: boolean; monthlyDiscount?: number | null };
+  openMl: OpenMl;
   /** Options proposées avec cette offre, à un prix propre à l'offre. */
   options: OfferOption[];
   /** Remise appliquée automatiquement (api-promo advice) : une seule par offre, les remises ne se cumulent pas. */
@@ -112,6 +112,16 @@ export interface OfferOption {
    * L'incompatibilité vaut dans les deux sens, même si elle n'est déclarée que sur l'une des deux options.
    */
   incompatibleOptions: string[];
+}
+
+/** Remise Open ML d'une offre, décrite comme une promo : code et libellé affichés sur la vignette de l'offre. */
+export interface OpenMl {
+  eligible: boolean;
+  /** Code de la remise (ex. « OPENML_10E ») ; absent si l'offre n'est pas éligible. */
+  id?: string | null;
+  /** Libellé affiché sur l'offre (ex. « Open ML −10 €/mois ») ; absent si l'offre n'est pas éligible. */
+  label?: string | null;
+  monthlyDiscount?: number | null;
 }
 
 export interface Promo {
