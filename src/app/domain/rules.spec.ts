@@ -5,6 +5,7 @@ import {
   allowedFamilies,
   blockedOptions,
   compatibleOptions,
+  customerDataChanged,
   identityChangeRequiresRescore,
   isOpenMlAvailable,
   isValidIban,
@@ -55,6 +56,24 @@ describe('relance de Préventel', () => {
   });
   it('les autres champs ne la relancent pas', () => {
     expect(identityChangeRequiresRescore(identity, { ...identity, email: 'x@y.fr', pieceNumero: 'ZZ', nom: ' dupont ' })).toBe(false);
+  });
+});
+
+describe('étape Client : mise à jour seulement en cas de modification', () => {
+  const address = { numeroVoie: '12', nomVoie: 'rue des Flamboyants', codePostal: '97100', commune: 'Basse-Terre', complement: '' };
+  const customer = { identity, address };
+
+  it('rien de modifié : pas de mise à jour', () => {
+    expect(customerDataChanged(customer, structuredClone(identity), structuredClone(address))).toBe(false);
+  });
+  it('espaces en début et fin, champ absent ou vide : pas une modification', () => {
+    expect(customerDataChanged(customer, { ...identity, email: ' a@b.fr ' }, { ...address, complement: undefined as never })).toBe(false);
+  });
+  it('identité ou adresse modifiée : mise à jour', () => {
+    expect(customerDataChanged(customer, { ...identity, email: 'autre@b.fr' }, address)).toBe(true);
+    expect(customerDataChanged(customer, identity, { ...address, complement: 'Bât. B' })).toBe(true);
+    expect(customerDataChanged(customer, identity, { ...address, numeroVoie: '3', nomVoie: 'rue Frébault' })).toBe(true);
+    expect(customerDataChanged(customer, { ...identity, nom: 'DUPONT' }, address)).toBe(true);
   });
 });
 

@@ -3,6 +3,7 @@
  * pour être testées indépendamment des écrans.
  */
 import {
+  Address,
   FamilyId,
   Flow,
   Identity,
@@ -89,6 +90,26 @@ export function identityChangeRequiresRescore(before: Identity, after: Identity)
     norm(before.prenom) !== norm(after.prenom) ||
     before.dateNaissance !== after.dateNaissance
   );
+}
+
+/**
+ * Les informations saisies à l'étape Client diffèrent-elles de celles du client connu ? Champ par champ, espaces
+ * de début et de fin ignorés, un champ absent valant une chaîne vide. Sans modification, le client n'est pas mis à
+ * jour (pas d'appel au backend).
+ */
+export function customerDataChanged(
+  customer: { identity: Identity; address: Address },
+  identity: Identity,
+  address: Address,
+): boolean {
+  return differs(customer.identity, identity) || differs(customer.address, address);
+}
+
+function differs(before: object, after: object): boolean {
+  const norm = (v: unknown) => (v === null || v === undefined ? '' : typeof v === 'string' ? v.trim() : JSON.stringify(v));
+  const a = before as Record<string, unknown>;
+  const b = after as Record<string, unknown>;
+  return [...new Set([...Object.keys(a), ...Object.keys(b)])].some((k) => norm(a[k]) !== norm(b[k]));
 }
 
 /** Open ML : selon l'éligibilité de l'offre (pas la Carte Prépayée) et jamais pour une ligne Card. */

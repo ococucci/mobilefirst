@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { ADDRESS_MIN_LENGTH, AddressApi, AddressSuggestion, debouncedAddressSearch } from '../api/address.api';
 import { formatAddress } from '../domain/format';
+import { customerDataChanged } from '../domain/rules';
 import { CustomerApi } from '../api/customer.api';
 import { OrderStore } from '../store/order.store';
 import { IdentityForm, identityComplete } from '../ui/identity-form';
@@ -165,6 +166,11 @@ export class ClientScreen {
     if (this.invalid()) return focusFirstError();
     const customer = this.store.customer();
     if (!customer) return;
+    // Aucune modification des informations du client : on passe à l'étape suivante sans appeler le backend.
+    if (!customerDataChanged(customer, d.identity, d.address)) {
+      this.store.go('forfait');
+      return;
+    }
     await run(this.busy, async () => {
       // Le serveur relance Préventel si le nom, le prénom ou la date de naissance ont changé ;
       // avec un score rouge, il n'enregistre rien.
