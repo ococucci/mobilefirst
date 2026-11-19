@@ -47,7 +47,9 @@ Les valeurs du build (`src/environments/`) s'appliquent pour tout ce que `config
 bouchons ne sont chargés qu'en mode `mock` (fichier séparé), ils n'alourdissent pas l'application en mode `api`.
 
 Au démarrage, le front vérifie seulement que l'API répond (`GET /actuator/health`, statut `UP`) ; le catalogue des
-offres n'est chargé qu'en arrivant sur l'écran Forfait (ou Options pour une modification d'options). Le catalogue,
+offres n'est chargé qu'en arrivant sur l'écran Forfait (ou Options pour une modification d'options), avec le
+territoire de l'adresse du client (`GET /catalog/offers?territoire=GUADELOUPE`) ; il est redemandé si ce territoire
+change (adresse de facturation modifiée). Le catalogue,
 les numéros disponibles et les terminaux ne sont appelés qu'**une fois par commande** : au retour sur un écran, ils
 ne sont pas rappelés. Une nouvelle commande (« Nouvelle commande », « Changer de client ») les rappelle ; un appel en
 échec est relancé au prochain passage sur l'écran.

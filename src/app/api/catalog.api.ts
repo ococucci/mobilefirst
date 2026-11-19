@@ -11,8 +11,10 @@ export class CatalogApi {
   private readonly api = inject(APP_CONFIG).apiUrl;
 
   /** Offres avec, pour chacune, ses options, ses remises (appliquées automatiquement) et l'éligibilité Open ML. */
-  offers(): Promise<Offer[]> {
-    return firstValueFrom(this.http.get<Offer[]>(`${this.api}/catalog/offers`));
+  /** Offres vendables sur le territoire de l'adresse du client (toutes si le territoire n'est pas connu). */
+  offers(territoire?: string): Promise<Offer[]> {
+    const params: Record<string, string> = territoire ? { territoire } : {};
+    return firstValueFrom(this.http.get<Offer[]>(`${this.api}/catalog/offers`, { params }));
   }
 
   availableNumbers(): Promise<string[]> {

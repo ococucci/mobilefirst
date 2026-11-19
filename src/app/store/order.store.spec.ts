@@ -40,6 +40,23 @@ describe('OrderStore : appels faits une seule fois par commande', () => {
     http.verify();
   });
 
+  it('catalogue : territoire de l’adresse du client envoyé, nouvel appel si le territoire change', async () => {
+    Object.assign(store.draft.address, { codePostal: '97200', territoire: 'MARTINIQUE' });
+    const first = store.loadCatalog();
+    http.expectOne('/api/v1/catalog/offers?territoire=MARTINIQUE').flush([{ id: 'm1' }]);
+    await first;
+    await store.loadCatalog();
+    http.expectNone((r) => r.url.endsWith('/catalog/offers'));
+
+    // Adresse modifiée (autre territoire) : le catalogue est redemandé.
+    Object.assign(store.draft.address, { codePostal: '97150', territoire: '' });
+    const second = store.loadCatalog();
+    http.expectOne('/api/v1/catalog/offers?territoire=ST-MARTIN').flush([{ id: 's1' }]);
+    expect(await second).toBe(true);
+    expect(store.offers().map((o) => o.id)).toEqual(['s1']);
+    http.verify();
+  });
+
   it('deux demandes simultanées partagent le même appel', async () => {
     const a = store.loadCatalog();
     const b = store.loadCatalog();

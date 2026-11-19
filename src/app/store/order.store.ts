@@ -152,6 +152,8 @@ export class OrderStore {
    * sur un écran. reset() les oublie pour la commande suivante ; un appel en échec pourra être relancé.
    */
   private readonly loads = new Map<string, Promise<void>>();
+  /** Territoire pour lequel le catalogue a été demandé. */
+  private offersTerritoire: string | null = null;
   /** Incrémenté à chaque nouvelle commande : la réponse d'un appel lancé avant reset() est ignorée. */
   private generation = 0;
 
@@ -161,7 +163,20 @@ export class OrderStore {
 
   /** Catalogue des offres, appelé une seule fois par commande ; renvoie true s'il vient d'être chargé. */
   loadCatalog(): Promise<boolean> {
-    return this.once('offers', () => this.catalogApi.offers(), (v) => this.offers.set(v));
+    // Le catalogue dépend du territoire de l'adresse du client : il est rappelé si le territoire a changé
+    // (adresse de facturation modifiée à l'étape Client), sinon il reste en cache pour la commande.
+    const territoire = this.territoire();
+    if (territoire !== this.offersTerritoire) {
+      this.loads.delete('offers');
+      this.offersTerritoire = territoire;
+    }
+    return this.once('offers', () => this.catalogApi.offers(territoire || undefined), (v) => this.offers.set(v));
+  }
+
+  /** Territoire de l'adresse du client (celui de l'adresse, ou à défaut déduit de son code postal). */
+  territoire(): string {
+    const a = this.draft.address;
+    return a.territoire || territoireFromCodePostal(a.codePostal);
   }
 
   /** Terminaux, appelés une seule fois par commande. */
@@ -274,6 +289,7 @@ export class OrderStore {
     // Nouvelle commande : catalogue, terminaux et numéros seront rappelés (numéros réservés, catalogue à jour).
     this.generation++;
     this.loads.clear();
+    this.offersTerritoire = null;
     this.offers.set([]);
     this.terminals.set([]);
     this.availableNumbers.set([]);
