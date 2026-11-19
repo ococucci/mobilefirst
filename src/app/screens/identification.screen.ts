@@ -59,7 +59,7 @@ type Mode = 'search' | 'unknown' | 'new';
         @if (!result()) {
           <div class="card">
             <h2>Identité du client</h2>
-            <app-identity-form [identity]="identity" [showErrors]="submitted()" />
+            <app-identity-form [identity]="identity" [full]="true" [showErrors]="submitted()" />
           </div>
           <div class="card">
             <h2>Adresse</h2>
@@ -183,9 +183,12 @@ export class IdentificationScreen {
     return !!r && r.score !== 'rouge';
   }
 
-  /** Fiche de création complète : identité et adresse choisie dans la recherche. */
+  /**
+   * Fiche de création complète : identité complète (comme à l'étape Client : département de naissance, mobile de
+   * contact, email) et adresse choisie dans la recherche.
+   */
   protected complete(): boolean {
-    return identityComplete(this.identity) && hasAddress(this.address);
+    return identityComplete(this.identity, true) && hasAddress(this.address);
   }
 
   protected resultTitle(): string {
