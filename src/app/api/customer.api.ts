@@ -20,9 +20,9 @@ export class CustomerApi {
     return firstValueFrom(this.http.post<Customer | null>(`${this.api}/customers/existence-checks`, { identity }));
   }
 
-  /** Contrôle Préventel puis création ; pas de client créé si le score est rouge. */
-  create(identity: Identity): Promise<{ score: Score; customer: Customer | null }> {
-    return firstValueFrom(this.http.post<{ score: Score; customer: Customer | null }>(`${this.api}/customers`, { identity }));
+  /** Contrôle Préventel puis création avec l'adresse saisie ; pas de client créé si le score est rouge. */
+  create(identity: Identity, address: Address): Promise<{ score: Score; customer: Customer | null }> {
+    return firstValueFrom(this.http.post<{ score: Score; customer: Customer | null }>(`${this.api}/customers`, { identity, address }));
   }
 
   /** Étape Client : Préventel est relancé côté serveur si le nom, le prénom ou la date de naissance changent. */

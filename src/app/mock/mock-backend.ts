@@ -16,6 +16,7 @@ import {
   requiresContract,
   round,
   simChangeFee,
+  territoireFromCodePostal,
   terminalPrice,
 } from '../domain/rules';
 import {
@@ -86,7 +87,7 @@ export class MockBackend {
   private readonly routes: [string, RegExp, (m: RegExpMatchArray, req: HttpRequest<unknown>) => MockResponse][] = [
     ['GET', /^\/customers$/, (_, req) => this.byMsisdn(req.params.get('msisdn') ?? '')],
     ['POST', /^\/customers\/existence-checks$/, (_, req) => this.existence(this.body<{ identity: Identity }>(req).identity)],
-    ['POST', /^\/customers$/, (_, req) => this.createCustomer(this.body<{ identity: Identity }>(req).identity)],
+    ['POST', /^\/customers$/, (_, req) => this.createCustomer(this.body<{ identity: Identity; address?: Address }>(req))],
     ['GET', /^\/customers\/([^/]+)$/, (m) => this.customerById(m[1])],
     ['PUT', /^\/customers\/([^/]+)$/, (m, req) => this.updateCustomer(m[1], this.body(req))],
     ['GET', /^\/customers\/([^/]+)\/lines$/, (m) => ok(this.customer(m[1]).lines)],
@@ -156,14 +157,16 @@ export class MockBackend {
     return nom.includes('rouge') ? 'rouge' : nom.includes('orange') ? 'orange' : 'vert';
   }
 
-  private createCustomer(identity: Identity): MockResponse {
+  private createCustomer({ identity, address }: { identity: Identity; address?: Address }): MockResponse {
     const score = this.preventel(identity);
     if (score === 'rouge') return created({ score, customer: null });
     const customer: MockCustomer = {
       id: `CL-${String(900000 + this.customers.length).padStart(6, '0')}`,
       type: 'GP',
       identity: structuredClone(identity),
-      address: { numeroVoie: '', nomVoie: '', codePostal: '', commune: '', territoire: '', complement: '' },
+      address: address
+        ? { ...structuredClone(address), territoire: address.territoire || territoireFromCodePostal(address.codePostal) }
+        : { numeroVoie: '', nomVoie: '', codePostal: '', commune: '', territoire: '', complement: '' },
       score,
       lines: [],
     };

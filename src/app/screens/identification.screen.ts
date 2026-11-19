@@ -2,10 +2,11 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CustomerApi } from '../api/customer.api';
 import { formatAddress, formatDate, formatMsisdn } from '../domain/format';
-import { Customer, Identity, Score } from '../domain/models';
+import { Address, Customer, Identity, Score } from '../domain/models';
 import { digits, isValidMsisdn } from '../domain/rules';
 import { MSISDN_MESSAGE } from '../domain/validation';
 import { CustomerStatus, emptyAddress, emptyIdentity, OrderStore } from '../store/order.store';
+import { AddressForm, hasAddress } from '../ui/address-form';
 import { IdentityForm, identityComplete } from '../ui/identity-form';
 import { FieldError, focusFirstError } from '../ui/field-error';
 import { Page } from '../ui/page';
@@ -16,7 +17,7 @@ type Mode = 'search' | 'unknown' | 'new';
 /** Écrans 1 à 1f : identification par MSISDN, contrôle Préventel, client sans numéro. */
 @Component({
   selector: 'app-identification',
-  imports: [FormsModule, Page, IdentityForm, FieldError],
+  imports: [FormsModule, Page, IdentityForm, AddressForm, FieldError],
   template: `
     <app-page [title]="title()" [disabled]="!canContinue()" (primary)="store.go('demande')"
       [hint]="store.score() === 'rouge' ? 'Score rouge : aucune vente possible.' : null">
@@ -59,13 +60,19 @@ type Mode = 'search' | 'unknown' | 'new';
           <div class="card">
             <h2>Identité du client</h2>
             <app-identity-form [identity]="identity" [showErrors]="submitted()" />
-            @if (!duplicate()) {
+          </div>
+          <div class="card">
+            <h2>Adresse</h2>
+            <app-address-form [address]="address" [showErrors]="submitted()" />
+          </div>
+          @if (!duplicate()) {
+            <p>
               <button type="button" class="btn" (click)="mode() === 'new' ? verify() : runPreventel('controle')" [disabled]="busy()">
                 @if (busy()) { <span class="spinner"></span> }
                 {{ mode() === 'new' ? 'Vérifier' : 'Lancer le contrôle Préventel' }}
               </button>
-            }
-          </div>
+            </p>
+          }
         }
       }
 
@@ -148,6 +155,8 @@ export class IdentificationScreen {
 
   protected msisdn = this.store.searchMsisdn() ? formatMsisdn(this.store.searchMsisdn()) : '';
   protected identity: Identity = emptyIdentity();
+  /** Adresse saisie sur la fiche de création, envoyée avec l'identité à la création du client. */
+  protected address: Address = emptyAddress();
 
   protected readonly fmt = formatMsisdn;
   protected readonly addr = formatAddress;
@@ -174,8 +183,9 @@ export class IdentificationScreen {
     return !!r && r.score !== 'rouge';
   }
 
+  /** Fiche de création complète : identité et adresse choisie dans la recherche. */
   protected complete(): boolean {
-    return identityComplete(this.identity);
+    return identityComplete(this.identity) && hasAddress(this.address);
   }
 
   protected resultTitle(): string {
@@ -207,6 +217,7 @@ export class IdentificationScreen {
       } else {
         this.identity = emptyIdentity();
         this.identity.mobileContact = digits(this.msisdn);
+        this.address = emptyAddress();
         this.mode.set('unknown');
       }
     });
@@ -216,6 +227,7 @@ export class IdentificationScreen {
     this.reset();
     this.store.searchMsisdn.set('');
     this.identity = emptyIdentity();
+    this.address = emptyAddress();
     this.mode.set('new');
   }
 
@@ -255,12 +267,12 @@ export class IdentificationScreen {
     this.submitted.set(true);
     if (!this.complete()) return focusFirstError();
     await run(this.busy, async () => {
-      const { score, customer } = await this.customers.create(this.identity);
+      const { score, customer } = await this.customers.create(this.identity, this.address);
       const shown = customer ?? {
         id: '',
         type: 'GP' as const,
         identity: structuredClone(this.identity),
-        address: emptyAddress(),
+        address: structuredClone(this.address),
         score,
       };
       this.duplicate.set(null);
