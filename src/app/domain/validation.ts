@@ -2,7 +2,7 @@
  * Messages d'erreur des formulaires, champ par champ. Chaque fonction renvoie
  * un objet { champ: message } ne contenant que les champs en erreur.
  */
-import { Identity } from './models';
+import { DEPARTEMENTS, Identity } from './models';
 import { compact, isValidEmail, isValidIban, isValidImei, isValidMsisdn, isValidRio } from './rules';
 
 export type Errors<K extends string = string> = Partial<Record<K, string>>;
@@ -16,6 +16,16 @@ export function isValidPieceNumber(value: string): boolean {
   return /^[A-Z0-9]{9}$|^[A-Z0-9]{12}$/.test(compact(value));
 }
 
+/**
+ * Département de naissance à afficher dans la liste : la valeur telle quelle si elle en fait partie, l'option de même
+ * code si la valeur est un code (« 971 » → « 971 · Guadeloupe »), sinon la valeur inchangée (à choisir à nouveau).
+ */
+export function normalizeDepartement(value: string | null | undefined): string {
+  const v = (value ?? '').trim();
+  if (!v || DEPARTEMENTS.includes(v)) return v;
+  return DEPARTEMENTS.find((d) => d.split(' · ')[0] === v) ?? v;
+}
+
 export function identityErrors(i: Identity, full: boolean, today = new Date().toISOString().slice(0, 10)): Errors<keyof Identity> {
   const e: Errors<keyof Identity> = {};
   if (!i.nom.trim()) e.nom = 'Le nom est obligatoire.';
@@ -25,7 +35,8 @@ export function identityErrors(i: Identity, full: boolean, today = new Date().to
   if (!i.pieceNumero.trim()) e.pieceNumero = 'Le n° de la pièce est obligatoire.';
   else if (!isValidPieceNumber(i.pieceNumero)) e.pieceNumero = 'N° invalide : 9 ou 12 lettres et chiffres.';
   if (full) {
-    if (!i.departementNaissance) e.departementNaissance = 'Le département de naissance est obligatoire.';
+    // Une valeur hors de la liste (ex. « 971 » reçu du backend) n'est pas affichée : elle compte comme non renseignée.
+    if (!DEPARTEMENTS.includes(i.departementNaissance)) e.departementNaissance = 'Le département de naissance est obligatoire.';
     if (!i.mobileContact.trim()) e.mobileContact = 'Le mobile de contact est obligatoire.';
     else if (!isValidMsisdn(i.mobileContact)) e.mobileContact = MSISDN_MESSAGE;
     if (!i.email.trim()) e.email = "L'email est obligatoire.";

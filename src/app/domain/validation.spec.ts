@@ -1,15 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import { Identity } from './models';
-import { identityErrors, isValidPieceNumber, numberErrors, sepaErrors, sponsorError, terminalErrors } from './validation';
+import { identityErrors, isValidPieceNumber, normalizeDepartement, numberErrors, sepaErrors, sponsorError, terminalErrors } from './validation';
 
 const today = '2026-10-29';
 const id: Identity = {
-  civilite: 'Mme', nom: 'Dupont', prenom: 'Marie', dateNaissance: '1988-03-14', departementNaissance: '971',
+  civilite: 'Mme', nom: 'Dupont', prenom: 'Marie', dateNaissance: '1988-03-14', departementNaissance: '971 · Guadeloupe',
   nationalite: '', pieceType: 'CNI', pieceNumero: '12AB34567', mobileContact: '0690123456', email: 'a@b.fr',
 };
 
 describe('identité', () => {
   it('aucune erreur pour une identité complète', () => expect(identityErrors(id, true, today)).toEqual({}));
+  it('département hors de la liste : non renseigné', () => {
+    expect(Object.keys(identityErrors({ ...id, departementNaissance: '971' }, true, today))).toEqual(['departementNaissance']);
+    expect(Object.keys(identityErrors({ ...id, departementNaissance: 'Inconnu' }, true, today))).toEqual(['departementNaissance']);
+  });
+  it('département reçu sous forme de code : option correspondante', () => {
+    expect(normalizeDepartement('971')).toBe('971 · Guadeloupe');
+    expect(normalizeDepartement(' 75 ')).toBe('75 · Paris');
+    expect(normalizeDepartement('972 · Martinique')).toBe('972 · Martinique');
+    expect(normalizeDepartement('Inconnu')).toBe('Inconnu');
+    expect(normalizeDepartement(null)).toBe('');
+  });
   it('champs obligatoires', () => {
     const e = identityErrors({ ...id, nom: ' ', prenom: '', dateNaissance: '', pieceNumero: '' }, false, today);
     expect(Object.keys(e).sort()).toEqual(['dateNaissance', 'nom', 'pieceNumero', 'prenom']);
