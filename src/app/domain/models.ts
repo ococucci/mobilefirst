@@ -191,18 +191,6 @@ export const SIM_REASONS: SimReason[] = [
 
 export const DONOR_OPERATORS = ['SFR Caraibes', 'FREE', 'Dauphin Telecom', 'UTS', 'DIGICEL'];
 
-export const DEPARTEMENTS = [
-  '971 · Guadeloupe',
-  '972 · Martinique',
-  '973 · Guyane',
-  '974 · La Réunion',
-  '976 · Mayotte',
-  '977 · Saint-Barthélemy',
-  '978 · Saint-Martin',
-  '75 · Paris',
-  '99 · Né à l’étranger',
-];
-
 export const SIM_LOSS_FEE = 10;
 
 export const FLOW_LABELS: Record<Flow, string> = {

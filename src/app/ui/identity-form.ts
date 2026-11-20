@@ -1,6 +1,6 @@
 import { Component, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DEPARTEMENTS, Identity } from '../domain/models';
+import { Identity } from '../domain/models';
 import { identityErrors } from '../domain/validation';
 import { FieldError } from './field-error';
 
@@ -43,12 +43,8 @@ import { FieldError } from './field-error';
       </div>
       @if (full()) {
         <div class="field">
-          <label for="dep">Département de naissance</label>
-          <select id="dep" [(ngModel)]="i.departementNaissance" [class.ko]="err('departementNaissance')" [attr.aria-invalid]="!!err('departementNaissance')" aria-describedby="dep-error">
-            <option value="" disabled>Choisir</option>
-            @for (d of departements; track d) { <option [value]="d">{{ d }}</option> }
-          </select>
-          <app-field-error for="dep" [message]="err('departementNaissance')" />
+          <label for="dep">Département de naissance (facultatif)</label>
+          <input id="dep" [(ngModel)]="i.departementNaissance" autocomplete="off" />
         </div>
       } @else {
         <div></div>
@@ -85,7 +81,6 @@ export class IdentityForm {
   readonly full = input(false);
   /** Les erreurs ne s'affichent qu'après une première tentative de validation. */
   readonly showErrors = input(false);
-  protected readonly departements = DEPARTEMENTS;
   protected readonly today = new Date().toISOString().slice(0, 10);
 
   protected err(field: keyof Identity): string | null {

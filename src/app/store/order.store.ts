@@ -1,6 +1,5 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { ApiErrors } from '../api/api-base';
-import { normalizeDepartement } from '../domain/validation';
 import { CatalogApi } from '../api/catalog.api';
 import { CustomerApi } from '../api/customer.api';
 import { HardwareApi } from '../api/hardware.api';
@@ -261,8 +260,6 @@ export class OrderStore {
     this.customerStatus.set(status);
     this.score.set(score);
     this.draft.identity = structuredClone(customer.identity);
-    // Département reçu sous forme de code (« 971 ») : rattaché à l'option de la liste pour être affiché.
-    this.draft.identity.departementNaissance = normalizeDepartement(this.draft.identity.departementNaissance);
     this.draft.identitySnapshot = structuredClone(customer.identity);
     this.draft.address = structuredClone(customer.address);
     // Adresse connue sans territoire : il est déduit du code postal (et transmis à la mise à jour du client).

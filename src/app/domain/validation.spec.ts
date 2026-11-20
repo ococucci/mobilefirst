@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Identity } from './models';
-import { identityErrors, isValidPieceNumber, normalizeDepartement, numberErrors, sepaErrors, sponsorError, terminalErrors } from './validation';
+import { identityErrors, isValidPieceNumber, numberErrors, sepaErrors, sponsorError, terminalErrors } from './validation';
 
 const today = '2026-10-29';
 const id: Identity = {
@@ -10,16 +10,9 @@ const id: Identity = {
 
 describe('identité', () => {
   it('aucune erreur pour une identité complète', () => expect(identityErrors(id, true, today)).toEqual({}));
-  it('département hors de la liste : non renseigné', () => {
-    expect(Object.keys(identityErrors({ ...id, departementNaissance: '971' }, true, today))).toEqual(['departementNaissance']);
-    expect(Object.keys(identityErrors({ ...id, departementNaissance: 'Inconnu' }, true, today))).toEqual(['departementNaissance']);
-  });
-  it('département reçu sous forme de code : option correspondante', () => {
-    expect(normalizeDepartement('971')).toBe('971 · Guadeloupe');
-    expect(normalizeDepartement(' 75 ')).toBe('75 · Paris');
-    expect(normalizeDepartement('972 · Martinique')).toBe('972 · Martinique');
-    expect(normalizeDepartement('Inconnu')).toBe('Inconnu');
-    expect(normalizeDepartement(null)).toBe('');
+  it('département de naissance facultatif, en saisie libre', () => {
+    expect(identityErrors({ ...id, departementNaissance: '' }, true, today)).toEqual({});
+    expect(identityErrors({ ...id, departementNaissance: '971' }, true, today)).toEqual({});
   });
   it('champs obligatoires', () => {
     const e = identityErrors({ ...id, nom: ' ', prenom: '', dateNaissance: '', pieceNumero: '' }, false, today);
@@ -27,9 +20,9 @@ describe('identité', () => {
   });
   it('date de naissance dans le futur', () => expect(identityErrors({ ...id, dateNaissance: '2030-01-01' }, false, today).dateNaissance).toBeTruthy());
   it('les champs complets ne sont contrôlés qu’en mode complet', () => {
-    const partial = { ...id, departementNaissance: '', mobileContact: '', email: 'x' };
+    const partial = { ...id, mobileContact: '', email: 'x' };
     expect(identityErrors(partial, false, today)).toEqual({});
-    expect(Object.keys(identityErrors(partial, true, today)).sort()).toEqual(['departementNaissance', 'email', 'mobileContact']);
+    expect(Object.keys(identityErrors(partial, true, today)).sort()).toEqual(['email', 'mobileContact']);
   });
   it('n° de pièce : 9 ou 12 caractères', () => {
     expect(isValidPieceNumber('12AB34567')).toBe(true);
