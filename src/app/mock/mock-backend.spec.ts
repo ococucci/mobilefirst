@@ -51,6 +51,12 @@ describe('bouchons intégrés (mode mock)', () => {
     expect(await firstValueFrom(http.post<Sponsor>(`${api}/open-ml/sponsor-checks`, { sponsor: '0690000000' }))).toEqual({ valid: false });
   });
 
+  it('pays pour la nationalité : id et libellé, triés par libellé', async () => {
+    const countries = await firstValueFrom(http.get<{ id: string; label: string }[]>(`${api}/catalog/countries`));
+    expect(countries.find((c) => c.id === 'FR')?.label).toBe('France');
+    expect(countries[0].label).toBe('Algérie');
+  });
+
   it('complétion d’adresse', async () => {
     const res = await firstValueFrom(http.get<unknown[]>(`${api}/addresses`, { params: { q: 'Flamboyants' } }));
     expect(res.length).toBe(1);

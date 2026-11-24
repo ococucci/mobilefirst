@@ -1,10 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { Offer } from '../domain/models';
+import { Country, Offer } from '../domain/models';
 import { APP_CONFIG } from '../config';
 
-/** Catalogue (Castor et promo advice), numéros disponibles (api ressource) et Open ML (api RHOC). */
 /** Résultat de la recherche du sponsor Open ML (api RHOC). */
 export interface SponsorResult {
   valid: boolean;
@@ -16,6 +15,7 @@ export interface SponsorResult {
   tokenId?: string | null;
 }
 
+/** Catalogue (Castor et promo advice), numéros disponibles (api ressource), Open ML (api RHOC) et pays. */
 @Injectable({ providedIn: 'root' })
 export class CatalogApi {
   private readonly http = inject(HttpClient);
@@ -30,6 +30,17 @@ export class CatalogApi {
 
   availableNumbers(): Promise<string[]> {
     return firstValueFrom(this.http.get<string[]>(`${this.api}/numbers/available`));
+  }
+
+  private countriesCache?: Promise<Country[]>;
+
+  /** Pays proposés pour la nationalité d'origine (id, libellé), chargés une seule fois. */
+  countries(): Promise<Country[]> {
+    this.countriesCache ??= firstValueFrom(this.http.get<Country[]>(`${this.api}/catalog/countries`)).catch((e) => {
+      this.countriesCache = undefined;
+      throw e;
+    });
+    return this.countriesCache;
   }
 
   /** Recherche du sponsor Open ML (N° de mobile ou ND) : nom, prénom et jeton RHOC s'il est reconnu. */

@@ -1,6 +1,7 @@
-import { Component, input } from '@angular/core';
+import { Component, effect, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Identity } from '../domain/models';
+import { CatalogApi } from '../api/catalog.api';
+import { Country, Identity } from '../domain/models';
 import { identityErrors } from '../domain/validation';
 import { FieldError } from './field-error';
 
@@ -20,8 +21,12 @@ import { FieldError } from './field-error';
       </div>
       @if (full()) {
         <div class="field">
-          <label for="nat">Nationalité (facultatif)</label>
-          <input id="nat" [(ngModel)]="i.nationalite" autocomplete="off" />
+          <label for="nat">Nationalité d'origine (facultatif)</label>
+          <select id="nat" [(ngModel)]="i.nationalite" [disabled]="!countries().length" aria-describedby="nat-msg">
+            <option value="">{{ countriesError() ? 'Liste indisponible' : countries().length ? 'Non renseignée' : 'Chargement…' }}</option>
+            @for (c of countries(); track c.id) { <option [value]="c.id">{{ c.label }}</option> }
+          </select>
+          @if (countriesError()) { <span class="msg ko" id="nat-msg">{{ countriesError() }}</span> }
         </div>
       } @else {
         <div></div>
@@ -82,6 +87,27 @@ export class IdentityForm {
   /** Les erreurs ne s'affichent qu'après une première tentative de validation. */
   readonly showErrors = input(false);
   protected readonly today = new Date().toISOString().slice(0, 10);
+
+  private readonly catalog = inject(CatalogApi);
+  /** Pays proposés (libellé affiché, id enregistré dans la nationalité). */
+  protected readonly countries = signal<Country[]>([]);
+  protected readonly countriesError = signal<string | null>(null);
+
+  constructor() {
+    // La liste n'est utile qu'en saisie complète ; elle est chargée une fois pour toute l'application.
+    effect(() => {
+      if (this.full() && !this.countries().length) void this.loadCountries();
+    });
+  }
+
+  private async loadCountries(): Promise<void> {
+    try {
+      this.countries.set(await this.catalog.countries());
+      this.countriesError.set(null);
+    } catch {
+      this.countriesError.set('Liste des pays indisponible : la nationalité pourra être renseignée plus tard.');
+    }
+  }
 
   protected err(field: keyof Identity): string | null {
     if (!this.showErrors()) return null;

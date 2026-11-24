@@ -23,6 +23,7 @@ import {
 import {
   ADDRESSES,
   AVAILABLE_NUMBERS,
+  COUNTRIES,
   CUSTOMERS,
   MockCustomer,
   ICCID_STOCK,
@@ -95,6 +96,7 @@ export class MockBackend {
     ['GET', /^\/customers\/([^/]+)\/pending-lines$/, (m) => ok(this.customer(m[1]).lines.map((l) => l.msisdn).filter((n) => this.pending.has(n)))],
     ['POST', /^\/customers\/([^/]+)\/lines\/([^/]+)\/rescoring$/, (m) => this.rescore(m[1], m[2])],
     ['GET', /^\/catalog\/offers$/, () => ok(OFFERS)],
+    ['GET', /^\/catalog\/countries$/, () => ok(COUNTRIES)],
     ['GET', /^\/numbers\/available$/, () => ok(AVAILABLE_NUMBERS.filter((n) => !this.reserved.has(n)))],
     ['POST', /^\/open-ml\/sponsor-checks$/, (_, req) => ok(this.sponsor(this.body<{ sponsor: string }>(req).sponsor ?? ''))],
     ['GET', /^\/hardware\/terminals$/, () => ok(this.terminals)],

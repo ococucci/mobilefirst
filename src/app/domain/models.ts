@@ -22,6 +22,12 @@ export type SimType = 'physique' | 'esim';
 
 export type PieceType = 'CNI' | 'PASSEPORT';
 
+/** Pays de la liste de référence : la nationalité du client contient son id. */
+export interface Country {
+  id: string;
+  label: string;
+}
+
 export interface Identity {
   civilite: 'M.' | 'Mme';
   nom: string;
@@ -29,6 +35,7 @@ export interface Identity {
   /** Format ISO yyyy-mm-dd. */
   dateNaissance: string;
   departementNaissance: string;
+  /** Nationalité d'origine : id du pays (liste GET /catalog/countries) ; vide si non renseignée. */
   nationalite: string;
   pieceType: PieceType;
   pieceNumero: string;

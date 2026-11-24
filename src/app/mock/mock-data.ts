@@ -17,7 +17,7 @@ export const CUSTOMERS: MockCustomer[] = [
       prenom: 'Marie',
       dateNaissance: '1988-03-14',
       departementNaissance: '971 · Guadeloupe',
-      nationalite: 'Française',
+      nationalite: 'FR',
       pieceType: 'CNI',
       pieceNumero: '12AB34567',
       mobileContact: '0690123456',
@@ -47,7 +47,7 @@ export const CUSTOMERS: MockCustomer[] = [
       prenom: 'Jean',
       dateNaissance: '1975-07-02',
       departementNaissance: '972 · Martinique',
-      nationalite: 'Française',
+      nationalite: 'FR',
       pieceType: 'PASSEPORT',
       pieceNumero: '19FR55120',
       mobileContact: '0696778899',
@@ -89,7 +89,7 @@ export const CUSTOMERS: MockCustomer[] = [
       prenom: 'Sophie',
       dateNaissance: '1982-05-09',
       departementNaissance: '971 · Guadeloupe',
-      nationalite: 'Française',
+      nationalite: 'FR',
       pieceType: 'CNI',
       pieceNumero: '45GH78901',
       mobileContact: '0690400500',
@@ -162,6 +162,21 @@ export const OFFERS: Offer[] = [
   { id: 'pp-classique', family: 'prepaye', level: 'card', label: 'Carte Prépayée', detail: 'Sans engagement, rechargeable', price: 10, openMl: { eligible: false },
     options: [], promo: null },
 ];
+
+/** Référentiel des pays (id ISO 3166-1 alpha-2, libellé), comme le bouchon du backend. */
+export const COUNTRIES: { id: string; label: string }[] = [
+  ['FR', 'France'], ['DZ', 'Algérie'], ['DE', 'Allemagne'], ['AG', 'Antigua-et-Barbuda'], ['AR', 'Argentine'], ['BS', 'Bahamas'],
+  ['BB', 'Barbade'], ['BE', 'Belgique'], ['BJ', 'Bénin'], ['BR', 'Brésil'], ['CM', 'Cameroun'], ['CA', 'Canada'], ['CN', 'Chine'],
+  ['CO', 'Colombie'], ['CG', 'Congo'], ['CD', 'Congo (Rép. dém.)'], ['CI', "Côte d'Ivoire"], ['CU', 'Cuba'], ['DM', 'Dominique'],
+  ['EG', 'Égypte'], ['ES', 'Espagne'], ['US', 'États-Unis'], ['GA', 'Gabon'], ['GB', 'Royaume-Uni'], ['GD', 'Grenade'], ['GN', 'Guinée'],
+  ['GY', 'Guyana'], ['HT', 'Haïti'], ['IN', 'Inde'], ['IT', 'Italie'], ['JM', 'Jamaïque'], ['LB', 'Liban'], ['LU', 'Luxembourg'],
+  ['MG', 'Madagascar'], ['ML', 'Mali'], ['MA', 'Maroc'], ['MU', 'Maurice'], ['MX', 'Mexique'], ['NL', 'Pays-Bas'], ['PE', 'Pérou'],
+  ['PL', 'Pologne'], ['PT', 'Portugal'], ['DO', 'République dominicaine'], ['RO', 'Roumanie'], ['KN', 'Saint-Christophe-et-Niévès'],
+  ['LC', 'Sainte-Lucie'], ['VC', 'Saint-Vincent-et-les-Grenadines'], ['SN', 'Sénégal'], ['CH', 'Suisse'], ['SR', 'Suriname'],
+  ['SY', 'Syrie'], ['TT', 'Trinité-et-Tobago'], ['TN', 'Tunisie'], ['TR', 'Turquie'], ['UA', 'Ukraine'], ['VE', 'Venezuela'], ['VN', 'Viêt Nam'],
+]
+  .map(([id, label]) => ({ id, label }))
+  .sort((a, b) => a.label.localeCompare(b.label, 'fr'));
 
 /** Sponsors Open ML reconnus par api RHOC (N° de mobile ou ND -> nom, prénom). */
 export const SPONSORS: Record<string, { lastName: string; firstName: string }> = {
