@@ -5,6 +5,17 @@ import { Offer } from '../domain/models';
 import { APP_CONFIG } from '../config';
 
 /** Catalogue (Castor et promo advice), numéros disponibles (api ressource) et Open ML (api RHOC). */
+/** Résultat de la recherche du sponsor Open ML (api RHOC). */
+export interface SponsorResult {
+  valid: boolean;
+  /** N° du sponsor au format national. */
+  msisdn?: string | null;
+  lastName?: string | null;
+  firstName?: string | null;
+  /** Jeton RHOC de la vérification, à renvoyer avec la commande. */
+  tokenId?: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CatalogApi {
   private readonly http = inject(HttpClient);
@@ -21,8 +32,8 @@ export class CatalogApi {
     return firstValueFrom(this.http.get<string[]>(`${this.api}/numbers/available`));
   }
 
-  async checkSponsor(sponsor: string): Promise<boolean> {
-    const res = await firstValueFrom(this.http.post<{ valid: boolean }>(`${this.api}/open-ml/sponsor-checks`, { sponsor }));
-    return res.valid;
+  /** Recherche du sponsor Open ML (N° de mobile ou ND) : nom, prénom et jeton RHOC s'il est reconnu. */
+  checkSponsor(sponsor: string): Promise<SponsorResult> {
+    return firstValueFrom(this.http.post<SponsorResult>(`${this.api}/open-ml/sponsor-checks`, { sponsor }));
   }
 }

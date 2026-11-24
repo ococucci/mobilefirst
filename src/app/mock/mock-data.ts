@@ -163,8 +163,12 @@ export const OFFERS: Offer[] = [
     options: [], promo: null },
 ];
 
-/** N° sponsor Open ML reconnus par api RHOC. */
-export const SPONSORS = ['0690654321', '0696112233'];
+/** Sponsors Open ML reconnus par api RHOC (N° de mobile ou ND -> nom, prénom). */
+export const SPONSORS: Record<string, { lastName: string; firstName: string }> = {
+  '0690654321': { lastName: 'MARTIN', firstName: 'JULIEN' },
+  '0696112233': { lastName: 'LOUISON', firstName: 'CHANTAL' },
+  '0590240254': { lastName: 'ROSEMOND', firstName: 'PATRICE' },
+};
 
 export const AVAILABLE_NUMBERS = ['0690123480', '0690123481', '0690123482', '0690123499', '0691245566'];
 

@@ -10,6 +10,7 @@ import {
   oneOffPrice,
   compact,
   digits,
+  nationalNumber,
   identityChangeRequiresRescore,
   isValidIban,
   isValidIccid,
@@ -95,7 +96,7 @@ export class MockBackend {
     ['POST', /^\/customers\/([^/]+)\/lines\/([^/]+)\/rescoring$/, (m) => this.rescore(m[1], m[2])],
     ['GET', /^\/catalog\/offers$/, () => ok(OFFERS)],
     ['GET', /^\/numbers\/available$/, () => ok(AVAILABLE_NUMBERS.filter((n) => !this.reserved.has(n)))],
-    ['POST', /^\/open-ml\/sponsor-checks$/, (_, req) => ok({ valid: SPONSORS.includes(digits(this.body<{ sponsor: string }>(req).sponsor ?? '')) })],
+    ['POST', /^\/open-ml\/sponsor-checks$/, (_, req) => ok(this.sponsor(this.body<{ sponsor: string }>(req).sponsor ?? ''))],
     ['GET', /^\/hardware\/terminals$/, () => ok(this.terminals)],
     ['POST', /^\/hardware\/iccid-checks$/, (_, req) => ok({ result: this.checkIccid(this.body<{ iccid: string }>(req).iccid ?? '') })],
     ['POST', /^\/hardware\/sim-scans$/, () => ok({ iccid: [...this.stock][Math.floor(Math.random() * this.stock.size)] ?? '' })],
@@ -118,6 +119,14 @@ export class MockBackend {
 
   private body<T>(req: HttpRequest<unknown>): T {
     return (req.body ?? {}) as T;
+  }
+
+  /** api RHOC bouchonnée : un nouveau jeton à chaque recherche. */
+  private sponsor(value: string) {
+    const msisdn = nationalNumber(value);
+    const found = SPONSORS[msisdn];
+    const tokenId = 'RHOC-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+    return found ? { valid: true, msisdn, ...found, tokenId } : { valid: false };
   }
 
   // ----- Client

@@ -21,6 +21,14 @@ import {
 
 export const digits = (value: string): string => value.replace(/\D/g, '');
 
+/** N° au format national : 590690123456 ou +590 690… -> 0690123456, 33612345678 -> 0612345678 ; sinon les chiffres seuls. */
+export function nationalNumber(value: string): string {
+  const d = digits(value ?? '');
+  if (d.length === 12 && /^(590|596|594|262)/.test(d)) return '0' + d.slice(3);
+  if (d.length === 11 && d.startsWith('33')) return '0' + d.slice(2);
+  return d;
+}
+
 export const compact = (value: string): string => value.replace(/[\s.-]/g, '').toUpperCase();
 
 export function isValidMsisdn(value: string): boolean {

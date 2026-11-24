@@ -4,8 +4,8 @@ import { CatalogApi } from '../api/catalog.api';
 import { formatEuro, formatMsisdn } from '../domain/format';
 import { DONOR_OPERATORS, FAMILIES, FamilyId, Offer } from '../domain/models';
 import { allowedFamilies, compatibleOptions, isOpenMlAvailable, levelLabel, openMlDiscount } from '../domain/rules';
-import { NumberChoice, numberErrors, sponsorError } from '../domain/validation';
-import { OrderStore } from '../store/order.store';
+import { NumberChoice, numberErrors, sponsorConditionsError, sponsorError } from '../domain/validation';
+import { OrderStore, emptyOpenMl } from '../store/order.store';
 import { CustomerBanner } from '../ui/customer-banner';
 import { CORRECT_FIELDS, FieldError, focusFirstError } from '../ui/field-error';
 import { Page } from '../ui/page';
@@ -148,32 +148,60 @@ import { run } from '../ui/run';
         @if (offerError()) { <span class="msg ko group-error" id="offer-error">{{ offerError() }}</span> }
       </div>
 
-      <div class="card">
-        <label class="check" [class.disabled]="!openMlAvailable()" style="padding-top: 0">
+      <div class="card openml">
+        <h2>Remise croisée</h2>
+        <label class="check" [class.disabled]="!openMlAvailable()">
           <span class="body">
-            <strong>Remise Open ML</strong><br />
-            <span class="small muted">−5 € (offre d'entrée de gamme) ou −10 € / mois à vie. Indisponible pour une ligne Card.</span>
+            <strong>Remise Open ML</strong>@if (openMlAvailable()) { <strong> (−{{ euro(openMlAmount()) }}/mois)</strong> }<br />
+            <span class="small muted">À vie, avec un sponsor. Indisponible pour la Carte Prépayée et pour une ligne Card.</span>
           </span>
           <input type="checkbox" [disabled]="!openMlAvailable()" [checked]="d.openMl.enabled && openMlAvailable()"
             (change)="d.openMl.enabled = $any($event.target).checked" />
         </label>
         @if (d.openMl.enabled && openMlAvailable()) {
-          <div class="field" style="margin: 0.5rem 0 0">
-            <label for="sponsor">N° sponsor</label>
-            <div class="inline">
-              <input id="sponsor" class="grow" type="tel" inputmode="tel" [ngModel]="d.openMl.sponsor"
-                (ngModelChange)="d.openMl.sponsor = $event; d.openMl.valid = null"
-                [class.ok]="d.openMl.valid === true" [class.ko]="sponsorErr()" [attr.aria-invalid]="!!sponsorErr()" aria-describedby="sponsor-error" />
-              <button type="button" class="btn small" (click)="checkSponsor()" [disabled]="checkingSponsor()">
-                @if (checkingSponsor()) { <span class="spinner"></span> } Vérifier
-              </button>
+          <div class="openml-body">
+            <div class="field">
+              <label for="sponsor">Numéro de mobile du sponsor ou ND</label>
+              <div class="inline">
+                <input id="sponsor" class="grow" type="tel" inputmode="tel" autocomplete="off" [ngModel]="d.openMl.sponsor"
+                  (ngModelChange)="sponsorChanged($event)" (keydown.enter)="$event.preventDefault(); checkSponsor()"
+                  [class.ok]="d.openMl.valid === true" [class.ko]="sponsorErr()" [attr.aria-invalid]="!!sponsorErr()"
+                  aria-describedby="sponsor-error" />
+                <button type="button" class="btn small icon" (click)="checkSponsor()" [disabled]="checkingSponsor()"
+                  aria-label="Rechercher le sponsor" title="Rechercher le sponsor">
+                  @if (checkingSponsor()) { <span class="spinner"></span> } @else {
+                    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4" /><path d="M15 15l6 6" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" /></svg>
+                  }
+                </button>
+              </div>
+              @if (sponsorErr()) {
+                <app-field-error for="sponsor" [message]="sponsorErr()" />
+              } @else if (d.openMl.valid !== true) {
+                <span class="msg">Saisissez le N° puis lancez la recherche (api RHOC).</span>
+              }
             </div>
+
             @if (d.openMl.valid === true) {
-              <span class="msg ok">Sponsor valide · remise de {{ euro(openMlAmount()) }}/mois à vie</span>
-            } @else if (sponsorErr()) {
-              <app-field-error for="sponsor" [message]="sponsorErr()" />
-            } @else {
-              <span class="msg">Le N° sponsor est contrôlé par api RHOC.</span>
+              <p class="msg ok sponsor-ok" role="status">Le client peut souscrire à un forfait mobile avec remise.</p>
+              <div class="sponsor-name">
+                <span class="k">Nom et prénom du sponsor</span>
+                <span class="v">{{ d.openMl.lastName }} {{ d.openMl.firstName }}</span>
+              </div>
+              <div class="notice blue conditions">
+                <strong>3 conditions à lire au client s'il n'est pas titulaire de la ligne :</strong>
+                <ul>
+                  <li>Vous devez avoir l'accord du titulaire pour bénéficier de la remise.</li>
+                  <li>Vous devez accepter de communiquer au titulaire de la ligne votre nom, prénom et numéro de téléphone.</li>
+                  <li>Vous bénéficierez de la remise tant que le titulaire de la ligne conserve son contrat et ne supprime pas votre remise.</li>
+                </ul>
+              </div>
+              <label class="check" [class.ko]="conditionsErr()">
+                <input id="openml-conditions" type="checkbox" [checked]="d.openMl.conditions"
+                  (change)="d.openMl.conditions = $any($event.target).checked"
+                  [attr.aria-invalid]="!!conditionsErr()" aria-describedby="openml-conditions-error" />
+                <span class="body">Le client accepte ces 3 conditions (ou est titulaire de la ligne)</span>
+              </label>
+              @if (conditionsErr()) { <app-field-error for="openml-conditions" [message]="conditionsErr()" /> }
             }
           </div>
         }
@@ -275,6 +303,13 @@ export class ForfaitScreen {
     return this.submitted() && !this.store.draft.offerId ? 'Choisissez un forfait.' : null;
   }
 
+  /** Conditions Open ML non acceptées (affiché après une tentative de validation). */
+  protected conditionsErr(): string | null {
+    const o = this.store.draft.openMl;
+    if (!this.openMlAvailable() || !this.submitted()) return null;
+    return sponsorConditionsError(o.enabled, o.valid, o.conditions);
+  }
+
   /** Un sponsor refusé s'affiche tout de suite ; les autres erreurs après une tentative de validation. */
   protected sponsorErr(): string | null {
     const o = this.store.draft.openMl;
@@ -295,7 +330,7 @@ export class ForfaitScreen {
     // On garde les options choisies que la nouvelle offre propose, sauf les options incluses (toujours actives)
     // et celles devenues incompatibles avec une option incluse de la nouvelle offre.
     d.options = compatibleOptions(offer, d.options);
-    if (!this.openMlAvailable()) d.openMl = { enabled: false, sponsor: '', valid: null };
+    if (!this.openMlAvailable()) d.openMl = emptyOpenMl();
   }
 
   protected setOption(id: string, checked: boolean): void {
@@ -303,15 +338,34 @@ export class ForfaitScreen {
     d.options = checked ? [...new Set([...d.options, id])] : d.options.filter((o) => o !== id);
   }
 
+  /** Un nouveau N° annule la recherche précédente : sponsor, jeton et conditions sont à refaire. */
+  protected sponsorChanged(value: string): void {
+    this.store.draft.openMl = { ...emptyOpenMl(), enabled: true, sponsor: value };
+  }
+
   protected async checkSponsor(): Promise<void> {
+    const o = this.store.draft.openMl;
+    if (!o.sponsor.trim()) {
+      o.valid = null;
+      this.submitted.set(true);
+      return;
+    }
     await run(this.checkingSponsor, async () => {
-      this.store.draft.openMl.valid = await this.catalog.checkSponsor(this.store.draft.openMl.sponsor);
+      const r = await this.catalog.checkSponsor(o.sponsor);
+      this.store.draft.openMl = {
+        ...o,
+        valid: r.valid,
+        lastName: r.valid ? (r.lastName ?? '') : '',
+        firstName: r.valid ? (r.firstName ?? '') : '',
+        tokenId: r.valid ? (r.tokenId ?? null) : null,
+        conditions: false,
+      };
     });
   }
 
   private invalid(): boolean {
     const numberInvalid = !this.isChange && Object.keys(numberErrors(this.store.draft.number, this.today)).length > 0;
-    return numberInvalid || !!this.offerError() || !!this.sponsorErr();
+    return numberInvalid || !!this.offerError() || !!this.sponsorErr() || !!this.conditionsErr();
   }
 
   /** Rappel près du bouton, tant qu'il reste des champs en erreur. */

@@ -105,7 +105,10 @@ export class Recap {
         for (const o of selectedOptions(offer, d.options)) {
           rows.push({ k: o.label, v: o.included ? 'Incluse' : '+' + formatEuro(o.price) });
         }
-        if (b.openMl) rows.push({ k: 'Remise Open ML', v: `−${formatEuro(b.openMl)}/mois, à vie` });
+        if (b.openMl) {
+          rows.push({ k: 'Remise Open ML', v: `−${formatEuro(b.openMl)}/mois, à vie` });
+          if (d.openMl.lastName) rows.push({ k: 'Sponsor', v: `${d.openMl.lastName} ${d.openMl.firstName}` });
+        }
         if (offer.promo) rows.push({ k: 'Remise', v: offer.promo.label });
         rows.push({ k: 'Mensualité', v: formatEuro(b.total) + '/mois', cls: 'sep total' });
         if (b.promo) rows.push({ k: `Les ${b.promo.months} premiers mois`, v: formatEuro(b.promo.total) + '/mois' });

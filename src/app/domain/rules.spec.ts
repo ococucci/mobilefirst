@@ -9,6 +9,7 @@ import {
   territoireFromCodePostal,
   identityChangeRequiresRescore,
   isOpenMlAvailable,
+  nationalNumber,
   isValidIban,
   isValidIccid,
   isValidImei,
@@ -97,6 +98,12 @@ describe('territoire déduit du code postal', () => {
 });
 
 describe('remise Open ML', () => {
+  it('N° du sponsor au format national', () => {
+    expect(nationalNumber('590690654321')).toBe('0690654321');
+    expect(nationalNumber('+590 590 24 02 54')).toBe('0590240254');
+    expect(nationalNumber('33612345678')).toBe('0612345678');
+    expect(nationalNumber('06 90 65 43 21')).toBe('0690654321');
+  });
   it('montant porté par l’offre (5 € en entrée de gamme, 10 € sinon)', () => {
     expect(openMlDiscount(offer({ openMl: { eligible: true, monthlyDiscount: 5 } }))).toBe(5);
     expect(openMlDiscount(offer())).toBe(10);

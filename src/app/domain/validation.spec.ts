@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Identity } from './models';
-import { identityErrors, isValidPieceNumber, numberErrors, sepaErrors, sponsorError, terminalErrors } from './validation';
+import { identityErrors, isValidPieceNumber, numberErrors, sepaErrors, sponsorConditionsError, sponsorError, terminalErrors } from './validation';
 
 const today = '2026-10-29';
 const id: Identity = {
@@ -45,9 +45,15 @@ describe('Open ML, terminal et SEPA', () => {
   it('sponsor', () => {
     expect(sponsorError(false, '', null)).toBeNull();
     expect(sponsorError(true, '', null)).toContain('Saisissez');
-    expect(sponsorError(true, '0690654321', null)).toContain('Vérifier');
+    expect(sponsorError(true, '0690654321', null)).toContain('loupe');
     expect(sponsorError(true, '0690654321', false)).toContain('non reconnu');
     expect(sponsorError(true, '0690654321', true)).toBeNull();
+  });
+  it('3 conditions Open ML à accepter une fois le sponsor trouvé', () => {
+    expect(sponsorConditionsError(true, true, false)).toContain('3 conditions');
+    expect(sponsorConditionsError(true, true, true)).toBeNull();
+    expect(sponsorConditionsError(true, null, false)).toBeNull();
+    expect(sponsorConditionsError(false, true, false)).toBeNull();
   });
   it('terminal', () => {
     const t = { withTerminal: true, terminalBrand: 'APPLE', terminalId: 'ip16-128', terminalColorId: 'ip16-128-bleu', imei: '490154203237518' };

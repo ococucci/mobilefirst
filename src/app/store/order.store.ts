@@ -51,6 +51,24 @@ export const emptyIdentity = (): Identity => ({
 export const emptyAddress = (): Address => ({ numeroVoie: '', nomVoie: '', codePostal: '', commune: '', territoire: '', complement: '' });
 
 /** Saisies du conseiller, liées aux formulaires (ngModel). */
+/**
+ * Remise Open ML : N° du sponsor saisi, résultat de la recherche RHOC (valid, nom, prénom, jeton) et acceptation des
+ * 3 conditions par le client (ou client titulaire de la ligne du sponsor).
+ */
+export interface OpenMlDraft {
+  enabled: boolean;
+  sponsor: string;
+  valid: boolean | null;
+  lastName: string;
+  firstName: string;
+  tokenId: string | null;
+  conditions: boolean;
+}
+
+export function emptyOpenMl(): OpenMlDraft {
+  return { enabled: false, sponsor: '', valid: null, lastName: '', firstName: '', tokenId: null, conditions: false };
+}
+
 export interface Draft {
   identity: Identity;
   address: Address;
@@ -67,7 +85,7 @@ export interface Draft {
   family: FamilyId;
   offerId: string | null;
   options: string[];
-  openMl: { enabled: boolean; sponsor: string; valid: boolean | null };
+  openMl: OpenMlDraft;
   hardware: {
     simType: SimType;
     iccid: string;
@@ -96,7 +114,7 @@ const emptyDraft = (): Draft => ({
   family: 'bloque',
   offerId: null,
   options: [],
-  openMl: { enabled: false, sponsor: '', valid: null },
+  openMl: emptyOpenMl(),
   hardware: {
     simType: 'physique',
     iccid: '',

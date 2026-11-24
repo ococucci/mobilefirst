@@ -41,6 +41,16 @@ describe('bouchons intégrés (mode mock)', () => {
     expect(created.cashDue).toBe(829); // bl-60 est une offre Silver
   });
 
+  it('sponsor Open ML : nom, prénom et jeton RHOC, N° national ou international', async () => {
+    type Sponsor = { valid: boolean; msisdn?: string; lastName?: string; firstName?: string; tokenId?: string };
+    const found = await firstValueFrom(http.post<Sponsor>(`${api}/open-ml/sponsor-checks`, { sponsor: '590690654321' }));
+    expect(found).toMatchObject({ valid: true, msisdn: '0690654321', lastName: 'MARTIN', firstName: 'JULIEN' });
+    expect(found.tokenId).toMatch(/^RHOC-/);
+    const again = await firstValueFrom(http.post<Sponsor>(`${api}/open-ml/sponsor-checks`, { sponsor: '0690654321' }));
+    expect(again.tokenId).not.toBe(found.tokenId);
+    expect(await firstValueFrom(http.post<Sponsor>(`${api}/open-ml/sponsor-checks`, { sponsor: '0690000000' }))).toEqual({ valid: false });
+  });
+
   it('complétion d’adresse', async () => {
     const res = await firstValueFrom(http.get<unknown[]>(`${api}/addresses`, { params: { q: 'Flamboyants' } }));
     expect(res.length).toBe(1);

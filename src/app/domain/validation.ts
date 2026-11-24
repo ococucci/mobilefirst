@@ -62,8 +62,13 @@ export function sponsorError(enabled: boolean, sponsor: string, valid: boolean |
   if (!enabled) return null;
   if (!sponsor.trim()) return 'Saisissez le N° sponsor ou décochez la remise.';
   if (valid === false) return 'Sponsor non reconnu par api RHOC.';
-  if (valid !== true) return 'Cliquez sur « Vérifier » pour contrôler le N° sponsor.';
+  if (valid !== true) return 'Cliquez sur la loupe pour rechercher le sponsor.';
   return null;
+}
+
+/** Les 3 conditions Open ML sont à accepter une fois le sponsor trouvé. */
+export function sponsorConditionsError(enabled: boolean, valid: boolean | null, conditions: boolean): string | null {
+  return enabled && valid === true && !conditions ? 'Le client doit accepter les 3 conditions (ou être titulaire de la ligne).' : null;
 }
 
 export interface TerminalInput {

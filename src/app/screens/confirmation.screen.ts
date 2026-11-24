@@ -200,7 +200,10 @@ export class ConfirmationScreen {
     const s = this.store;
     const d = s.draft;
     const iccid = d.hardware.iccid.replace(/\s/g, '');
-    const openMlSponsor = d.openMl.enabled && d.openMl.valid ? d.openMl.sponsor : null;
+    const openMl = d.openMl.enabled && d.openMl.valid === true;
+    const openMlSponsor = openMl ? d.openMl.sponsor : null;
+    const openMlTokenId = openMl ? d.openMl.tokenId : null;
+    const openMlConditionsAccepted = openMl ? d.openMl.conditions : null;
     const base: OrderRequest = {
       flow: this.flow,
       customerId: s.customer()?.id ?? '',
@@ -224,6 +227,8 @@ export class ConfirmationScreen {
           offerId: d.offerId,
           options: d.options,
           openMlSponsor,
+          openMlTokenId,
+          openMlConditionsAccepted,
           sim: { type: d.hardware.simType, iccid },
           terminal: d.hardware.withTerminal && !card
             ? { id: d.hardware.terminalId, colorId: d.hardware.terminalColorId, imei: d.hardware.imei }
@@ -232,7 +237,7 @@ export class ConfirmationScreen {
         };
       }
       case 'forfait':
-        return { ...base, lineMsisdn: d.lineMsisdn, offerId: d.offerId, options: d.options, openMlSponsor };
+        return { ...base, lineMsisdn: d.lineMsisdn, offerId: d.offerId, options: d.options, openMlSponsor, openMlTokenId, openMlConditionsAccepted };
       case 'options':
         return { ...base, lineMsisdn: d.lineMsisdn, options: d.options };
       case 'sim':

@@ -2,7 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { CustomerApi } from '../api/customer.api';
 import { formatEuro, formatMsisdn } from '../domain/format';
 import { FLOW_LABELS, Line, SIM_REASONS } from '../domain/models';
-import { OrderStore } from '../store/order.store';
+import { OrderStore, emptyOpenMl } from '../store/order.store';
 import { CustomerBanner } from '../ui/customer-banner';
 import { CORRECT_FIELDS, focusFirstError } from '../ui/field-error';
 import { Page } from '../ui/page';
@@ -137,7 +137,7 @@ export class LigneScreen {
         // Une ligne Card change d'offre pour un forfait : on ouvre sur une famille avec mensualité.
         const family = this.store.offer(line.offerId)?.family ?? 'bloque';
         d.family = family === 'prepaye' ? 'bloque' : family;
-        d.openMl = { enabled: false, sponsor: '', valid: null };
+        d.openMl = emptyOpenMl();
         d.preparedFor = key;
         this.store.go('forfait');
         break;

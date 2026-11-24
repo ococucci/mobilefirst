@@ -18,6 +18,10 @@ export interface OrderRequest {
   /** Liste complète souhaitée (pour une modification d'options, le serveur calcule ajouts et retraits). */
   options?: string[];
   openMlSponsor?: string | null;
+  /** Jeton RHOC renvoyé par la recherche du sponsor. */
+  openMlTokenId?: string | null;
+  /** Le client accepte les 3 conditions Open ML (ou est titulaire de la ligne du sponsor). */
+  openMlConditionsAccepted?: boolean | null;
   sim?: { type: SimType; iccid: string };
   /** Modèle et couleur choisis ; le serveur applique le prix du niveau de l'offre. */
   terminal?: { id: string; colorId: string; imei: string } | null;
