@@ -143,7 +143,7 @@ validée consomme réellement la SIM, réserve le numéro et met la ligne en « 
 | Nom contenant « rouge » ou « orange » | Score Préventel correspondant (sinon vert) |
 | Nouveau client Dupont Marie, 14/03/1988, CNI 12AB34567 | Doublon trouvé |
 | N° de pièce d'identité | 9 caractères (CNI récente, passeport) ou 12 (ancienne CNI), lettres et chiffres |
-| N° sponsor Open ML | `0690 65 43 21` ou `0696 11 22 33` |
+| Sponsor Open ML (N° de mobile ou ND, aussi au format 590…) | `0690 65 43 21` (MARTIN JULIEN), `0696 11 22 33`, ND `0590 24 02 54` |
 | ICCID en stock | `8933 0100 0000 0000 001`, `…019`, `…027`, `…035`, `…043`, ou bouton de scan |
 | IBAN | `FR76 3000 6000 0112 3456 7890 189` |
 | IMEI | `490154203237518` |
