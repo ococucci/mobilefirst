@@ -233,7 +233,6 @@ export class ConfirmationScreen {
           terminal: d.hardware.withTerminal && !card
             ? { id: d.hardware.terminalId, colorId: d.hardware.terminalColorId, imei: d.hardware.imei }
             : null,
-          sepaMandateRef: card ? null : d.sepa.mandateRef,
           ibanToken: card ? null : d.sepa.ibanToken,
         };
       }

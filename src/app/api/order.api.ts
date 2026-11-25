@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { Address, Flow, IbanToken, Identity, SepaMandate, SimType } from '../domain/models';
+import { Address, Flow, IbanToken, Identity, SimType } from '../domain/models';
 import { APP_CONFIG } from '../config';
 
 /** Corps commun à POST /contracts et POST /orders ; les champs utiles dépendent de la demande. */
@@ -25,7 +25,6 @@ export interface OrderRequest {
   sim?: { type: SimType; iccid: string };
   /** Modèle et couleur choisis ; le serveur applique le prix du niveau de l'offre. */
   terminal?: { id: string; colorId: string; imei: string } | null;
-  sepaMandateRef?: string | null;
   /** Information bancaire tokenisée du mandat (renvoyée par POST /sepa-mandates). */
   ibanToken?: IbanToken | null;
   simReason?: string | null;
@@ -48,9 +47,9 @@ export class OrderApi {
   private readonly http = inject(HttpClient);
   private readonly api = inject(APP_CONFIG).apiUrl;
 
-  /** Enregistre le mandat SEPA (api IML) : RUM et information bancaire tokenisée. */
-  storeMandate(holder: string, iban: string): Promise<SepaMandate> {
-    return firstValueFrom(this.http.post<SepaMandate>(`${this.api}/sepa-mandates`, { holder, iban }));
+  /** Enregistre le mandat SEPA (api IML) et renvoie l'information bancaire tokenisée. */
+  storeMandate(holder: string, iban: string): Promise<IbanToken> {
+    return firstValueFrom(this.http.post<IbanToken>(`${this.api}/sepa-mandates`, { holder, iban }));
   }
 
   /** Génère et stocke le contrat ; renvoie son identifiant (contractRef). */

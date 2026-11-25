@@ -83,8 +83,8 @@ export interface Draft {
     terminalColorId: string;
     imei: string;
   };
-  /** Mandat SEPA : saisie, puis RUM et information bancaire tokenisée renvoyées par api IML. */
-  sepa: { holder: string; iban: string; mandateRef: string | null; ibanToken: IbanToken | null };
+  /** Mandat SEPA : saisie, puis information bancaire tokenisée renvoyée par api IML. */
+  sepa: { holder: string; iban: string; ibanToken: IbanToken | null };
   lineMsisdn: string | null;
   simReason: string | null;
   /** Ligne (et raison) pour laquelle les étapes suivantes ont été préparées. */
@@ -111,7 +111,7 @@ const emptyDraft = (): Draft => ({
     terminalColorId: '',
     imei: '',
   },
-  sepa: { holder: '', iban: '', mandateRef: null, ibanToken: null },
+  sepa: { holder: '', iban: '', ibanToken: null },
   lineMsisdn: null,
   simReason: null,
   preparedFor: null,

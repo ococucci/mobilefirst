@@ -94,15 +94,15 @@ import { CORRECT_FIELDS, FieldError, focusFirstError } from '../ui/field-error';
           <div class="seg" style="margin-bottom: 1rem"><button type="button" class="on">Prélèvement SEPA</button></div>
           <div class="field">
             <label for="holder">Titulaire du compte</label>
-            <input id="holder" [(ngModel)]="sepa.holder" (ngModelChange)="sepa.mandateRef = null; sepa.ibanToken = null"
+            <input id="holder" [(ngModel)]="sepa.holder" (ngModelChange)="sepa.ibanToken = null"
               [class.ko]="serr('holder')" [attr.aria-invalid]="!!serr('holder')" aria-describedby="holder-error" />
             <app-field-error for="holder" [message]="serr('holder')" />
           </div>
           <div class="field">
             <label for="iban">IBAN</label>
-            <input id="iban" autocomplete="off" placeholder="FR76 …" [(ngModel)]="sepa.iban" (ngModelChange)="sepa.mandateRef = null; sepa.ibanToken = null"
-              [class.ok]="!!sepa.mandateRef" [class.ko]="serr('iban')" [attr.aria-invalid]="!!serr('iban')" aria-describedby="iban-error" />
-            @if (sepa.mandateRef) { <span class="msg ok">Mandat contrôlé et stocké (api IML) · RUM {{ sepa.mandateRef }}</span> }
+            <input id="iban" autocomplete="off" placeholder="FR76 …" [(ngModel)]="sepa.iban" (ngModelChange)="sepa.ibanToken = null"
+              [class.ok]="!!sepa.ibanToken" [class.ko]="serr('iban')" [attr.aria-invalid]="!!serr('iban')" aria-describedby="iban-error" />
+            @if (sepa.ibanToken; as t) { <span class="msg ok">Mandat contrôlé et stocké (api IML) · compte tokenisé {{ t.codeIban }} {{ t.bankIdentifier }} {{ t.bankBranchIdentifier }} {{ t.accountNumber }} {{ t.ribCheckDigits }}</span> }
             @else { <app-field-error for="iban" [message]="serr('iban')" /> }
           </div>
           <p class="small muted">Le mandat SEPA est signé hors de l'outil. Aucun paiement par carte bancaire dans l'outil.</p>
@@ -207,12 +207,9 @@ export class MaterielScreen {
       if (!simOk || this.invalid()) return focusFirstError();
       if (this.isCard()) {
         h.withTerminal = false;
-        sepa.mandateRef = null;
         sepa.ibanToken = null;
-      } else if (!sepa.mandateRef || !sepa.ibanToken) {
-        const mandate = await this.orders.storeMandate(sepa.holder, sepa.iban);
-        sepa.mandateRef = mandate.reference;
-        sepa.ibanToken = mandate.ibanToken;
+      } else if (!sepa.ibanToken) {
+        sepa.ibanToken = await this.orders.storeMandate(sepa.holder, sepa.iban);
       }
       this.store.go('confirmation');
     });

@@ -222,10 +222,9 @@ export class MockBackend {
     else if (!isValidIban(body.iban)) errors['iban'] = 'IBAN invalide : vérifiez sa saisie.';
     if (Object.keys(errors).length) throw invalid(errors);
     const iban = compact(body.iban ?? '');
-    const uid = String(this.sequence++);
-    const reference = `RUM-OOF-${iban.slice(-4)}-${uid.padStart(4, '0')}`;
-    this.mandates.add(reference);
-    return created({ reference, ibanToken: tokenize(uid, iban) });
+    const token = tokenize(String(this.sequence++), iban);
+    this.mandates.add(token.uid);
+    return created(token);
   }
 
   // ----- Contrat et commande
