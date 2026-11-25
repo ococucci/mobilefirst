@@ -57,6 +57,15 @@ describe('bouchons intégrés (mode mock)', () => {
     expect(countries[0].label).toBe('Algérie');
   });
 
+  it('mandat SEPA : RUM et information bancaire tokenisée', async () => {
+    const m = await firstValueFrom(
+      http.post<{ reference: string; ibanToken: Record<string, string> }>(`${api}/sepa-mandates`, { holder: 'Marie Dupont', iban: 'FR76 3000 6000 0112 3456 7890 189' }),
+    );
+    expect(m.reference).toMatch(/^RUM-OOF-0189-/);
+    expect(m.ibanToken).toMatchObject({ codeIban: 'FR76', bankIdentifier: '30006', bankBranchIdentifier: '00001', ribCheckDigits: '89' });
+    expect(m.ibanToken['accountNumber']).toMatch(/^[A-Z]{7}8901$/);
+  });
+
   it('complétion d’adresse', async () => {
     const res = await firstValueFrom(http.get<unknown[]>(`${api}/addresses`, { params: { q: 'Flamboyants' } }));
     expect(res.length).toBe(1);

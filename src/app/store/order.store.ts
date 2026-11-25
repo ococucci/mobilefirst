@@ -3,22 +3,7 @@ import { ApiErrors } from '../api/api-base';
 import { CatalogApi } from '../api/catalog.api';
 import { CustomerApi } from '../api/customer.api';
 import { HardwareApi } from '../api/hardware.api';
-import {
-  Address,
-  Customer,
-  FamilyId,
-  Flow,
-  Identity,
-  Line,
-  Offer,
-  OfferOption,
-  OrderResult,
-  Score,
-  Screen,
-  SimType,
-  Terminal,
-  TerminalColor,
-} from '../domain/models';
+import { Address, Customer, FamilyId, Flow, IbanToken, Identity, Line, Offer, OfferOption, OrderResult, Score, Screen, SimType, Terminal, TerminalColor } from '../domain/models';
 import {
   acquisitionCashDue,
   blockedOptions,
@@ -98,7 +83,8 @@ export interface Draft {
     terminalColorId: string;
     imei: string;
   };
-  sepa: { holder: string; iban: string; mandateRef: string | null };
+  /** Mandat SEPA : saisie, puis RUM et information bancaire tokenisée renvoyées par api IML. */
+  sepa: { holder: string; iban: string; mandateRef: string | null; ibanToken: IbanToken | null };
   lineMsisdn: string | null;
   simReason: string | null;
   /** Ligne (et raison) pour laquelle les étapes suivantes ont été préparées. */
@@ -125,7 +111,7 @@ const emptyDraft = (): Draft => ({
     terminalColorId: '',
     imei: '',
   },
-  sepa: { holder: '', iban: '', mandateRef: null },
+  sepa: { holder: '', iban: '', mandateRef: null, ibanToken: null },
   lineMsisdn: null,
   simReason: null,
   preparedFor: null,

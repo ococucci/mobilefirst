@@ -234,6 +234,7 @@ export class ConfirmationScreen {
             ? { id: d.hardware.terminalId, colorId: d.hardware.terminalColorId, imei: d.hardware.imei }
             : null,
           sepaMandateRef: card ? null : d.sepa.mandateRef,
+          ibanToken: card ? null : d.sepa.ibanToken,
         };
       }
       case 'forfait':

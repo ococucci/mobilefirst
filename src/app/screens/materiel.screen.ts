@@ -94,13 +94,13 @@ import { CORRECT_FIELDS, FieldError, focusFirstError } from '../ui/field-error';
           <div class="seg" style="margin-bottom: 1rem"><button type="button" class="on">Prélèvement SEPA</button></div>
           <div class="field">
             <label for="holder">Titulaire du compte</label>
-            <input id="holder" [(ngModel)]="sepa.holder" (ngModelChange)="sepa.mandateRef = null"
+            <input id="holder" [(ngModel)]="sepa.holder" (ngModelChange)="sepa.mandateRef = null; sepa.ibanToken = null"
               [class.ko]="serr('holder')" [attr.aria-invalid]="!!serr('holder')" aria-describedby="holder-error" />
             <app-field-error for="holder" [message]="serr('holder')" />
           </div>
           <div class="field">
             <label for="iban">IBAN</label>
-            <input id="iban" autocomplete="off" placeholder="FR76 …" [(ngModel)]="sepa.iban" (ngModelChange)="sepa.mandateRef = null"
+            <input id="iban" autocomplete="off" placeholder="FR76 …" [(ngModel)]="sepa.iban" (ngModelChange)="sepa.mandateRef = null; sepa.ibanToken = null"
               [class.ok]="!!sepa.mandateRef" [class.ko]="serr('iban')" [attr.aria-invalid]="!!serr('iban')" aria-describedby="iban-error" />
             @if (sepa.mandateRef) { <span class="msg ok">Mandat contrôlé et stocké (api IML) · RUM {{ sepa.mandateRef }}</span> }
             @else { <app-field-error for="iban" [message]="serr('iban')" /> }
@@ -208,8 +208,11 @@ export class MaterielScreen {
       if (this.isCard()) {
         h.withTerminal = false;
         sepa.mandateRef = null;
-      } else if (!sepa.mandateRef) {
-        sepa.mandateRef = await this.orders.storeMandate(sepa.holder, sepa.iban);
+        sepa.ibanToken = null;
+      } else if (!sepa.mandateRef || !sepa.ibanToken) {
+        const mandate = await this.orders.storeMandate(sepa.holder, sepa.iban);
+        sepa.mandateRef = mandate.reference;
+        sepa.ibanToken = mandate.ibanToken;
       }
       this.store.go('confirmation');
     });

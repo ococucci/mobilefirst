@@ -221,9 +221,11 @@ export class MockBackend {
     if (!body.iban?.trim()) errors['iban'] = "L'IBAN est obligatoire.";
     else if (!isValidIban(body.iban)) errors['iban'] = 'IBAN invalide : vérifiez sa saisie.';
     if (Object.keys(errors).length) throw invalid(errors);
-    const reference = `RUM-OOF-${compact(body.iban ?? '').slice(-4)}-${String(this.sequence++).padStart(4, '0')}`;
+    const iban = compact(body.iban ?? '');
+    const uid = String(this.sequence++);
+    const reference = `RUM-OOF-${iban.slice(-4)}-${uid.padStart(4, '0')}`;
     this.mandates.add(reference);
-    return created({ reference });
+    return created({ reference, ibanToken: tokenize(uid, iban) });
   }
 
   // ----- Contrat et commande
@@ -324,3 +326,24 @@ export const mockBackendInterceptor: HttpInterceptorFn = (req, next) => {
     }
   }).pipe(delay(LATENCY_MS));
 };
+
+/**
+ * Jeton bouchonné (comme le backend) : 4 premiers caractères de l'IBAN, code banque, code guichet, numéro de compte
+ * dont les 7 premiers caractères sont remplacés par des lettres, et clé RIB.
+ */
+function tokenize(uid: string, iban: string) {
+  const bban = (iban.slice(4) + '0'.repeat(23)).slice(0, 23);
+  let seed = [...iban].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+  const letters = Array.from({ length: 7 }, () => {
+    seed = (seed * 1103515245 + 12345) >>> 0;
+    return String.fromCharCode(65 + (seed % 26));
+  }).join('');
+  return {
+    uid,
+    codeIban: iban.slice(0, 4),
+    bankIdentifier: bban.slice(0, 5),
+    bankBranchIdentifier: bban.slice(5, 10),
+    accountNumber: letters + bban.slice(17, 21),
+    ribCheckDigits: bban.slice(21, 23),
+  };
+}

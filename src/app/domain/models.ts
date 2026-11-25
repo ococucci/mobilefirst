@@ -22,6 +22,28 @@ export type SimType = 'physique' | 'esim';
 
 export type PieceType = 'CNI' | 'PASSEPORT';
 
+/** Information bancaire tokenisée renvoyée par api IML avec la RUM du mandat SEPA. */
+export interface IbanToken {
+  /** Identifiant unique de l'information bancaire tokenisée. */
+  uid: string;
+  /** Les 4 premiers caractères du jeton (ex. FR79). */
+  codeIban: string;
+  /** Code banque du jeton. */
+  bankIdentifier: string;
+  /** Code guichet du jeton. */
+  bankBranchIdentifier: string;
+  /** Numéro de compte du jeton. */
+  accountNumber: string;
+  /** Clé RIB du jeton. */
+  ribCheckDigits: string;
+}
+
+/** Mandat SEPA enregistré : référence unique (RUM) et information bancaire tokenisée. */
+export interface SepaMandate {
+  reference: string;
+  ibanToken: IbanToken;
+}
+
 /** Pays de la liste de référence : la nationalité du client contient son id. */
 export interface Country {
   id: string;
