@@ -46,12 +46,14 @@ export interface OpenMlDraft {
   valid: boolean | null;
   lastName: string;
   firstName: string;
+  /** N° du sponsor au format national, renvoyé par RHOC. */
+  msisdn: string;
   tokenId: string | null;
   conditions: boolean;
 }
 
 export function emptyOpenMl(): OpenMlDraft {
-  return { enabled: false, sponsor: '', valid: null, lastName: '', firstName: '', tokenId: null, conditions: false };
+  return { enabled: false, sponsor: '', valid: null, lastName: '', firstName: '', msisdn: '', tokenId: null, conditions: false };
 }
 
 export interface Draft {

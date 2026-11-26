@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { Address, Flow, IbanToken, Identity, SimType } from '../domain/models';
+import { Address, Flow, IbanToken, Identity, SimType, Sponsor } from '../domain/models';
 import { APP_CONFIG } from '../config';
 
 /** Corps commun à POST /contracts et POST /orders ; les champs utiles dépendent de la demande. */
@@ -17,9 +17,8 @@ export interface OrderRequest {
   offerId?: string | null;
   /** Liste complète souhaitée (pour une modification d'options, le serveur calcule ajouts et retraits). */
   options?: string[];
-  openMlSponsor?: string | null;
-  /** Jeton RHOC renvoyé par la recherche du sponsor. */
-  openMlTokenId?: string | null;
+  /** Sponsor Open ML renvoyé par la recherche RHOC (N°, nom, prénom, jeton). */
+  openMlSponsor?: Sponsor | null;
   /** Le client accepte les 3 conditions Open ML (ou est titulaire de la ligne du sponsor). */
   openMlConditionsAccepted?: boolean | null;
   sim?: { type: SimType; iccid: string };

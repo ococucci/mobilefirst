@@ -357,6 +357,7 @@ export class ForfaitScreen {
         valid: r.valid,
         lastName: r.valid ? (r.lastName ?? '') : '',
         firstName: r.valid ? (r.firstName ?? '') : '',
+        msisdn: r.valid ? (r.msisdn ?? '') : '',
         tokenId: r.valid ? (r.tokenId ?? null) : null,
         conditions: false,
       };

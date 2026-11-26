@@ -22,6 +22,16 @@ export type SimType = 'physique' | 'esim';
 
 export type PieceType = 'CNI' | 'PASSEPORT';
 
+/** Sponsor Open ML trouvé par api RHOC, envoyé tel quel dans la commande. */
+export interface Sponsor {
+  /** N° de mobile ou ND du sponsor, au format national. */
+  msisdn: string;
+  lastName: string;
+  firstName: string;
+  /** Jeton RHOC de la recherche. */
+  tokenId: string;
+}
+
 /** Information bancaire tokenisée renvoyée par api IML à l'enregistrement du mandat SEPA. */
 export interface IbanToken {
   /** Identifiant unique de l'information bancaire tokenisée. */

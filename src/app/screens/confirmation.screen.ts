@@ -201,8 +201,9 @@ export class ConfirmationScreen {
     const d = s.draft;
     const iccid = d.hardware.iccid.replace(/\s/g, '');
     const openMl = d.openMl.enabled && d.openMl.valid === true;
-    const openMlSponsor = openMl ? d.openMl.sponsor : null;
-    const openMlTokenId = openMl ? d.openMl.tokenId : null;
+    // Sponsor tel que renvoyé par RHOC (le serveur le revérifie à la validation).
+    const o = d.openMl;
+    const openMlSponsor = openMl ? { msisdn: o.msisdn || o.sponsor, lastName: o.lastName, firstName: o.firstName, tokenId: o.tokenId ?? '' } : null;
     const openMlConditionsAccepted = openMl ? d.openMl.conditions : null;
     const base: OrderRequest = {
       flow: this.flow,
@@ -227,7 +228,6 @@ export class ConfirmationScreen {
           offerId: d.offerId,
           options: d.options,
           openMlSponsor,
-          openMlTokenId,
           openMlConditionsAccepted,
           sim: { type: d.hardware.simType, iccid },
           terminal: d.hardware.withTerminal && !card
@@ -237,7 +237,7 @@ export class ConfirmationScreen {
         };
       }
       case 'forfait':
-        return { ...base, lineMsisdn: d.lineMsisdn, offerId: d.offerId, options: d.options, openMlSponsor, openMlTokenId, openMlConditionsAccepted };
+        return { ...base, lineMsisdn: d.lineMsisdn, offerId: d.offerId, options: d.options, openMlSponsor, openMlConditionsAccepted };
       case 'options':
         return { ...base, lineMsisdn: d.lineMsisdn, options: d.options };
       case 'sim':
