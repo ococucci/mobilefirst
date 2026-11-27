@@ -178,8 +178,8 @@ export interface Terminal {
   id: string;
   brand: string;
   model: string;
-  /** Prix du terminal (en euros) pour chaque niveau d'offre. */
-  prices: Record<OfferLevel, number>;
+  /** Prix du terminal (en euros) par niveau d'offre ; sans prix pour un niveau, il n'est pas proposé avec cette gamme. */
+  prices: Partial<Record<OfferLevel, number>>;
   colors: TerminalColor[];
 }
 

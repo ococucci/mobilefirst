@@ -19,6 +19,7 @@ import {
   simChangeFee,
   territoireFromCodePostal,
   terminalPrice,
+  hasPriceFor,
 } from '../domain/rules';
 import {
   ADDRESSES,
@@ -99,7 +100,7 @@ export class MockBackend {
     ['GET', /^\/catalog\/countries$/, () => ok(COUNTRIES)],
     ['GET', /^\/numbers\/available$/, () => ok(AVAILABLE_NUMBERS.filter((n) => !this.reserved.has(n)))],
     ['POST', /^\/open-ml\/sponsor-checks$/, (_, req) => ok(this.sponsor(this.body<{ sponsor: string }>(req).sponsor ?? ''))],
-    ['GET', /^\/hardware\/terminals$/, () => ok(this.terminals)],
+    ['GET', /^\/hardware\/terminals$/, (_, req) => ok(this.terminalsFor(req.params.get('offerId')))],
     ['POST', /^\/hardware\/iccid-checks$/, (_, req) => ok({ result: this.checkIccid(this.body<{ iccid: string }>(req).iccid ?? '') })],
     ['POST', /^\/hardware\/sim-scans$/, () => ok({ iccid: [...this.stock][Math.floor(Math.random() * this.stock.size)] ?? '' })],
     ['GET', /^\/addresses$/, (_, req) => this.addresses(req.params.get('q') ?? '')],
@@ -121,6 +122,14 @@ export class MockBackend {
 
   private body<T>(req: HttpRequest<unknown>): T {
     return (req.body ?? {}) as T;
+  }
+
+  /** Terminaux ; avec une offre, seulement ceux qui ont un tarif pour sa gamme. */
+  private terminalsFor(offerId: string | null): Terminal[] {
+    if (!offerId) return this.terminals;
+    const offer = OFFERS.find((o) => o.id === offerId);
+    if (!offer) throw notFound(`Offre ${offerId} introuvable.`);
+    return this.terminals.filter((t) => hasPriceFor(t, offer.level));
   }
 
   /** api RHOC bouchonnée : un nouveau jeton à chaque recherche. */

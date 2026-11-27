@@ -187,14 +187,17 @@ export const SPONSORS: Record<string, { lastName: string; firstName: string }> =
 
 export const AVAILABLE_NUMBERS = ['0690123480', '0690123481', '0690123482', '0690123499', '0691245566'];
 
-/** Modèle de terminal : prix par niveau d'offre [nonsub, card, silver, gold, elite, platine] et couleurs proposées. */
-const terminal = (id: string, brand: string, model: string, prices: number[], colors: string[]): Terminal => {
+/**
+ * Modèle de terminal : prix par niveau d'offre [nonsub, card, silver, gold, elite, platine] (null : pas proposé avec
+ * cette gamme) et couleurs proposées.
+ */
+const terminal = (id: string, brand: string, model: string, prices: (number | null)[], colors: string[]): Terminal => {
   const levels: OfferLevel[] = ['nonsub', 'card', 'silver', 'gold', 'elite', 'platine'];
   return {
     id,
     brand,
     model,
-    prices: Object.fromEntries(levels.map((l, i) => [l, prices[i]])) as Record<OfferLevel, number>,
+    prices: Object.fromEntries(levels.flatMap((l, i) => (prices[i] == null ? [] : [[l, prices[i]]]))) as Partial<Record<OfferLevel, number>>,
     colors: colors.map((label) => ({ id: `${id}-${label}`, label })),
   };
 };
@@ -209,10 +212,10 @@ export const TERMINALS: Terminal[] = [
   terminal('ip15-128', 'APPLE', 'iPhone 15 128Go', [769, 769, 649, 529, 464, 399], APPLE_COLORS),
   terminal('ip15-256', 'APPLE', 'iPhone 15 256Go', [899, 899, 779, 659, 594, 529], APPLE_COLORS),
   terminal('ip15plus-256', 'APPLE', 'iPhone 15 PLUS 256Go', [999, 999, 879, 759, 694, 629], APPLE_COLORS),
-  terminal('ip15pro-128', 'APPLE', 'iPhone 15 PRO 128Go', [1129, 1129, 999, 869, 804, 739], ['blanc', 'bleu', 'noir']),
-  terminal('ip15pro-256', 'APPLE', 'iPhone 15 PRO 256Go', [1259, 1259, 1129, 999, 934, 869], ['blanc', 'bleu', 'noir']),
-  terminal('ip15promax-256', 'APPLE', 'iPhone 15 PRO MAX 256Go', [1379, 1379, 1249, 1119, 1054, 989], ['blanc', 'bleu', 'noir']),
-  terminal('ip15promax-512', 'APPLE', 'iPhone 15 PRO MAX 512Go', [1629, 1629, 1499, 1369, 1304, 1239], ['blanc', 'bleu', 'noir']),
+  terminal('ip15pro-128', 'APPLE', 'iPhone 15 PRO 128Go', [null, null, null, 869, 804, 739], ['blanc', 'bleu', 'noir']),
+  terminal('ip15pro-256', 'APPLE', 'iPhone 15 PRO 256Go', [null, null, null, 999, 934, 869], ['blanc', 'bleu', 'noir']),
+  terminal('ip15promax-256', 'APPLE', 'iPhone 15 PRO MAX 256Go', [null, null, null, 1119, 1054, 989], ['blanc', 'bleu', 'noir']),
+  terminal('ip15promax-512', 'APPLE', 'iPhone 15 PRO MAX 512Go', [null, null, null, 1369, 1304, 1239], ['blanc', 'bleu', 'noir']),
   terminal('ip16-128', 'APPLE', 'iPhone 16 5G 128Go', [969, 969, 829, 689, 619, 549], APPLE_COLORS),
   terminal('ip16-256', 'APPLE', 'iPhone 16 5G 256Go', [1099, 1099, 959, 819, 749, 679], APPLE_COLORS),
   terminal('ip16plus-128', 'APPLE', 'iPhone 16 PLUS 5G 128Go', [1119, 1119, 979, 839, 769, 699], APPLE_COLORS),
@@ -220,7 +223,7 @@ export const TERMINALS: Terminal[] = [
   terminal('bb-key2', 'BLACK BERRY', 'BlackBerry KEY2 64Go', [349, 349, 299, 249, 224, 199], ['noir']),
   terminal('cadaoz-c3', 'CADAOZ', 'Cadaoz C3 4G', [59, 59, 39, 19, 10, 1], ['blanc', 'noir']),
   terminal('sam-a15', 'SAMSUNG', 'Galaxy A15 128Go', [149, 149, 99, 49, 25, 1], ['blanc', 'bleu', 'noir']),
-  terminal('sam-s24', 'SAMSUNG', 'Galaxy S24 5G 256Go', [899, 899, 749, 599, 524, 449], ['bleu', 'noir', 'vert']),
+  terminal('sam-s24', 'SAMSUNG', 'Galaxy S24 5G 256Go', [null, null, 749, 599, 524, 449], ['bleu', 'noir', 'vert']),
   terminal('xiaomi-rn13', 'XIAOMI', 'Redmi Note 13 128Go', [199, 199, 149, 99, 74, 49], ['bleu', 'noir', 'vert']),
 ];
 

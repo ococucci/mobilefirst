@@ -194,9 +194,14 @@ export function levelLabel(level: OfferLevel): string {
   return OFFER_LEVELS.find((l) => l.id === level)?.label ?? level;
 }
 
-/** Prix du terminal au niveau de l'offre choisie (niveau de subvention). */
+/** Prix du terminal au niveau de l'offre choisie (niveau de subvention) ; 0 s'il n'est pas tarifé pour ce niveau. */
 export function terminalPrice(terminal: Terminal, offer: Offer): number {
-  return terminal.prices[offer.level];
+  return terminal.prices[offer.level] ?? 0;
+}
+
+/** Le terminal a un tarif pour la gamme (niveau) de l'offre : seul un terminal tarifé est proposé avec elle. */
+export function hasPriceFor(terminal: Terminal, level: OfferLevel | undefined): boolean {
+  return !!level && terminal.prices[level] != null;
 }
 
 /** Marques distinctes, triées par ordre alphabétique. */

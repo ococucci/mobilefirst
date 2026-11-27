@@ -160,6 +160,8 @@ export class OrderStore {
   private readonly loads = new Map<string, Promise<void>>();
   /** Territoire pour lequel le catalogue a été demandé. */
   private offersTerritoire: string | null = null;
+  /** Offre pour laquelle la liste des terminaux a été chargée. */
+  private terminalsOfferId: string | null = null;
   /** Incrémenté à chaque nouvelle commande : la réponse d'un appel lancé avant reset() est ignorée. */
   private generation = 0;
 
@@ -185,9 +187,25 @@ export class OrderStore {
     return a.territoire || territoireFromCodePostal(a.codePostal);
   }
 
-  /** Terminaux, appelés une seule fois par commande. */
+  /**
+   * Terminaux tarifés pour la gamme de l'offre choisie : rappelés si l'offre a changé, sinon en cache pour la commande.
+   * Un terminal choisi qui n'est plus proposé avec la nouvelle offre est retiré.
+   */
   loadTerminals(): Promise<boolean> {
-    return this.once('terminals', () => this.hardwareApi.terminals(), (v) => this.terminals.set(v));
+    const offerId = this.draft.offerId;
+    if (offerId !== this.terminalsOfferId) {
+      this.loads.delete('terminals');
+      this.terminalsOfferId = offerId;
+    }
+    return this.once('terminals', () => this.hardwareApi.terminals(offerId), (v) => {
+      this.terminals.set(v);
+      const h = this.draft.hardware;
+      if (h.terminalId && !v.some((t) => t.id === h.terminalId)) {
+        h.terminalId = '';
+        h.terminalColorId = '';
+        if (!v.some((t) => t.brand === h.terminalBrand)) h.terminalBrand = '';
+      }
+    });
   }
 
   /** Numéros disponibles, appelés une seule fois par commande. */
@@ -296,6 +314,7 @@ export class OrderStore {
     this.generation++;
     this.loads.clear();
     this.offersTerritoire = null;
+    this.terminalsOfferId = null;
     this.offers.set([]);
     this.terminals.set([]);
     this.availableNumbers.set([]);

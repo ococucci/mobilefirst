@@ -10,6 +10,7 @@ import {
   identityChangeRequiresRescore,
   isOpenMlAvailable,
   nationalNumber,
+  hasPriceFor,
   isValidIban,
   isValidIccid,
   isValidImei,
@@ -230,5 +231,14 @@ describe('contrôles de saisie', () => {
   it('IMEI (Luhn)', () => {
     expect(isValidImei('490154203237518')).toBe(true);
     expect(isValidImei('490154203237519')).toBe(false);
+  });
+});
+
+describe('terminaux proposés selon la gamme de l’offre', () => {
+  const t: Terminal = { id: 'ip', brand: 'APPLE', model: 'iPhone', prices: { gold: 869, platine: 739 }, colors: [] };
+  it('seulement si le terminal a un tarif pour la gamme', () => {
+    expect(hasPriceFor(t, 'gold')).toBe(true);
+    expect(hasPriceFor(t, 'nonsub')).toBe(false);
+    expect(hasPriceFor(t, undefined)).toBe(false);
   });
 });

@@ -66,6 +66,15 @@ describe('bouchons intégrés (mode mock)', () => {
     expect(m['accountNumber']).toMatch(/^[A-Z]{7}8901$/);
   });
 
+  it('terminaux tarifés pour la gamme de l’offre', async () => {
+    const ids = async (offerId?: string) =>
+      (await firstValueFrom(http.get<{ id: string }[]>(`${api}/hardware/terminals`, { params: offerId ? { offerId } : {} }))).map((t) => t.id);
+    expect(await ids('bl-20')).toContain('sam-a15');
+    expect(await ids('bl-20')).not.toContain('ip15pro-128');
+    expect(await ids('bl-120')).toContain('ip15pro-128');
+    expect(await ids()).toContain('ip15pro-128');
+  });
+
   it('complétion d’adresse', async () => {
     const res = await firstValueFrom(http.get<unknown[]>(`${api}/addresses`, { params: { q: 'Flamboyants' } }));
     expect(res.length).toBe(1);
