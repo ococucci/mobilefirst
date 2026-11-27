@@ -118,11 +118,12 @@ export class MaterielScreen {
 
   /** Catalogue des terminaux en cours de chargement : marque, modèle et couleur ne sont pas encore sélectionnables. */
   protected readonly loadingTerminals = signal(false);
-  protected readonly brands = computed(() => terminalBrands(this.store.terminals()));
+  /** Marques et modèles : seulement les terminaux tarifés pour la gamme de l'offre choisie. */
+  protected readonly brands = computed(() => terminalBrands(this.offerTerminals()));
   /** Marque choisie, pour recalculer la liste des modèles. */
   private readonly brand = signal(this.store.draft.hardware.terminalBrand);
   protected readonly models = computed(() =>
-    this.store.terminals()
+    this.offerTerminals()
       .filter((t) => t.brand === this.brand())
       .sort((a, b) => a.model.localeCompare(b.model, 'fr', { numeric: true })),
   );
@@ -136,8 +137,17 @@ export class MaterielScreen {
       const i = this.store.draft.identity;
       sepa.holder = `${i.prenom} ${i.nom}`.trim();
     }
-    // Terminaux appelés une seule fois par commande.
-    void run(this.loadingTerminals, async () => void (await this.store.loadTerminals()));
+    // Terminaux appelés une seule fois par commande, puis filtrés selon la gamme de l'offre choisie.
+    void run(this.loadingTerminals, async () => {
+      await this.store.loadTerminals();
+      this.store.dropUnavailableTerminal();
+      this.brand.set(this.store.draft.hardware.terminalBrand);
+    });
+  }
+
+  /** Terminaux proposés avec l'offre choisie (tarifés pour sa gamme). */
+  private offerTerminals(): Terminal[] {
+    return this.store.offerTerminals();
   }
 
   /** Tarif unique de la Carte Prépayée choisie. */

@@ -66,13 +66,11 @@ describe('bouchons intégrés (mode mock)', () => {
     expect(m['accountNumber']).toMatch(/^[A-Z]{7}8901$/);
   });
 
-  it('terminaux tarifés pour la gamme de l’offre', async () => {
-    const ids = async (offerId?: string) =>
-      (await firstValueFrom(http.get<{ id: string }[]>(`${api}/hardware/terminals`, { params: offerId ? { offerId } : {} }))).map((t) => t.id);
-    expect(await ids('bl-20')).toContain('sam-a15');
-    expect(await ids('bl-20')).not.toContain('ip15pro-128');
-    expect(await ids('bl-120')).toContain('ip15pro-128');
-    expect(await ids()).toContain('ip15pro-128');
+  it('terminaux : tous, avec un prix absent pour les gammes où ils ne sont pas proposés', async () => {
+    const terminals = await firstValueFrom(http.get<{ id: string; prices: Record<string, number> }[]>(`${api}/hardware/terminals`));
+    const pro = terminals.find((t) => t.id === 'ip15pro-128')!;
+    expect(pro.prices['gold']).toBe(869);
+    expect(pro.prices['silver']).toBeUndefined();
   });
 
   it('complétion d’adresse', async () => {

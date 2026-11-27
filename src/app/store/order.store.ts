@@ -4,19 +4,7 @@ import { CatalogApi } from '../api/catalog.api';
 import { CustomerApi } from '../api/customer.api';
 import { HardwareApi } from '../api/hardware.api';
 import { Address, Customer, FamilyId, Flow, IbanToken, Identity, Line, Offer, OfferOption, OrderResult, Score, Screen, SimType, Terminal, TerminalColor } from '../domain/models';
-import {
-  acquisitionCashDue,
-  blockedOptions,
-  monthly,
-  oneOffPrice,
-  MonthlyBreakdown,
-  optionsDiff,
-  OptionsDiff,
-  simChangeFee,
-  stepsFor,
-  territoireFromCodePostal,
-  terminalPrice,
-} from '../domain/rules';
+import { acquisitionCashDue, blockedOptions, monthly, oneOffPrice, MonthlyBreakdown, optionsDiff, OptionsDiff, simChangeFee, stepsFor, territoireFromCodePostal, terminalPrice, hasPriceFor } from '../domain/rules';
 
 export type CustomerStatus = 'connu' | 'controle' | 'cree';
 
@@ -160,8 +148,6 @@ export class OrderStore {
   private readonly loads = new Map<string, Promise<void>>();
   /** Territoire pour lequel le catalogue a été demandé. */
   private offersTerritoire: string | null = null;
-  /** Offre pour laquelle la liste des terminaux a été chargée. */
-  private terminalsOfferId: string | null = null;
   /** Incrémenté à chaque nouvelle commande : la réponse d'un appel lancé avant reset() est ignorée. */
   private generation = 0;
 
@@ -187,25 +173,26 @@ export class OrderStore {
     return a.territoire || territoireFromCodePostal(a.codePostal);
   }
 
-  /**
-   * Terminaux tarifés pour la gamme de l'offre choisie : rappelés si l'offre a changé, sinon en cache pour la commande.
-   * Un terminal choisi qui n'est plus proposé avec la nouvelle offre est retiré.
-   */
+  /** Terminaux (tous, avec leurs prix par gamme), appelés une seule fois par commande. */
   loadTerminals(): Promise<boolean> {
-    const offerId = this.draft.offerId;
-    if (offerId !== this.terminalsOfferId) {
-      this.loads.delete('terminals');
-      this.terminalsOfferId = offerId;
+    return this.once('terminals', () => this.hardwareApi.terminals(), (v) => this.terminals.set(v));
+  }
+
+  /** Terminaux proposés avec l'offre choisie : ceux qui ont un tarif pour sa gamme. */
+  offerTerminals(): Terminal[] {
+    const level = this.selectedOffer()?.level;
+    return this.terminals().filter((t) => hasPriceFor(t, level));
+  }
+
+  /** Retire le terminal choisi s'il n'est pas proposé avec l'offre choisie (offre changée entre-temps). */
+  dropUnavailableTerminal(): void {
+    const h = this.draft.hardware;
+    const available = this.offerTerminals();
+    if (h.terminalId && !available.some((t) => t.id === h.terminalId)) {
+      h.terminalId = '';
+      h.terminalColorId = '';
     }
-    return this.once('terminals', () => this.hardwareApi.terminals(offerId), (v) => {
-      this.terminals.set(v);
-      const h = this.draft.hardware;
-      if (h.terminalId && !v.some((t) => t.id === h.terminalId)) {
-        h.terminalId = '';
-        h.terminalColorId = '';
-        if (!v.some((t) => t.brand === h.terminalBrand)) h.terminalBrand = '';
-      }
-    });
+    if (h.terminalBrand && !available.some((t) => t.brand === h.terminalBrand)) h.terminalBrand = '';
   }
 
   /** Numéros disponibles, appelés une seule fois par commande. */
@@ -314,7 +301,6 @@ export class OrderStore {
     this.generation++;
     this.loads.clear();
     this.offersTerritoire = null;
-    this.terminalsOfferId = null;
     this.offers.set([]);
     this.terminals.set([]);
     this.availableNumbers.set([]);

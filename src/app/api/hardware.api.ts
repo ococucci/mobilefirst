@@ -12,10 +12,9 @@ export class HardwareApi {
   private readonly http = inject(HttpClient);
   private readonly api = inject(APP_CONFIG).apiUrl;
 
-  /** Terminaux vendables ; avec l'offre, seulement ceux qui ont un tarif pour sa gamme. */
-  terminals(offerId?: string | null): Promise<Terminal[]> {
-    const params: Record<string, string> = offerId ? { offerId } : {};
-    return firstValueFrom(this.http.get<Terminal[]>(`${this.api}/hardware/terminals`, { params }));
+  /** Tous les terminaux vendables, avec leur prix par gamme (le filtrage par gamme est fait à l'écran). */
+  terminals(): Promise<Terminal[]> {
+    return firstValueFrom(this.http.get<Terminal[]>(`${this.api}/hardware/terminals`));
   }
 
   async checkIccid(iccid: string): Promise<IccidCheck> {
